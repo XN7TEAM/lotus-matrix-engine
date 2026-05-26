@@ -1,4 +1,4 @@
-﻿class LotusCylinderEngine:
+class LotusCylinderEngine:
     def __init__(self):
         self.LIMIT = 16
         self.GOVERNOR_POLE_START = 0  # Top absolute boundary (0)
@@ -17,12 +17,14 @@
         }
 
     def process_clockwise_transform(self, data_stream: str, key_stream: str) -> dict:
-        """Processes 4 hex values by spinning them clockwise down the infinite boundaries."""
+        """Processes hexadecimal vectors by spinning them clockwise down the infinite boundaries."""
         clean_data = data_stream.upper().replace(" ", "")
         clean_key = key_stream.upper().replace(" ", "")
         
-        if len(clean_data) != 4 or len(clean_key) != 4:
-            raise ValueError("Lattice blocks require exactly 4 hexadecimal characters.")
+        # Automatically adapt to either 4-character or full 8-character presentation blocks
+        expected_len = len(clean_data)
+        if expected_len not in [4, 8] or len(clean_key) != expected_len:
+            raise ValueError("Lattice blocks require symmetrical 4 or 8 hexadecimal characters.")
             
         input_nodes = [int(char, 16) for char in clean_data]
         force_nodes = [int(char, 16) for char in clean_key]
@@ -30,7 +32,7 @@
         output_hex_chars = []
         telemetry_log = []
 
-        # Run the transformations simultaneously through the vertical layers
+        # Run the transformations simultaneously through the active vertical layers
         for idx, (node_val, force_val) in enumerate(zip(input_nodes, force_nodes)):
             tier_id = idx + 1
             tier_meta = self.CYLINDER_TIERS.get(tier_id, {"binary": "0000", "val": 0, "name": "Undefined Axis"})
