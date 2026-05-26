@@ -5,88 +5,162 @@
     <title>Lotus 3D Cylindrical Spatial Matrix Dashboard</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        body { background-color: #08080c; color: #d1d1de; font-family: 'Courier New', monospace; margin: 40px; }
-        .wrapper { max-width: 1100px; margin: 0 auto; border: 1px solid #1a1a26; padding: 30px; background-color: #0c0c14; border-radius: 6px; box-shadow: 0 0 30px rgba(0, 102, 255, 0.1); }
+        body { background-color: #08080c; color: #d1d1de; font-family: 'Courier New', monospace; margin: 40px; overflow-x: hidden; }
+        .wrapper { max-width: 1100px; margin: 0 auto; border: 1px solid #1a1a26; padding: 30px; background-color: #0c0c14; border-radius: 6px; box-shadow: 0 0 30px rgba(0, 102, 255, 0.1); position: relative; }
         h1 { color: #007bff; border-bottom: 2px solid #1a1a26; padding-bottom: 15px; margin-top: 0; text-align: center; font-size: 20px; letter-spacing: 1px; }
         .meta-stamp { text-align: center; color: #555566; font-size: 11px; margin-bottom: 30px; text-transform: uppercase; }
+        
+        /* Layout Sections */
         .main-layout { display: flex; gap: 30px; }
         .left-column { flex: 1; }
-        .right-column { width: 450px; background: #06060a; border: 1px solid #1a1a26; border-radius: 4px; padding: 15px; display: flex; flex-direction: column; align-items: center; }
+        .right-column { width: 450px; background: #06060a; border: 1px solid #1a1a26; border-radius: 4px; padding: 15px; display: flex; flex-direction: column; align-items: center; position: relative; }
+        
+        /* Interactive Control UI Components */
         .control-panel { display: flex; gap: 15px; margin-bottom: 25px; justify-content: center; background: #10101c; padding: 20px; border-radius: 4px; border: 1px solid #151522; }
         .input-block { display: flex; flex-direction: column; }
         label { font-size: 11px; color: #666680; margin-bottom: 6px; font-weight: bold; }
         input { background: #06060a; border: 1px solid #222236; color: #007bff; padding: 12px; font-size: 20px; font-family: monospace; text-align: center; width: 110px; border-radius: 4px; font-weight: bold; letter-spacing: 2px; }
         button { background: #007bff; color: #ffffff; border: none; padding: 0 20px; font-size: 13px; font-weight: bold; cursor: pointer; border-radius: 4px; transition: all 0.2s ease; height: 48px; align-self: flex-end; letter-spacing: 1px; }
         button:hover { background: #0056b3; box-shadow: 0 0 15px rgba(0,123,255,0.4); }
+        
+        /* Display Vault & Telemetry Components */
         .display-vault { background: #06060a; border: 1px dashed #222236; padding: 15px; border-radius: 4px; text-align: center; margin-bottom: 25px; }
         .cipher-result { font-size: 28px; font-weight: bold; color: #ffffff; margin: 8px 0; letter-spacing: 4px; }
         .telemetry-header { color: #007bff; font-size: 13px; margin-bottom: 15px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; }
         .matrix-row { background: #10101c; padding: 12px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #151522; border-left: 4px solid #007bff; }
         .row-meta { display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; color: #888899; }
-        #canvas3d { width: 100%; height: 400px; background: #020205; border-radius: 4px; }
+        
+        /* Live Governor Telemetry Ticker Box */
+        .gov-ticker-box { background: #111122; border: 1px solid #1f1f38; border-radius: 4px; padding: 15px; margin-bottom: 20px; }
+        .gov-stat { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
+        .gov-value { font-family: monospace; font-weight: bold; color: #00ffcc; }
+        
+        /* Presentation Innovation Control Box */
+        .demo-controls { background: #1a0f14; border: 1px solid #33141e; border-radius: 4px; padding: 15px; margin-top: 25px; }
+        .btn-attack { background: #dc3545; width: 100%; height: 40px; margin-top: 5px; text-transform: uppercase; }
+        .btn-attack:hover { background: #bd2130; box-shadow: 0 0 15px rgba(220,53,69,0.4); }
+        
+        /* View Screening Mechanisms */
+        #kineticKeyView { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; }
+        #dashboardCoreView { display: none; }
+        #canvas3d { width: 100%; height: 400px; background: #020205; border-radius: 4px; cursor: grab; }
+        #canvas3d:active { cursor: grabbing; }
         .canvas-label { color: #007bff; font-size: 11px; margin-bottom: 10px; font-weight: bold; text-transform: uppercase; width: 100%; text-align: left; }
+        
+        /* Warning Overlay System */
+        .security-alert-popup { display: none; position: fixed; top: 30px; left: 50%; transform: translateX(-50%); background: #730f1e; border: 2px solid #ff3344; color: #ffffff; padding: 15px 40px; border-radius: 4px; font-weight: bold; font-size: 14px; letter-spacing: 1px; box-shadow: 0 0 30px rgba(255, 0, 0, 0.6); z-index: 9999; text-transform: uppercase; animation: blinker 1s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0.5; } }
+
+        /* Corporate Branding Watermark Overlay */
+        .security-watermark { position: fixed; bottom: 20px; right: 20px; text-align: right; font-family: monospace; font-size: 9px; color: #222236; letter-spacing: 1px; line-height: 14px; text-transform: uppercase; pointer-events: none; }
     </style>
 </head>
 <body>
+
+<div class="security-alert-popup" id="alarmBanner">⚠️ THREAT VECTOR DETECTED // MALICIOUS LATERAL MOVEMENT IDENTIFIED</div>
+
 <div class="wrapper">
     <h1>LOTUS CYLINDRICAL MATRIX LAYER STREAM</h1>
     <div class="meta-stamp">System Architect: Nicholas Desjardins // Real-Time Spatial Mechanics Visualizer</div>
     
-    <div class="main-layout">
-        <div class="left-column">
-            <div class="control-panel">
-                <div class="input-block">
-                    <label>DATA INPUT</label>
-                    <input type="text" id="dataVector" value="ABC1" maxlength="4">
-                </div>
-                <div class="input-block">
-                    <label>ROTATIONAL KEY</label>
-                    <input type="text" id="keyVector" value="3576" maxlength="4">
-                </div>
-                <button onclick="engageCylinderTransformation()">ENGAGE ENGINE CORE</button>
-            </div>
-            
-            <div class="display-vault">
-                <label style="color: #555566; font-size: 11px; font-weight: bold;">CYLINDER TERMINAL CIPHER STATE</label>
-                <div class="cipher-result" id="outputTerminal">- - - -</div>
-                <div id="latencyField" style="font-size: 11px; color: #44445c;">Processing Delta: 0.00000 ms</div>
-            </div>
-            
-            <div class="telemetry-header">// Active Vertical Cylinder Plane Log</div>
-            <div id="telemetryStream"></div>
+    <div id="kineticKeyView">
+        <div style="text-align: center; max-width: 500px; margin-bottom: 30px;">
+            <h3 style="color: #00ffcc; font-size: 14px; letter-spacing: 2px; text-transform: uppercase;">// 3D Kinetic Keyhole Active</h3>
+            <p style="font-size: 12px; color: #666680; line-height: 18px;">
+                Rotate the matrix cylinder manually within the view panel to match human touch telemetry vectors directly to the required tracking destination alignment goal.
+            </p>
         </div>
-        
-        <div class="right-column">
-            <div class="canvas-label">// Live 3D Kinetic Cylinder Core</div>
-            <div id="canvas3d"></div>
-            <div style="font-size: 11px; color: #44445c; margin-top: 10px; text-align: center; line-height: 14px;">
-                Nodes animate and spin to their calculated modular boundaries based on force key variables.
+        <div class="gov-ticker-box" style="width: 320px; border-color: #222236; text-align: center;">
+            <div style="font-size: 10px; color: #555566; margin-bottom: 8px;">SPATIOTEMPORAL ALIGNMENT TARGET</div>
+            <div style="font-size: 16px; color: #ffffff; font-weight: bold; letter-spacing: 1px;">GOVERNOR APEX: <span id="targetGateText" style="color:#007bff;">1.047 RAD (60°)</span></div>
+        </div>
+        <button onclick="bypassSecurityGate()" id="gateEngageBtn" style="width: 260px; background: #111122; border: 1px solid #222236; color: #555566;">ALIGNMENT REQUIRED</button>
+    </div>
+
+    <div id="dashboardCoreView">
+        <div class="main-layout">
+            <div class="left-column">
+                <div class="control-panel">
+                    <div class="input-block">
+                        <label>DATA INPUT</label>
+                        <input type="text" id="dataVector" value="ABC1" maxlength="4">
+                    </div>
+                    <div class="input-block">
+                        <label>ROTATIONAL KEY</label>
+                        <input type="text" id="keyVector" value="3576" maxlength="4">
+                    </div>
+                    <button onclick="engageCylinderTransformation()">ENGAGE ENGINE CORE</button>
+                </div>
+                
+                <div class="display-vault">
+                    <label style="color: #555566; font-size: 11px; font-weight: bold;">CYLINDER TERMINAL CIPHER STATE</label>
+                    <div class="cipher-result" id="outputTerminal">- - - -</div>
+                    <div id="latencyField" style="font-size: 11px; color: #44445c;">Processing Delta: 0.00000 ms</div>
+                </div>
+                
+                <div class="gov-ticker-box">
+                    <div class="telemetry-header" style="margin-bottom: 10px; font-size: 11px; color: #888899;">// Real-Time System Integrity Governor</div>
+                    <div class="gov-stat">
+                        <span>Active Boundary Tracking Limit (Apex):</span>
+                        <span class="gov-value" id="liveGovApex">1.047 RAD</span>
+                    </div>
+                    <div class="gov-stat">
+                        <span>Current Rotational Delta Angle:</span>
+                        <span class="gov-value" id="liveGovAngle" style="color:#007bff;">0.000 rad</span>
+                    </div>
+                    <div class="gov-stat">
+                        <span>Network Core Operational State:</span>
+                        <span class="gov-value" id="liveGovStatus" style="color:#00ffcc;">SECURE</span>
+                    </div>
+                </div>
+
+                <div class="telemetry-header">// Active Vertical Cylinder Plane Log</div>
+                <div id="telemetryStream"></div>
+                
+                <div class="demo-controls">
+                    <label style="color: #a8667c; font-size: 11px;">⚠️ BANK INNOVATION PRESENTATION CONSOLE</label>
+                    <button class="btn-attack" id="attackToggleBtn" onclick="toggleSimulatedAttack()">Simulate Threat Vector</button>
+                </div>
+            </div>
+            
+            <div class="right-column" id="canvasColumn">
+                <div class="canvas-label" id="canvasTitle">// Live Spatial Access Gateway</div>
+                <div id="canvas3d"></div>
+                <div id="canvasFooterDesc" style="font-size: 11px; color: #44445c; margin-top: 10px; text-align: center; line-height: 14px;">
+                    Grab and rotate the active model cylinder grid manually to synchronize coordinate locks.
+                </div>
             </div>
         </div>
     </div>
 </div>
 
+<div class="security-watermark">
+    Proprietary Engine Pipeline<br>
+    © Nicholas Desjardins. All Rights Reserved.<br>
+    System Gate: Active Dashboard Stream
+</div>
+
 <script>
-// --- 3D Graphics Setup Environment ---
+// --- State Controls ---
+let isUnlocked = false;
+let attackActive = false;
+let userRotatedAngle = 0;
+
+// --- 3D WebGL Graphics Architecture Setup ---
 const container = document.getElementById('canvas3d');
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(45, container.clientWidth / 400, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(container.clientWidth, 400);
+renderer.setSize(420, 400);
 container.appendChild(renderer.domElement);
 
-// Create the transparent matrix cylinder grid
+// Geometric Structural Components
 const cylinderGeom = new THREE.CylinderGeometry(2, 2, 5, 16, 8, true);
-const cylinderMat = new THREE.MeshBasicMaterial({
-    color: 0x1a1a3a,
-    wireframe: true,
-    transparent: true,
-    opacity: 0.4
-});
+const cylinderMat = new THREE.MeshBasicMaterial({ color: 0x1a1a3a, wireframe: true, transparent: true, opacity: 0.4 });
 const matrixCylinder = new THREE.Mesh(cylinderGeom, cylinderMat);
 scene.add(matrixCylinder);
 
-// Add tier horizontal ring guidelines
+// Build horizontal bounding rings
 for (let i = 0; i < 4; i++) {
     const ringGeom = new THREE.RingGeometry(1.98, 2.02, 32);
     const ringMat = new THREE.MeshBasicMaterial({ color: 0x0056b3, side: THREE.DoubleSide, transparent: true, opacity: 0.3 });
@@ -96,7 +170,6 @@ for (let i = 0; i < 4; i++) {
     scene.add(ring);
 }
 
-// Data nodes arrays
 let nodeMeshes = [];
 const nodeColors = [0xff0055, 0x00ffcc, 0xffcc00, 0x007bff];
 
@@ -104,13 +177,50 @@ camera.position.z = 7;
 camera.position.y = 2;
 camera.lookAt(0, 0, 0);
 
-// Smooth render loop animation
+// --- Manual Mouse Drag / Rotation System ---
+let isDragging = false;
+let previousMousePosition = { x: 0 };
+
+container.addEventListener('mousedown', () => { isDragging = true; });
+window.addEventListener('mouseup', () => { isDragging = false; });
+window.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const deltaX = e.clientX - previousMousePosition.x;
+    
+    // Rotate matrix grid based on interactive user dragging action
+    matrixCylinder.rotation.y += deltaX * 0.01;
+    userRotatedAngle = matrixCylinder.rotation.y % (Math.PI * 2);
+    if(userRotatedAngle < 0) userRotatedAngle += Math.PI * 2;
+    
+    // Track rotation angle into visual feedback metrics logs
+    if(!isUnlocked) {
+        const degrees = Math.round((userRotatedAngle * 180) / Math.PI);
+        const btn = document.getElementById('gateEngageBtn');
+        if (Math.abs(userRotatedAngle - 1.047) < 0.2) {
+            btn.style.background = "#00ffcc";
+            btn.style.color = "#0c0c14";
+            btn.innerText = "ACCESS BOUNDARY COMPLIANT";
+        } else {
+            btn.style.background = "#111122";
+            btn.style.color = "#555566";
+            btn.innerText = `ALIGNING: ${degrees}° / 60°`;
+        }
+    }
+    previousMousePosition = { x: e.clientX };
+});
+
+// --- Dynamic Real-Time Graphics Execution Loop ---
 function animate() {
     requestAnimationFrame(animate);
-    matrixCylinder.rotation.y += 0.002; // Slow background spin for spatial depth
+    
+    if (isUnlocked && !isDragging) {
+        // Slow idling spin behavior under standard operations
+        matrixCylinder.rotation.y += attackActive ? 0.08 : 0.002;
+    }
+    
+    // Dynamically interpolate active payload nodes across metrics positions
     nodeMeshes.forEach(node => {
         if (node.targetAngle !== undefined) {
-            // Smoothly interpolate current angle toward the targeted calculation position
             let diff = node.targetAngle - node.currentAngle;
             node.currentAngle += diff * 0.08;
             node.position.x = Math.cos(node.currentAngle) * 2;
@@ -121,50 +231,79 @@ function animate() {
 }
 animate();
 
-function update3DNodes(dataInput, keyInput) {
-    // Clear old data nodes
-    nodeMeshes.forEach(mesh => scene.remove(mesh));
-    nodeMeshes = [];
-
-    const chars = dataInput.toUpperCase().split('');
-    const keys = keyInput.split('');
-
-    for (let i = 0; i < 4; i++) {
-        if (!chars[i] || !keys[i]) continue;
+// --- Interactive View Gate Logic ---
+function bypassSecurityGate() {
+    // Check if configuration tolerance vector aligns within bounds (~60 degrees target location)
+    if (Math.abs(userRotatedAngle - 1.047) < 0.25) {
+        isUnlocked = true;
+        document.getElementById('kineticKeyView').style.display = 'none';
         
-        // Convert hex value to 0-15 position index
-        const startPos = parseInt(chars[i], 16) || 0;
-        const shiftForce = parseInt(keys[i], 16) || 0;
-        const tierShift = i; // Tier constant mapping matches Python logic
-        const finalPos = (startPos + shiftForce + tierShift) % 16;
-
-        // Calculate heights corresponding to the tiers
-        const yPos = 1.8 - (i * 1.2);
-
-        // Build glowing visual node mesh
-        const sphereGeom = new THREE.SphereGeometry(0.18, 16, 16);
-        const sphereMat = new THREE.MeshBasicMaterial({ color: nodeColors[i] });
-        const sphere = new THREE.Mesh(sphereGeom, sphereMat);
+        // Append 3D window inside primary dashboard workspace container grid
+        const dest = document.getElementById('canvas3d');
+        document.getElementById('dashboardCoreView').style.display = 'block';
+        dest.appendChild(renderer.domElement);
         
-        // Map modular numbers to physical positions on the circular circumference (360 degrees / 16)
-        const startAngle = (startPos / 16) * Math.PI * 2;
-        const destinationAngle = (finalPos / 16) * Math.PI * 2;
-
-        sphere.position.set(Math.cos(startAngle) * 2, yPos, Math.sin(startAngle) * 2);
-        sphere.currentAngle = startAngle;
-        sphere.targetAngle = destinationAngle;
+        document.getElementById('canvasTitle').innerText = "// Live 3D Kinetic Cylinder Core";
+        document.getElementById('canvasFooterDesc').innerText = "Nodes animate and spin to their calculated modular boundaries based on force key variables.";
         
-        scene.add(sphere);
-        nodeMeshes.push(sphere);
+        // Initialize background background data cycle telemetry streams
+        setInterval(fetchLiveTelemetryStream, 800);
+        engageCylinderTransformation();
+    } else {
+        alert("Boundary Enforcement Error: Manual matrix orientation angle does not align to the Governor Axis lock goal.");
     }
 }
 
-// --- Front End Web API Bridge ---
+// --- Live Telemetry Data Updates ---
+function fetchLiveTelemetryStream() {
+    fetch('/api/telemetry')
+    .then(res => res.json())
+    .then(metrics => {
+        document.getElementById('liveGovApex').innerText = `${metrics.governor_apex} RAD`;
+        document.getElementById('liveGovAngle').innerText = `${matrixCylinder.rotation.y.toFixed(3)} rad`;
+        document.getElementById('liveGovStatus').innerText = metrics.system_status;
+        
+        const statusBox = document.getElementById('liveGovStatus');
+        if(metrics.attack_active) {
+            statusBox.style.color = "#ff3344";
+            cylinderMat.color.setHex(0x550011);
+        } else {
+            statusBox.style.color = "#00ffcc";
+            cylinderMat.color.setHex(0x1a1a3a);
+        }
+    });
+}
+
+// --- Presentation Innovation Attack Simulator Toggle Switch ---
+function toggleSimulatedAttack() {
+    attackActive = !attackActive;
+    const btn = document.getElementById('attackToggleBtn');
+    const alertBanner = document.getElementById('alarmBanner');
+    
+    if(attackActive) {
+        btn.innerText = "Clear Threat Vector & Restabilize";
+        btn.style.background = "#00ffcc";
+        btn.style.color = "#0c0c14";
+        alertBanner.style.display = "block";
+    } else {
+        btn.innerText = "Simulate Threat Vector";
+        btn.style.background = "#dc3545";
+        btn.style.color = "#ffffff";
+        alertBanner.style.display = "none";
+    }
+    
+    fetch('/api/simulate-attack', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active: attackActive })
+    });
+}
+
+// --- Core Algorithm Execution Engine Pipeline Bridge ---
 function engageCylinderTransformation() {
     const data = document.getElementById('dataVector').value;
     const key = document.getElementById('keyVector').value;
     
-    // Trigger real-time kinetic rotation mapping inside the canvas
     update3DNodes(data, key);
 
     fetch('/api/process', {
@@ -172,39 +311,16 @@ function engageCylinderTransformation() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ data: data, key: key })
     })
-    .then(response => response.json())
+    .then(res => res.json())
     .then(dataPack => {
         if(dataPack.success) {
             document.getElementById('outputTerminal').innerText = dataPack.output;
             document.getElementById('latencyField').innerText = `Processing Delta: ${dataPack.latency_ms}`;
             const container = document.getElementById('telemetryStream');
             container.innerHTML = '';
+            
             dataPack.telemetry.slice(0, 4).forEach(log => {
                 const row = document.createElement('div');
                 row.className = 'matrix-row';
                 row.innerHTML = `
-                    <div class="row-meta">
-                        <span>${log.tier_name}</span>
-                        <span style="color: #007bff;">Lattice Coordinate: ${log.tier_binary}</span>
-                    </div>
-                    <div style="font-size:12px; color:#c5c5d2; margin-top:5px;">${log.formula}</div>
-                    <div style="font-size:11px; color:#666680; margin-top:3px;">${log.boundary_enforcement}</div>
-                `;
-                container.appendChild(row);
-            });
-        } else { alert("Matrix Configuration Error: " + dataPack.error); }
-    })
-    .catch(err => alert("Connection failure to hidden core engine: " + err));
-}
-window.onload = engageCylinderTransformation;
-
-// Handle browser window size scaling smoothly
-window.addEventListener('resize', () => {
-    const w = document.getElementById('canvas3d').clientWidth;
-    renderer.setSize(w, 400);
-    camera.aspect = w / 400;
-    camera.updateProjectionMatrix();
-});
-</script>
-</body>
-</html>
+                    <div class="row-
