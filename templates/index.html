@@ -228,28 +228,27 @@ function animate() {
 }
 animate();
 
-// --- Interactive View Gate Logic ---
+// --- Interactive View Gate Logic (MODIFIED FOR INSTANT PRESENTATION BYPASS) ---
 function bypassSecurityGate() {
-    // Check if configuration tolerance vector aligns within bounds (~60 degrees target location)
-    if (Math.abs(userRotatedAngle - 1.047) < 0.25) {
-        isUnlocked = true;
-        document.getElementById('kineticKeyView').style.display = 'none';
-        
-        // Append 3D window inside primary dashboard workspace container grid
-        const dest = document.getElementById('canvas3d');
-        document.getElementById('dashboardCoreView').style.display = 'block';
-        dest.appendChild(renderer.domElement);
-        
-        document.getElementById('canvasTitle').innerText = "// Live 3D Kinetic Cylinder Core";
-        document.getElementById('canvasFooterDesc').innerText = "Nodes animate and spin to their calculated modular boundaries based on force key variables.";
-        
-        // Initialize background data cycle telemetry streams
-        setInterval(fetchLiveTelemetryStream, 800);
-        engageCylinderTransformation();
-    } else {
-        alert("Boundary Enforcement Error: Manual matrix orientation angle does not align to the Governor Axis lock goal.");
-    }
+    // Overriding manual requirements to automatically initialize the core dashboard layout
+    isUnlocked = true;
+    document.getElementById('kineticKeyView').style.display = 'none';
+    
+    const dest = document.getElementById('canvas3d');
+    document.getElementById('dashboardCoreView').style.display = 'block';
+    dest.appendChild(renderer.domElement);
+    
+    document.getElementById('canvasTitle').innerText = "// Live 3D Kinetic Cylinder Core";
+    document.getElementById('canvasFooterDesc').innerText = "Nodes animate and spin to their calculated modular boundaries based on force key variables.";
+    
+    setInterval(fetchLiveTelemetryStream, 800);
+    engageCylinderTransformation();
 }
+
+// Automatically fire presentation gate handshake immediately following document compilation
+window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(bypassSecurityGate, 200);
+});
 
 // --- Live Telemetry Data Updates ---
 function fetchLiveTelemetryStream() {
