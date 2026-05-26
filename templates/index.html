@@ -243,7 +243,7 @@ function bypassSecurityGate() {
         document.getElementById('canvasTitle').innerText = "// Live 3D Kinetic Cylinder Core";
         document.getElementById('canvasFooterDesc').innerText = "Nodes animate and spin to their calculated modular boundaries based on force key variables.";
         
-        // Initialize background background data cycle telemetry streams
+        // Initialize background data cycle telemetry streams
         setInterval(fetchLiveTelemetryStream, 800);
         engageCylinderTransformation();
     } else {
@@ -316,8 +316,49 @@ function engageCylinderTransformation() {
             const container = document.getElementById('telemetryStream');
             container.innerHTML = '';
             
-            dataPack.telemetry.slice(0, 4).forEach(log => {
+            // Dynamically loop through and display all 8 synchronization tiers cleanly
+            dataPack.telemetry.forEach(log => {
                 const row = document.createElement('div');
                 row.className = 'matrix-row';
                 row.innerHTML = `
-                    <div class="row-
+                    <div class="row-meta">
+                        <span>${log.tier_name}</span>
+                        <span style="color:#00ffcc;">[${log.tier_binary}]</span>
+                    </div>
+                    <div style="font-size:12px; margin-top:6px; color:#ffffff;">${log.formula}</div>
+                    <div style="font-size:10px; margin-top:4px; color:#666680;">${log.boundary_enforcement}</div>
+                `;
+                container.appendChild(row);
+            });
+        }
+    });
+}
+
+// --- Dynamic 3D Matrix Node Mapping ---
+function update3DNodes(data, key) {
+    // Clear old spatial representations from the workspace mesh
+    nodeMeshes.forEach(mesh => scene.remove(mesh));
+    nodeMeshes = [];
+    
+    const cleanData = data.toUpperCase().replace(" ", "");
+    const expectedLen = cleanData.length;
+    
+    for (let i = 0; i < expectedLen; i++) {
+        const charVal = parseInt(cleanData[i], 16) || 0;
+        const targetAngle = (charVal / 16) * Math.PI * 2;
+        
+        const nodeGeom = new THREE.SphereGeometry(0.15, 16, 16);
+        const nodeMat = new THREE.MeshBasicMaterial({ color: nodeColors[i % nodeColors.length] });
+        const nodeMesh = new THREE.Mesh(nodeGeom, nodeMat);
+        
+        nodeMesh.currentAngle = 0;
+        nodeMesh.targetAngle = targetAngle;
+        nodeMesh.position.y = 1.8 - (i * 0.55); // Spatially stack nodes through the vertical axis
+        
+        scene.add(nodeMesh);
+        nodeMeshes.push(nodeMesh);
+    }
+}
+</script>
+</body>
+</html>
