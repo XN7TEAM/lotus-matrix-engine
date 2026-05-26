@@ -21,9 +21,8 @@ class LotusCylinderEngine:
         clean_data = data_stream.upper().replace(" ", "")
         clean_key = key_stream.upper().replace(" ", "")
         
-        # Automatically adapt to either 4-character or full 8-character presentation blocks
-        expected_len = len(clean_data)
-        if expected_len not in [4, 8] or len(clean_key) != expected_len:
+        # Symmetrical character block handling logic
+        if len(clean_data) not in [4, 8] or len(clean_key) != len(clean_data):
             raise ValueError("Lattice blocks require symmetrical 4 or 8 hexadecimal characters.")
             
         input_nodes = [int(char, 16) for char in clean_data]
@@ -32,10 +31,14 @@ class LotusCylinderEngine:
         output_hex_chars = []
         telemetry_log = []
 
-        # Run the transformations simultaneously through the active vertical layers
-        for idx, (node_val, force_val) in enumerate(zip(input_nodes, force_nodes)):
+        # --- FIX: Explicitly loop through all 8 structural sync tiers ---
+        for idx in range(8):
             tier_id = idx + 1
             tier_meta = self.CYLINDER_TIERS.get(tier_id, {"binary": "0000", "val": 0, "name": "Undefined Axis"})
+            
+            # Safely loop back around the input nodes/keys if they are only 4 characters long
+            node_val = input_nodes[idx % len(input_nodes)]
+            force_val = force_nodes[idx % len(force_nodes)]
             
             # Mathematical Trajectory: Input Vector + Key Force Vector + Tier Level Constant
             raw_trajectory = node_val + force_val + tier_meta["val"]
