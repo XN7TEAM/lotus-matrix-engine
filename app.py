@@ -55,8 +55,14 @@ def get_telemetry():
     if system_telemetry["attack_active"]:
         system_telemetry["governor_apex"] = round(random.uniform(2.500, 3.999), 3)
         system_telemetry["processing_delta"] = round(random.uniform(0.85000, 1.45000), 5)
+        # Keep the simulation shifting to model ongoing lateral threat vector tracking
+        if random.random() > 0.7:
+            system_telemetry["intruder_tier"] = random.randint(1, 4)  # Matched to your 4 3D node planes
+            system_telemetry["target_trajectory"] = round(random.uniform(0.0, 6.28), 3)
     else:
         system_telemetry["governor_apex"] = round(1.047 + random.uniform(-0.03, 0.03), 3)
+        system_telemetry["intruder_tier"] = None
+        system_telemetry["target_trajectory"] = 0.0
         
     return jsonify(system_telemetry)
 
@@ -67,7 +73,8 @@ def simulate_attack():
     system_telemetry["system_status"] = "UNDER ATTACK" if system_telemetry["attack_active"] else "SECURE"
     
     if system_telemetry["attack_active"]:
-        system_telemetry["intruder_tier"] = random.randint(1, 8)
+        # Restrict to layers 1-4 to cleanly map against your UI cylinder rings
+        system_telemetry["intruder_tier"] = random.randint(1, 4)
         system_telemetry["target_trajectory"] = round(random.uniform(0.0, 6.28), 3)
     else:
         system_telemetry["intruder_tier"] = None
