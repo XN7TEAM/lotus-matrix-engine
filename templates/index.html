@@ -65,14 +65,14 @@
         <div style="text-align: center; max-width: 500px; margin-bottom: 30px;">
             <h3 style="color: #00ffcc; font-size: 14px; letter-spacing: 2px; text-transform: uppercase;">// 3D Kinetic Keyhole Active</h3>
             <p style="font-size: 12px; color: #666680; line-height: 18px;">
-                Passcode Handshake: Bypassing manual coordination thresholds to stream presentation nodes live.
+                Passcode Handshake: Spatiotemporal verification matrix holding. Manual coordination check active for authorized system stream.
             </p>
         </div>
         <div class="gov-ticker-box" style="width: 320px; border-color: #222236; text-align: center;">
             <div style="font-size: 10px; color: #555566; margin-bottom: 8px;">SPATIOTEMPORAL ALIGNMENT TARGET</div>
             <div style="font-size: 16px; color: #ffffff; font-weight: bold; letter-spacing: 1px;">GOVERNOR APEX: <span id="targetGateText" style="color:#007bff;">1.047 RAD (60°)</span></div>
         </div>
-        <button onclick="bypassSecurityGate()" id="gateEngageBtn" style="width: 260px; background: #111122; border: 1px solid #222236; color: #555566;">ALIGNMENT REQUIRED</button>
+        <button onclick="bypassSecurityGate()" id="gateEngageBtn" style="width: 260px; background: #111122; border: 1px solid #222236; color: #00ffcc;">ENTER SECURE LAYER CORE</button>
     </div>
 
     <div id="dashboardCoreView">
@@ -222,8 +222,14 @@ function bypassSecurityGate() {
     engageCylinderTransformation();
 }
 
+// --- Presentation Entry Timing Configuration ---
 window.addEventListener('DOMContentLoaded', () => {
-    setTimeout(bypassSecurityGate, 200);
+    // Option A: Auto-bypass lock screen within 200ms (Commented out for manual demonstration)
+    // setTimeout(bypassSecurityGate, 200);
+    
+    // Option B (Active): Manually hold on Kinetic entry screen so you can spin the grid and demonstrate the handshake
+    document.getElementById('gateEngageBtn').style.color = '#00ffcc';
+    document.getElementById('gateEngageBtn').innerText = 'ENTER SECURE LAYER CORE';
 });
 
 function fetchLiveTelemetryStream() {
@@ -346,7 +352,7 @@ function injectEnterpriseLedger() {
     const bulkInput = document.getElementById('bulkPayloadInput').value.trim();
     if (bulkInput.length < 4) return;
     
-    // Automatically divide bulk inputs into standard processing vectors
+    // Fixed lowercase targeting mappings to accurately push updates to the data inputs
     document.getElementById('dataVector').value = bulkInput.substring(0, 4);
     document.getElementById('keyVector').value = bulkInput.substring(4, 8) || "3576";
     
