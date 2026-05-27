@@ -27,7 +27,6 @@ class LotusCylinderEngine:
         clean_data = data_stream.upper().replace(" ", "")
         clean_key = key_stream.upper().replace(" ", "")
         
-        # Guard rails verifying parameter hygiene
         if not all(c in "0123456789ABCDEF" for c in clean_data + clean_key):
             raise ValueError("Input vectors must contain valid hexadecimal syntax.")
             
@@ -40,7 +39,6 @@ class LotusCylinderEngine:
         output_hex_chars = []
         telemetry_log = []
         
-        # Continuous temporal vector mapping tracking limits relative to galactic constants
         current_epoch_vector = time.time() % self.GALACTIC_SPACE_TIME_RADIUS
 
         for idx in range(8):
@@ -50,7 +48,6 @@ class LotusCylinderEngine:
             node_val = input_nodes[idx % len(input_nodes)]
             force_val = force_nodes[idx % len(force_nodes)]
             
-            # Mathematical transformation converting linear blocks into active spatial rings
             orbital_angle_rad = ((node_val + force_val) % self.LIMIT) * (math.pi / 8)
             calculated_clockwise_radius = 2.0 + (math.sin(current_epoch_vector + tier_id) * 0.05)
             
