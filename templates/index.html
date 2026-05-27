@@ -113,9 +113,11 @@
             border: 1px solid #151522;
             padding: 12px;
             border-radius: 4px;
-            min-height: 150px;
+            min-height: 240px;
             box-sizing: border-box;
             overflow-x: auto;
+            display: flex;
+            flex-direction: column;
         }
         .terminal-title {
             color: #888899;
@@ -126,6 +128,7 @@
             letter-spacing: 1px;
             border-bottom: 1px dashed #151522;
             padding-bottom: 5px;
+            flex-shrink: 0;
         }
         .terminal-output {
             font-size: 11px;
@@ -133,7 +136,22 @@
             line-height: 16px;
             white-space: pre-wrap;
             font-family: monospace;
+            flex-grow: 1;
+            overflow-y: auto;
         }
+        
+        /* INTERACTIVE LINUX SHELL EMULATION WRAPPER */
+        .interactive-shell-box {
+            margin-top: auto;
+            display: flex;
+            align-items: center;
+            background: #020204;
+            border-top: 1px solid #1c1c2e;
+            padding-top: 8px;
+            flex-shrink: 0;
+        }
+        .shell-prompt { color: #00ffcc; font-size: 12px; font-weight: bold; padding-right: 5px; white-space: nowrap; }
+        .shell-input-field { background: transparent; border: none; outline: none; color: #ffffff; font-family: 'Courier New', monospace; font-size: 12px; width: 100%; padding: 0; text-align: left; font-weight: normal; }
     </style>
 </head>
 <body>
@@ -143,7 +161,7 @@
 <div class="wrapper">
     <div class="personal-terminal" id="appTerminalWindow">
         <div class="terminal-header-bar">
-            <span>⚡ SOVEREIGN FORENSIC ESCROW MONITOR // GOVERNANCE CORE BROWSER BYPASS</span>
+            <span>⚡ SOVEREIGN FORENSIC ESCROW MONITOR // GOVERNANCE CORE INTERACTIVE LINUX ENVIRONMENT</span>
             <span style="cursor:pointer; color:#ff3344; font-weight:bold; letter-spacing:1px;" onclick="toggleTerminalDisplay()">[CLOSE CONSOLE]</span>
         </div>
         <div class="terminal-grid">
@@ -152,8 +170,12 @@
                 <div class="terminal-output" id="termCacheData">SYSTEM STATE: SECURE&#10;STREAM AXIS: BASELINE ZEROS RUNNING&#10;NO EXPLOIT RESIDUE ENCOUNTERED.</div>
             </div>
             <div class="terminal-block">
-                <div class="terminal-title">// Transferred Core Ledger Escrow Output (JSON Object)</div>
-                <div class="terminal-output" id="termJsonData" style="color:#00ffcc; font-size:11px;">{ "status": "WAITING_FOR_VECTOR_HANDSHAKE" }</div>
+                <div class="terminal-title">// Interactive Linux Operating System Prompt (Bash Language)</div>
+                <div class="terminal-output" id="termLinuxShellOut">LOTUS MATRIX SECURITY INTERACTIVE LINUX INSTANCE INTERFACE INITIALIZED.<br>Type commands like 'uname -a', 'whoami', 'df -h', or 'ls' to audit system constraints.<br><br></div>
+                <div class="interactive-shell-box">
+                    <span class="shell-prompt">root@lotus-matrix:~#</span>
+                    <input type="text" id="linuxShellInput" class="shell-input-field" placeholder="Enter OS shell command..." autocomplete="off" autocapitalize="none">
+                </div>
             </div>
         </div>
         <div style="font-size: 9px; color: #44445c; text-align: right; margin-top: 10px; text-transform: uppercase; letter-spacing: 0.5px;">
@@ -294,7 +316,6 @@ camera.position.set(0, 2, 7);
 camera.lookAt(0, 0, 0);
 controls.update();
 
-// Device Cross-Platform Window Re-size Observer Function
 window.addEventListener('resize', onWindowResize, false);
 function onWindowResize() {
     camera.aspect = container.clientWidth / container.clientHeight;
@@ -333,9 +354,23 @@ window.addEventListener('keydown', function(e) {
     }
 });
 
+// Interactive OS Execution Capture Listener Hook
+document.getElementById('linuxShellInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        const cmdValue = this.value.trim();
+        if (!cmdValue) return;
+        
+        this.value = '';
+        executeLinuxTerminalCommand(cmdValue);
+    }
+});
+
 function toggleTerminalDisplay() {
     const term = document.getElementById('appTerminalWindow');
     term.style.display = (term.style.display === 'block') ? 'none' : 'block';
+    if(term.style.display === 'block') {
+        document.getElementById('linuxShellInput').focus();
+    }
 }
 
 function verifyKineticHandshake() {
@@ -372,7 +407,6 @@ function initializeSecureDashboard() {
     document.getElementById('kineticKeyView').style.display = 'none';
     document.getElementById('dashboardCoreView').style.display = 'block';
     
-    // Remap the rendering output node instantly into the responsive grid segment
     onWindowResize();
     
     document.getElementById('canvasTitle').textContent = "// Live 3D Kinetic Cylinder Core [0s ACTIVE]";
@@ -395,7 +429,6 @@ function fetchLiveTelemetryStream() {
         intruderLocationData = metrics; 
         const statusBox = document.getElementById('liveGovStatus');
         const cacheOutput = document.getElementById('termCacheData');
-        const jsonOutput = document.getElementById('termJsonData');
         
         if(metrics.attack_active) {
             statusBox.style.color = "#ff3344";
@@ -423,7 +456,6 @@ function fetchLiveTelemetryStream() {
                 const rep = metrics.incident_escrow_report;
                 cacheOutput.style.color = "#ff3344";
                 cacheOutput.textContent = `ALERT // EXPLOIT INTERCEPTED BY GOVERNOR BRAIN\nALLOCATED CODENAME: ${rep.allocated_codename}\nBREACH ATTACK ROW: Tier ${rep.spatial_entry_tier}\nPROCESSING LATENCY: ${rep.captured_telemetry.inbound_latency_ms}\nGPS MATRIX LOC: ${rep.captured_telemetry.simulated_spatial_gps}\nHARDWARE FOOTPRINT: ${rep.captured_telemetry.simulated_device_fingerprint}`;
-                jsonOutput.textContent = JSON.stringify(rep, null, 2);
             }
         } else {
             statusBox.style.color = "#00ffcc";
@@ -434,9 +466,44 @@ function fetchLiveTelemetryStream() {
             
             document.getElementById('canvasTitle').textContent = "// Live 3D Kinetic Cylinder Core [0s ACTIVE]";
             cacheOutput.style.color = "#ffffff";
-            cacheOutput.textContent = "SYSTEM STATE: SECURE\nSTREAM AXIS: BASELINE ZEROS RUNNING\nPERSONAL GOVERNANCE BRAIN: ACTIVE NO EXPLOIT LEAKS TRACKED.";
-            jsonOutput.textContent = JSON.stringify({ "status": "MONITORING_STREAM_AXIS_0", "governance_state": "ACTIVE" }, null, 2);
+            cacheOutput.textContent = "SYSTEM STATE: SECURE\nSTREAM AXIS: BASELINE ZEROS RUNNING\nPERSONAL GOVERNANCE BRAIN: ACTIVE\nNO EXPLOIT LEAKS TRACKED.";
         }
+    });
+}
+
+function executeLinuxTerminalCommand(commandText) {
+    if(!sessionToken) return;
+    const shellOutputDiv = document.getElementById('termLinuxShellOut');
+    
+    // Append user input locally to mimic standard shell behavior
+    shellOutputDiv.innerHTML += `<span style="color:#00ffcc;">root@lotus-matrix:~# ${commandText}</span><br>`;
+    shellOutputDiv.scrollTop = shellOutputDiv.scrollHeight;
+    
+    if (commandText === 'clear') {
+        shellOutputDiv.innerHTML = '';
+        return;
+    }
+    
+    fetch('/api/terminal/execute', {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${sessionToken}`
+        },
+        body: JSON.stringify({ cmd: commandText })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.output) {
+            shellOutputDiv.innerHTML += `${data.output}<br>`;
+        } else if(data.error) {
+            shellOutputDiv.innerHTML += `<span style="color:#ff3344;">${data.error}</span><br>`;
+        }
+        shellOutputDiv.scrollTop = shellOutputDiv.scrollHeight;
+    })
+    .catch(() => {
+        shellOutputDiv.innerHTML += `<span style="color:#ff3344;">Communication loss with platform terminal pipeline.</span><br>`;
+        shellOutputDiv.scrollTop = shellOutputDiv.scrollHeight;
     });
 }
 
