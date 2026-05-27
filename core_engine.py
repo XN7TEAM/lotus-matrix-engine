@@ -31,7 +31,7 @@ class LotusCylinderEngine:
         output_hex_chars = []
         telemetry_log = []
 
-        # --- FIX: Explicitly loop through all 8 structural sync tiers ---
+        # Explicitly loop through all 8 structural sync tiers
         for idx in range(8):
             tier_id = idx + 1
             tier_meta = self.CYLINDER_TIERS.get(tier_id, {"binary": "0000", "val": 0, "name": "Undefined Axis"})
