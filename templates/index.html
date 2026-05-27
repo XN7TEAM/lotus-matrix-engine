@@ -2,9 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lotus 3D Cylindrical Spatial Matrix Dashboard</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <style>
         body { background-color: #08080c; color: #d1d1de; font-family: 'Courier New', monospace; margin: 20px; overflow-y: auto; }
         .wrapper { max-width: 1200px; margin: 0 auto; border: 1px solid #1a1a26; padding: 20px; background-color: #0c0c14; border-radius: 6px; box-shadow: 0 0 30px rgba(0, 102, 255, 0.1); }
@@ -46,11 +48,12 @@
         .security-alert-popup { display: none; position: fixed; top: 30px; left: 50%; transform: translateX(-50%); background: #730f1e; border: 2px solid #ff3344; color: #ffffff; padding: 15px 40px; border-radius: 4px; font-weight: bold; font-size: 14px; letter-spacing: 1px; box-shadow: 0 0 30px rgba(255, 0, 0, 0.6); z-index: 9999; text-transform: uppercase; animation: blinker 1s linear infinite; }
         @keyframes blinker { 50% { opacity: 0.5; } }
 
-        /* Ledger Input Styling */
         .ledger-box { margin-top: 10px; border-top: 1px dashed #33141e; padding-top: 10px; }
         .ledger-flex { display: flex; gap: 10px; margin-top: 5px; }
         .ledger-input { background: #06060a; border: 1px solid #222236; color: #00ffcc; padding: 8px; font-size: 14px; font-family: monospace; text-align: left; width: 100%; border-radius: 4px; font-weight: bold; }
         .ledger-btn { height: 38px; padding: 0 15px; font-size: 11px; background: #111122; border: 1px solid #222236; color: #00ffcc; white-space: nowrap; align-self: auto; }
+        
+        .error-message { color: #ff3344; font-size: 12px; margin-top: 5px; text-align: center; display: none; }
     </style>
 </head>
 <body>
@@ -63,16 +66,21 @@
     
     <div id="kineticKeyView">
         <div style="text-align: center; max-width: 500px; margin-bottom: 30px;">
-            <h3 style="color: #00ffcc; font-size: 14px; letter-spacing: 2px; text-transform: uppercase;">// 3D Kinetic Keyhole Active</h3>
+            <h3 style="color: #00ffcc; font-size: 14px; letter-spacing: 2px; text-transform: uppercase;">// 3D KINETIC KEYHOLE ACTIVE</h3>
             <p style="font-size: 12px; color: #666680; line-height: 18px;">
-                Passcode Handshake: Spatiotemporal verification matrix holding. Manual coordination check active for authorized system stream.
+                Passcode Handshake: Spatiotemporal verification matrix holding.<br>
+                Manual coordination check active for authorized system stream.
             </p>
         </div>
-        <div class="gov-ticker-box" style="width: 320px; border-color: #222236; text-align: center;">
-            <div style="font-size: 10px; color: #555566; margin-bottom: 8px;">SPATIOTEMPORAL ALIGNMENT TARGET</div>
-            <div style="font-size: 16px; color: #ffffff; font-weight: bold; letter-spacing: 1px;">GOVERNOR APEX: <span id="targetGateText" style="color:#007bff;">1.047 RAD (60°)</span></div>
+        
+        <div class="display-vault" style="width: 280px; background: #10101c; border: 1px solid #1f1f38;">
+            <label style="color: #555566; font-size: 10px; letter-spacing: 1px;">SPATIOTEMPORAL ALIGNMENT TARGET</label>
+            <div style="color: #007bff; font-weight: bold; font-size: 14px; margin-top: 5px;">GOVERNOR APEX: 1.047 RAD</div>
+            <div style="color: #666680; font-size: 11px;">(60°)</div>
         </div>
-        <button onclick="bypassSecurityGate()" id="gateEngageBtn" style="width: 260px; background: #111122; border: 1px solid #222236; color: #00ffcc;">ENTER SECURE LAYER CORE</button>
+
+        <div id="gateError" class="error-message" style="margin-bottom: 15px;"></div>
+        <button onclick="verifyKineticHandshake()" id="gateEngageBtn" style="width: 280px; background: #06060a; border: 1px solid #222236; color: #00ffcc; font-size: 11px; letter-spacing: 1px; font-weight: bold; height: 48px;">ENTER SECURE LAYER CORE</button>
     </div>
 
     <div id="dashboardCoreView">
@@ -148,12 +156,11 @@
 </div>
 
 <script>
-// --- State Controls ---
 let isUnlocked = false;
 let attackActive = false;
 let intruderLocationData = null;
+let sessionToken = null;
 
-// --- 3D WebGL Graphics Architecture Setup ---
 const container = document.getElementById('canvas3d');
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
@@ -182,24 +189,30 @@ for (let i = 0; i < 4; i++) {
 let nodeMeshes = [];
 const nodeColors = [0xff0055, 0x00ffcc, 0xffcc00, 0x007bff];
 
-camera.position.z = 7;
-camera.position.y = 2;
+camera.position.set(0, 2, 7);
 camera.lookAt(0, 0, 0);
 controls.update();
 
+// Animate loop mapping '0' baseline strings along unique clockwise radial fields
 function animate() {
     requestAnimationFrame(animate);
+    
+    const timeVector = Date.now() * 0.001; 
     
     if (isUnlocked) {
         matrixCylinder.rotation.y += attackActive ? 0.06 : 0.002;
     }
     
-    nodeMeshes.forEach(node => {
+    nodeMeshes.forEach((node, index) => {
         if (node.targetAngle !== undefined) {
-            let diff = node.targetAngle - node.currentAngle;
-            node.currentAngle += diff * 0.08;
-            node.position.x = Math.cos(node.currentAngle) * 2;
-            node.position.z = Math.sin(node.currentAngle) * 2;
+            let angularVelocity = attackActive ? 0.05 : 0.01;
+            node.currentAngle += angularVelocity; // Constant clockwise radius loop execution
+            
+            // Non-linear orbital radius breathing parameter modeling galactic distance
+            const galacticClockwiseRadius = 2.0 + Math.sin(timeVector + index) * 0.1;
+            
+            node.position.x = Math.cos(node.currentAngle) * galacticClockwiseRadius;
+            node.position.z = Math.sin(node.currentAngle) * galacticClockwiseRadius;
         }
     });
     
@@ -208,7 +221,37 @@ function animate() {
 }
 animate();
 
-function bypassSecurityGate() {
+// Token Generation Interaction Handshake Validation
+function verifyKineticHandshake() {
+    const errorDiv = document.getElementById('gateError');
+    if (errorDiv) errorDiv.style.display = 'none';
+
+    fetch('/api/handshake', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ alignment_state: 1.047 }) 
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.authenticated) {
+            sessionToken = data.token; 
+            initializeSecureDashboard();
+        } else {
+            if (errorDiv) {
+                errorDiv.textContent = `❌ GATEWAY EXPLOIT ATTEMPT BLOCKED: ${data.message}`;
+                errorDiv.style.display = 'block';
+            }
+        }
+    })
+    .catch(() => {
+        if (errorDiv) {
+            errorDiv.textContent = "❌ Server spatiotemporal synchronization timed out.";
+            errorDiv.style.display = 'block';
+        }
+    });
+}
+
+function initializeSecureDashboard() {
     isUnlocked = true;
     document.getElementById('kineticKeyView').style.display = 'none';
     
@@ -216,39 +259,58 @@ function bypassSecurityGate() {
     document.getElementById('dashboardCoreView').style.display = 'block';
     dest.appendChild(renderer.domElement);
     
-    document.getElementById('canvasTitle').innerText = "// Live 3D Kinetic Cylinder Core";
+    document.getElementById('canvasTitle').textContent = "// Live 3D Kinetic Cylinder Core [0s ACTIVE]";
     
     setInterval(fetchLiveTelemetryStream, 800);
     engageCylinderTransformation();
 }
 
-// --- Presentation Entry Timing Configuration ---
-window.addEventListener('DOMContentLoaded', () => {
-    // Option A: Auto-bypass lock screen within 200ms (Commented out for manual demonstration)
-    // setTimeout(bypassSecurityGate, 200);
-    
-    // Option B (Active): Manually hold on Kinetic entry screen so you can spin the grid and demonstrate the handshake
-    document.getElementById('gateEngageBtn').style.color = '#00ffcc';
-    document.getElementById('gateEngageBtn').innerText = 'ENTER SECURE LAYER CORE';
-});
-
 function fetchLiveTelemetryStream() {
-    fetch('/api/telemetry')
-    .then(res => res.json())
+    if (!sessionToken) return;
+    
+    fetch('/api/telemetry', {
+        headers: { 'Authorization': `Bearer ${sessionToken}` }
+    })
+    .then(res => res.status === 401 ? window.location.reload() : res.json())
     .then(metrics => {
-        document.getElementById('liveGovApex').innerText = `${metrics.governor_apex} RAD`;
-        document.getElementById('liveGovAngle').innerText = `${matrixCylinder.rotation.y.toFixed(3)} rad`;
-        document.getElementById('liveGovStatus').innerText = metrics.system_status;
+        document.getElementById('liveGovApex').textContent = `${metrics.governor_apex} RAD`;
+        document.getElementById('liveGovAngle').textContent = `${matrixCylinder.rotation.y.toFixed(3)} rad`;
+        document.getElementById('liveGovStatus').textContent = metrics.system_status;
         
         intruderLocationData = metrics; 
-        
         const statusBox = document.getElementById('liveGovStatus');
+        
+        // Handles Spatiotemporal Threat Vector Injection of individual '1' Node Spheres
         if(metrics.attack_active) {
             statusBox.style.color = "#ff3344";
-            cylinderMat.color.setHex(0x550011);
+            cylinderMat.color.setHex(0x550011); 
+            
+            let hackerBall = scene.getObjectByName("hackerVector1");
+            if (!hackerBall) {
+                const hackerGeom = new THREE.SphereGeometry(0.25, 16, 16);
+                const hackerMat = new THREE.MeshBasicMaterial({ color: 0xff3344, wireframe: false });
+                hackerBall = new THREE.Mesh(hackerGeom, hackerMat);
+                hackerBall.name = "hackerVector1";
+                scene.add(hackerBall);
+            }
+            
+            const targetTier = metrics.intruder_tier || 1;
+            const targetAngle = metrics.target_trajectory || 0.0;
+            
+            hackerBall.position.y = 1.8 - (targetTier * 0.55);
+            hackerBall.position.x = Math.cos(targetAngle) * 2;
+            hackerBall.position.z = Math.sin(targetAngle) * 2;
+            
+            document.getElementById('canvasTitle').textContent = `// MONITORING THREAT VECTOR [1] // LOCATION TIER: ${targetTier}`;
         } else {
             statusBox.style.color = "#00ffcc";
-            cylinderMat.color.setHex(0x1a1a3a);
+            cylinderMat.color.setHex(0x1a1a3a); 
+            
+            let hackerBall = scene.getObjectByName("hackerVector1");
+            if (hackerBall) {
+                scene.remove(hackerBall);
+            }
+            document.getElementById('canvasTitle').textContent = "// Live 3D Kinetic Cylinder Core [0s ACTIVE]";
         }
     });
 }
@@ -261,12 +323,14 @@ function toggleSimulatedAttack() {
     
     fetch('/api/simulate-attack', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${sessionToken}`
+        },
         body: JSON.stringify({ active: true })
     });
 }
 
-// --- Enterprise Innovation: Camera Vector Tracking and Total Containment ---
 function executeIntruderElimination() {
     if (!intruderLocationData || !intruderLocationData.intruder_tier) {
         destroyThreatVector();
@@ -276,24 +340,16 @@ function executeIntruderElimination() {
     const targetTier = intruderLocationData.intruder_tier;
     const targetAngle = intruderLocationData.target_trajectory || 1.2;
     
-    // UI Feedback: Focus on tracking coordinates
-    document.getElementById('canvasTitle').innerText = `// TRACKING: ANOMALY ISOLATED AT TIER ${targetTier}`;
+    document.getElementById('canvasTitle').textContent = `// AUTO-CONTAINMENT: PURGING THREAT ON TIER ${targetTier}`;
     
-    // Matrix Camera Zoom Shift directly to the intruder position
     camera.position.set(Math.cos(targetAngle) * 4, 1.8 - (targetTier * 0.55), Math.sin(targetAngle) * 4);
     camera.lookAt(0, 1.8 - (targetTier * 0.55), 0);
     controls.update();
     
-    // Hold orientation focus briefly to execute purge sequence
     setTimeout(() => {
-        document.getElementById('canvasTitle').innerText = "// Live 3D Kinetic Cylinder Core";
-        
-        // Restore pristine tracking perspective
         camera.position.set(0, 2, 7);
         camera.lookAt(0, 0, 0);
         controls.update();
-        
-        // Wipe vector trace completely
         destroyThreatVector();
     }, 1300);
 }
@@ -306,7 +362,10 @@ function destroyThreatVector() {
     
     fetch('/api/simulate-attack', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${sessionToken}`
+        },
         body: JSON.stringify({ active: false })
     });
 }
@@ -319,40 +378,59 @@ function engageCylinderTransformation() {
 
     fetch('/api/process', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${sessionToken}`
+        },
         body: JSON.stringify({ data: data, key: key })
     })
     .then(res => res.json())
     .then(dataPack => {
         if(dataPack.success) {
-            document.getElementById('outputTerminal').innerText = dataPack.output;
-            document.getElementById('latencyField').innerText = `Processing Delta: ${dataPack.latency_ms}`;
+            document.getElementById('outputTerminal').textContent = dataPack.output;
+            document.getElementById('latencyField').textContent = `Processing Delta: ${dataPack.latency_ms}`;
+            
             const container = document.getElementById('telemetryStream');
-            container.innerHTML = '';
+            container.textContent = ''; 
             
             dataPack.telemetry.forEach(log => {
                 const row = document.createElement('div');
                 row.className = 'matrix-row';
-                row.innerHTML = `
-                    <div class="row-meta">
-                        <span>${log.tier_name}</span>
-                        <span style="color:#00ffcc;">[${log.tier_binary}]</span>
-                    </div>
-                    <div style="font-size:12px; margin-top:6px; color:#ffffff;">${log.formula}</div>
-                    <div style="font-size:10px; margin-top:4px; color:#666680;">${log.boundary_enforcement}</div>
-                `;
+                
+                const metaRow = document.createElement('div');
+                metaRow.className = 'row-meta';
+                
+                const tierNameSpan = document.createElement('span');
+                tierNameSpan.textContent = log.tier_name;
+                
+                const binarySpan = document.createElement('span');
+                binarySpan.style.color = '#00ffcc';
+                binarySpan.textContent = `[${log.tier_binary}]`;
+                
+                metaRow.appendChild(tierNameSpan);
+                metaRow.appendChild(binarySpan);
+                
+                const formulaDiv = document.createElement('div');
+                formulaDiv.style.cssText = 'font-size:12px; margin-top:6px; color:#ffffff;';
+                formulaDiv.textContent = log.formula;
+                
+                const boundaryDiv = document.createElement('div');
+                boundaryDiv.style.cssText = 'font-size:10px; margin-top:4px; color:#666680;';
+                boundaryDiv.textContent = log.boundary_enforcement;
+                
+                row.appendChild(metaRow);
+                row.appendChild(formulaDiv);
+                row.appendChild(boundaryDiv);
                 container.appendChild(row);
             });
         }
     });
 }
 
-// --- Enterprise Innovation: Processing Bulk 8-Character Data Strings ---
 function injectEnterpriseLedger() {
     const bulkInput = document.getElementById('bulkPayloadInput').value.trim();
     if (bulkInput.length < 4) return;
     
-    // Fixed lowercase targeting mappings to accurately push updates to the data inputs
     document.getElementById('dataVector').value = bulkInput.substring(0, 4);
     document.getElementById('keyVector').value = bulkInput.substring(4, 8) || "3576";
     
@@ -363,19 +441,19 @@ function update3DNodes(data, key) {
     nodeMeshes.forEach(mesh => scene.remove(mesh));
     nodeMeshes = [];
     
-    const cleanData = data.toUpperCase().replace(" ", "");
+    const cleanData = data.toUpperCase().replace(/\s+/g, "");
     const expectedLen = cleanData.length;
     
     for (let i = 0; i < expectedLen; i++) {
         const charVal = parseInt(cleanData[i], 16) || 0;
-        const targetAngle = (charVal / 16) * Math.PI * 2;
+        const initialAngle = (charVal / 16) * Math.PI * 2;
         
         const nodeGeom = new THREE.SphereGeometry(0.15, 16, 16);
         const nodeMat = new THREE.MeshBasicMaterial({ color: nodeColors[i % nodeColors.length] });
         const nodeMesh = new THREE.Mesh(nodeGeom, nodeMat);
         
-        nodeMesh.currentAngle = 0;
-        nodeMesh.targetAngle = targetAngle;
+        nodeMesh.currentAngle = initialAngle;
+        nodeMesh.targetAngle = initialAngle;
         nodeMesh.position.y = 1.8 - (i * 0.55);
         
         scene.add(nodeMesh);
