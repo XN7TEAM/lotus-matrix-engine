@@ -121,4 +121,261 @@
                     <button class="btn-destroy" id="destroyVectorBtn" onclick="executeIntruderElimination()">Locate & Eliminate Intruder</button>
                     
                     <div class="ledger-box">
-                        <label style="color: #00ffcc
+                        <label style="color: #00ffcc; font-size: 10px;">ENTERPRISE PAYLOAD BUFFER INPUT</label>
+                        <div class="ledger-flex">
+                            <input type="text" id="bulkPayloadInput" value="F3A23576" maxlength="8" class="ledger-input">
+                            <button onclick="injectEnterpriseLedger()" class="ledger-btn">INGEST LEDGER</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="right-column" id="canvasColumn">
+                <div class="canvas-label" id="canvasTitle">// Live Spatial Access Gateway</div>
+                <div id="canvas3d"></div>
+                <div id="canvasFooterDesc" style="font-size: 11px; color: #44445c; margin-top: 10px; text-align: center; line-height: 14px;">
+                    Left Click + Drag to Spin. Right Click + Drag to Move. Scroll wheel to Zoom. Full infinite rotational freedom active.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="security-watermark" style="text-align: center; font-size: 11px; color: #44445c; margin-top: 20px;">
+    Proprietary Engine Pipeline<br>
+    © Nicholas Desjardins. All Rights Reserved.<br>
+    System Gate: Active Dashboard Stream
+</div>
+
+<script>
+// --- State Controls ---
+let isUnlocked = false;
+let attackActive = false;
+let intruderLocationData = null;
+
+// --- 3D WebGL Graphics Architecture Setup ---
+const container = document.getElementById('canvas3d');
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(420, 400);
+container.appendChild(renderer.domElement);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+
+const cylinderGeom = new THREE.CylinderGeometry(2, 2, 5, 16, 8, true);
+const cylinderMat = new THREE.MeshBasicMaterial({ color: 0x1a1a3a, wireframe: true, transparent: true, opacity: 0.4 });
+const matrixCylinder = new THREE.Mesh(cylinderGeom, cylinderMat);
+scene.add(matrixCylinder);
+
+for (let i = 0; i < 4; i++) {
+    const ringGeom = new THREE.RingGeometry(1.98, 2.02, 32);
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0x0056b3, side: THREE.DoubleSide, transparent: true, opacity: 0.3 });
+    const ring = new THREE.Mesh(ringGeom, ringMat);
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = 1.8 - (i * 1.2);
+    scene.add(ring);
+}
+
+let nodeMeshes = [];
+const nodeColors = [0xff0055, 0x00ffcc, 0xffcc00, 0x007bff];
+
+camera.position.z = 7;
+camera.position.y = 2;
+camera.lookAt(0, 0, 0);
+controls.update();
+
+function animate() {
+    requestAnimationFrame(animate);
+    
+    if (isUnlocked) {
+        matrixCylinder.rotation.y += attackActive ? 0.06 : 0.002;
+    }
+    
+    nodeMeshes.forEach(node => {
+        if (node.targetAngle !== undefined) {
+            let diff = node.targetAngle - node.currentAngle;
+            node.currentAngle += diff * 0.08;
+            node.position.x = Math.cos(node.currentAngle) * 2;
+            node.position.z = Math.sin(node.currentAngle) * 2;
+        }
+    });
+    
+    controls.update(); 
+    renderer.render(scene, camera);
+}
+animate();
+
+function bypassSecurityGate() {
+    isUnlocked = true;
+    document.getElementById('kineticKeyView').style.display = 'none';
+    
+    const dest = document.getElementById('canvas3d');
+    document.getElementById('dashboardCoreView').style.display = 'block';
+    dest.appendChild(renderer.domElement);
+    
+    document.getElementById('canvasTitle').innerText = "// Live 3D Kinetic Cylinder Core";
+    
+    setInterval(fetchLiveTelemetryStream, 800);
+    engageCylinderTransformation();
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(bypassSecurityGate, 200);
+});
+
+function fetchLiveTelemetryStream() {
+    fetch('/api/telemetry')
+    .then(res => res.json())
+    .then(metrics => {
+        document.getElementById('liveGovApex').innerText = `${metrics.governor_apex} RAD`;
+        document.getElementById('liveGovAngle').innerText = `${matrixCylinder.rotation.y.toFixed(3)} rad`;
+        document.getElementById('liveGovStatus').innerText = metrics.system_status;
+        
+        intruderLocationData = metrics; 
+        
+        const statusBox = document.getElementById('liveGovStatus');
+        if(metrics.attack_active) {
+            statusBox.style.color = "#ff3344";
+            cylinderMat.color.setHex(0x550011);
+        } else {
+            statusBox.style.color = "#00ffcc";
+            cylinderMat.color.setHex(0x1a1a3a);
+        }
+    });
+}
+
+function toggleSimulatedAttack() {
+    attackActive = true;
+    document.getElementById('alarmBanner').style.display = "block";
+    document.getElementById('attackToggleBtn').style.display = "none";
+    document.getElementById('destroyVectorBtn').style.display = "block";
+    
+    fetch('/api/simulate-attack', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active: true })
+    });
+}
+
+// --- Enterprise Innovation: Camera Vector Tracking and Total Containment ---
+function executeIntruderElimination() {
+    if (!intruderLocationData || !intruderLocationData.intruder_tier) {
+        destroyThreatVector();
+        return;
+    }
+    
+    const targetTier = intruderLocationData.intruder_tier;
+    const targetAngle = intruderLocationData.target_trajectory || 1.2;
+    
+    // UI Feedback: Focus on tracking coordinates
+    document.getElementById('canvasTitle').innerText = `// TRACKING: ANOMALY ISOLATED AT TIER ${targetTier}`;
+    
+    // Matrix Camera Zoom Shift directly to the intruder position
+    camera.position.set(Math.cos(targetAngle) * 4, 1.8 - (targetTier * 0.55), Math.sin(targetAngle) * 4);
+    camera.lookAt(0, 1.8 - (targetTier * 0.55), 0);
+    controls.update();
+    
+    // Hold orientation focus briefly to execute purge sequence
+    setTimeout(() => {
+        document.getElementById('canvasTitle').innerText = "// Live 3D Kinetic Cylinder Core";
+        
+        // Restore pristine tracking perspective
+        camera.position.set(0, 2, 7);
+        camera.lookAt(0, 0, 0);
+        controls.update();
+        
+        // Wipe vector trace completely
+        destroyThreatVector();
+    }, 1300);
+}
+
+function destroyThreatVector() {
+    attackActive = false;
+    document.getElementById('alarmBanner').style.display = "none";
+    document.getElementById('attackToggleBtn').style.display = "block";
+    document.getElementById('destroyVectorBtn').style.display = "none";
+    
+    fetch('/api/simulate-attack', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active: false })
+    });
+}
+
+function engageCylinderTransformation() {
+    const data = document.getElementById('dataVector').value;
+    const key = document.getElementById('keyVector').value;
+    
+    update3DNodes(data, key);
+
+    fetch('/api/process', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: data, key: key })
+    })
+    .then(res => res.json())
+    .then(dataPack => {
+        if(dataPack.success) {
+            document.getElementById('outputTerminal').innerText = dataPack.output;
+            document.getElementById('latencyField').innerText = `Processing Delta: ${dataPack.latency_ms}`;
+            const container = document.getElementById('telemetryStream');
+            container.innerHTML = '';
+            
+            dataPack.telemetry.forEach(log => {
+                const row = document.createElement('div');
+                row.className = 'matrix-row';
+                row.innerHTML = `
+                    <div class="row-meta">
+                        <span>${log.tier_name}</span>
+                        <span style="color:#00ffcc;">[${log.tier_binary}]</span>
+                    </div>
+                    <div style="font-size:12px; margin-top:6px; color:#ffffff;">${log.formula}</div>
+                    <div style="font-size:10px; margin-top:4px; color:#666680;">${log.boundary_enforcement}</div>
+                `;
+                container.appendChild(row);
+            });
+        }
+    });
+}
+
+// --- Enterprise Innovation: Processing Bulk 8-Character Data Strings ---
+function injectEnterpriseLedger() {
+    const bulkInput = document.getElementById('bulkPayloadInput').value.trim();
+    if (bulkInput.length < 4) return;
+    
+    // Automatically divide bulk inputs into standard processing vectors
+    document.getElementById('dataVector').value = bulkInput.substring(0, 4);
+    document.getElementById('keyVector').value = bulkInput.substring(4, 8) || "3576";
+    
+    engageCylinderTransformation();
+}
+
+function update3DNodes(data, key) {
+    nodeMeshes.forEach(mesh => scene.remove(mesh));
+    nodeMeshes = [];
+    
+    const cleanData = data.toUpperCase().replace(" ", "");
+    const expectedLen = cleanData.length;
+    
+    for (let i = 0; i < expectedLen; i++) {
+        const charVal = parseInt(cleanData[i], 16) || 0;
+        const targetAngle = (charVal / 16) * Math.PI * 2;
+        
+        const nodeGeom = new THREE.SphereGeometry(0.15, 16, 16);
+        const nodeMat = new THREE.MeshBasicMaterial({ color: nodeColors[i % nodeColors.length] });
+        const nodeMesh = new THREE.Mesh(nodeGeom, nodeMat);
+        
+        nodeMesh.currentAngle = 0;
+        nodeMesh.targetAngle = targetAngle;
+        nodeMesh.position.y = 1.8 - (i * 0.55);
+        
+        scene.add(nodeMesh);
+        nodeMeshes.push(nodeMesh);
+    }
+}
+</script>
+</body>
+</html>
