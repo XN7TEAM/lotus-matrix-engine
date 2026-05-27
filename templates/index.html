@@ -40,11 +40,17 @@
         
         #kineticKeyView { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; }
         #dashboardCoreView { display: none; }
-        #canvas3d { width: 100%; height: 400px; background: #020205; border-radius: 4px; }
+        #canvas3d { width: 100%; height: 400px; background: #020205; border-radius: 4px; position: relative; z-index: 10; }
         .canvas-label { color: #007bff; font-size: 11px; margin-bottom: 10px; font-weight: bold; text-transform: uppercase; width: 100%; text-align: left; }
         
         .security-alert-popup { display: none; position: fixed; top: 30px; left: 50%; transform: translateX(-50%); background: #730f1e; border: 2px solid #ff3344; color: #ffffff; padding: 15px 40px; border-radius: 4px; font-weight: bold; font-size: 14px; letter-spacing: 1px; box-shadow: 0 0 30px rgba(255, 0, 0, 0.6); z-index: 9999; text-transform: uppercase; animation: blinker 1s linear infinite; }
         @keyframes blinker { 50% { opacity: 0.5; } }
+
+        /* Ledger Input Styling */
+        .ledger-box { margin-top: 10px; border-top: 1px dashed #33141e; padding-top: 10px; }
+        .ledger-flex { display: flex; gap: 10px; margin-top: 5px; }
+        .ledger-input { background: #06060a; border: 1px solid #222236; color: #00ffcc; padding: 8px; font-size: 14px; font-family: monospace; text-align: left; width: 100%; border-radius: 4px; font-weight: bold; }
+        .ledger-btn { height: 38px; padding: 0 15px; font-size: 11px; background: #111122; border: 1px solid #222236; color: #00ffcc; white-space: nowrap; align-self: auto; }
     </style>
 </head>
 <body>
@@ -112,222 +118,7 @@
                 <div class="demo-controls">
                     <label style="color: #a8667c; font-size: 11px;">⚠️ BANK INNOVATION PRESENTATION CONSOLE</label>
                     <button class="btn-attack" id="attackToggleBtn" onclick="toggleSimulatedAttack()">Simulate Threat Vector</button>
-                    <button class="btn-destroy" id="destroyVectorBtn" onclick="destroyThreatVector()">Purge & Destroy Threat Vector</button>
-                </div>
-            </div>
-            
-            <div class="right-column" id="canvasColumn">
-                <div class="canvas-label" id="canvasTitle">// Live Spatial Access Gateway</div>
-                <div id="canvas3d"></div>
-                <div id="canvasFooterDesc" style="font-size: 11px; color: #44445c; margin-top: 10px; text-align: center; line-height: 14px;">
-                    Left Click + Drag to Spin. Right Click + Drag to Move. Scroll wheel to Zoom. Full infinite rotational freedom active.
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="security-watermark" style="text-align: center; font-size: 11px; color: #44445c; margin-top: 20px;">
-    Proprietary Engine Pipeline<br>
-    © Nicholas Desjardins. All Rights Reserved.<br>
-    System Gate: Active Dashboard Stream
-</div>
-
-<script>
-// --- State Controls ---
-let isUnlocked = false;
-let attackActive = false;
-
-// --- 3D WebGL Graphics Architecture Setup ---
-const container = document.getElementById('canvas3d');
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(420, 400);
-container.appendChild(renderer.domElement);
-
-// Initialize OrbitControls to give the user infinite rotational movement (tilt, flip, pan, spin)
-const controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.dampingFactor = 0.05;
-
-// Geometric Structural Components
-const cylinderGeom = new THREE.CylinderGeometry(2, 2, 5, 16, 8, true);
-const cylinderMat = new THREE.MeshBasicMaterial({ color: 0x1a1a3a, wireframe: true, transparent: true, opacity: 0.4 });
-const matrixCylinder = new THREE.Mesh(cylinderGeom, cylinderMat);
-scene.add(matrixCylinder);
-
-// Build horizontal bounding rings
-for (let i = 0; i < 4; i++) {
-    const ringGeom = new THREE.RingGeometry(1.98, 2.02, 32);
-    const ringMat = new THREE.MeshBasicMaterial({ color: 0x0056b3, side: THREE.DoubleSide, transparent: true, opacity: 0.3 });
-    const ring = new THREE.Mesh(ringGeom, ringMat);
-    ring.rotation.x = Math.PI / 2;
-    ring.position.y = 1.8 - (i * 1.2);
-    scene.add(ring);
-}
-
-let nodeMeshes = [];
-const nodeColors = [0xff0055, 0x00ffcc, 0xffcc00, 0x007bff];
-
-camera.position.z = 7;
-camera.position.y = 2;
-camera.lookAt(0, 0, 0);
-controls.update();
-
-// --- Dynamic Real-Time Graphics Execution Loop ---
-function animate() {
-    requestAnimationFrame(animate);
-    
-    // Smooth idle spin logic when mouse isn't grabbing
-    if (isUnlocked) {
-        matrixCylinder.rotation.y += attackActive ? 0.06 : 0.002;
-    }
-    
-    // Dynamically update node path orientations
-    nodeMeshes.forEach(node => {
-        if (node.targetAngle !== undefined) {
-            let diff = node.targetAngle - node.currentAngle;
-            node.currentAngle += diff * 0.08;
-            node.position.x = Math.cos(node.currentAngle) * 2;
-            node.position.z = Math.sin(node.currentAngle) * 2;
-        }
-    });
-    
-    controls.update(); // Keeps physics orbit interactions completely fluid
-    renderer.render(scene, camera);
-}
-animate();
-
-// --- Interactive Presentation Handshake Bypass ---
-function bypassSecurityGate() {
-    isUnlocked = true;
-    document.getElementById('kineticKeyView').style.display = 'none';
-    
-    const dest = document.getElementById('canvas3d');
-    document.getElementById('dashboardCoreView').style.display = 'block';
-    dest.appendChild(renderer.domElement);
-    
-    document.getElementById('canvasTitle').innerText = "// Live 3D Kinetic Cylinder Core";
-    
-    setInterval(fetchLiveTelemetryStream, 800);
-    engageCylinderTransformation();
-}
-
-// Auto fire presentation unlock
-window.addEventListener('DOMContentLoaded', () => {
-    setTimeout(bypassSecurityGate, 200);
-});
-
-// --- Live Telemetry Data Updates ---
-function fetchLiveTelemetryStream() {
-    fetch('/api/telemetry')
-    .then(res => res.json())
-    .then(metrics => {
-        document.getElementById('liveGovApex').innerText = `${metrics.governor_apex} RAD`;
-        document.getElementById('liveGovAngle').innerText = `${matrixCylinder.rotation.y.toFixed(3)} rad`;
-        document.getElementById('liveGovStatus').innerText = metrics.system_status;
-        
-        const statusBox = document.getElementById('liveGovStatus');
-        if(metrics.attack_active) {
-            statusBox.style.color = "#ff3344";
-            cylinderMat.color.setHex(0x550011);
-        } else {
-            statusBox.style.color = "#00ffcc";
-            cylinderMat.color.setHex(0x1a1a3a);
-        }
-    });
-}
-
-// --- Presentation Innovation Attack Simulator Trigger Switch ---
-function toggleSimulatedAttack() {
-    attackActive = true;
-    document.getElementById('alarmBanner').style.display = "block";
-    document.getElementById('attackToggleBtn').style.display = "none";
-    document.getElementById('destroyVectorBtn').style.display = "block";
-    
-    fetch('/api/simulate-attack', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ active: true })
-    });
-}
-
-// --- Destroy Threat Logic ---
-function destroyThreatVector() {
-    attackActive = false;
-    document.getElementById('alarmBanner').style.display = "none";
-    document.getElementById('attackToggleBtn').style.display = "block";
-    document.getElementById('destroyVectorBtn').style.display = "none";
-    
-    fetch('/api/simulate-attack', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ active: false })
-    });
-}
-
-// --- Core Algorithm Execution Engine Pipeline Bridge ---
-function engageCylinderTransformation() {
-    const data = document.getElementById('dataVector').value;
-    const key = document.getElementById('keyVector').value;
-    
-    update3DNodes(data, key);
-
-    fetch('/api/process', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: data, key: key })
-    })
-    .then(res => res.json())
-    .then(dataPack => {
-        if(dataPack.success) {
-            document.getElementById('outputTerminal').innerText = dataPack.output;
-            document.getElementById('latencyField').innerText = `Processing Delta: ${dataPack.latency_ms}`;
-            const container = document.getElementById('telemetryStream');
-            container.innerHTML = '';
-            
-            dataPack.telemetry.forEach(log => {
-                const row = document.createElement('div');
-                row.className = 'matrix-row';
-                row.innerHTML = `
-                    <div class="row-meta">
-                        <span>${log.tier_name}</span>
-                        <span style="color:#00ffcc;">[${log.tier_binary}]</span>
-                    </div>
-                    <div style="font-size:12px; margin-top:6px; color:#ffffff;">${log.formula}</div>
-                    <div style="font-size:10px; margin-top:4px; color:#666680;">${log.boundary_enforcement}</div>
-                `;
-                container.appendChild(row);
-            });
-        }
-    });
-}
-
-// --- Dynamic 3D Matrix Node Mapping ---
-function update3DNodes(data, key) {
-    nodeMeshes.forEach(mesh => scene.remove(mesh));
-    nodeMeshes = [];
-    
-    const cleanData = data.toUpperCase().replace(" ", "");
-    const expectedLen = cleanData.length;
-    
-    for (let i = 0; i < expectedLen; i++) {
-        const charVal = parseInt(cleanData[i], 16) || 0;
-        const targetAngle = (charVal / 16) * Math.PI * 2;
-        
-        const nodeGeom = new THREE.SphereGeometry(0.15, 16, 16);
-        const nodeMat = new THREE.MeshBasicMaterial({ color: nodeColors[i % nodeColors.length] });
-        const nodeMesh = new THREE.Mesh(nodeGeom, nodeMat);
-        
-        nodeMesh.currentAngle = 0;
-        nodeMesh.targetAngle = targetAngle;
-        nodeMesh.position.y = 1.8 - (i * 0.55);
-        
-        scene.add(nodeMesh);
-        nodeMeshes.push(nodeMesh);
-    }
-}
-</script>
-</body>
-</html>
+                    <button class="btn-destroy" id="destroyVectorBtn" onclick="executeIntruderElimination()">Locate & Eliminate Intruder</button>
+                    
+                    <div class="ledger-box">
+                        <label style="color: #00ffcc
