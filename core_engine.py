@@ -7,11 +7,10 @@ class LotusCylinderEngine:
         self.GOVERNOR_POLE_START = 0  
         self.ANCHOR_POLE_END = 1      
         
-        # Astrometric Scale Constant: Represents known galaxy distance bounds in space-time tracking calculation thresholds
-        # 100,000 Light Years mapped to light-travel time metrics (approx 3.154e13 seconds)
+        # Astrometric Space Scale Threshold: 100,000 Light Years mapped to light-travel metric limits
         self.GALACTIC_SPACE_TIME_RADIUS = 3.154e13 
         
-        # 8-Tier Structural System Matrix Core Coordinates
+        # 8-Tier Structural System Matrix Layer Layout
         self.CYLINDER_TIERS = {
             1: {"binary": "0001", "val": 1, "name": "Alpha Base Axis (NORTH)"},
             2: {"binary": "0010", "val": 2, "name": "Beta Plane Layer (EAST)"},
@@ -24,34 +23,34 @@ class LotusCylinderEngine:
         }
 
     def process_clockwise_transform(self, data_stream: str, key_stream: str) -> dict:
-        """Processes hex payloads sequentially through an expanding orbital spatial cylinder matrix."""
+        """Processes hex inputs sequentially through an active expanding spatial cylinder matrix layout."""
         clean_data = data_stream.upper().replace(" ", "")
         clean_key = key_stream.upper().replace(" ", "")
         
-        # Cryptographic edge hardening to reject injection scripts and boundary fuzzing
+        # Guard rails verifying parameter hygiene
         if not all(c in "0123456789ABCDEF" for c in clean_data + clean_key):
-            raise ValueError("Input data must contain valid hexadecimal blocks.")
+            raise ValueError("Input vectors must contain valid hexadecimal syntax.")
             
         if len(clean_data) < 1 or len(clean_key) < 1:
-            raise ValueError("Data stream and force key vectors cannot be empty.")
+            raise ValueError("Input data and force key tracks cannot be null.")
             
         input_nodes = [int(char, 16) for char in clean_data]
         force_nodes = [int(char, 16) for char in clean_key]
         
         output_hex_chars = []
         telemetry_log = []
-
-        # System temporal vector evaluating continuous drift relative to the galactic constant
+        
+        # Continuous temporal vector mapping tracking limits relative to galactic constants
         current_epoch_vector = time.time() % self.GALACTIC_SPACE_TIME_RADIUS
 
         for idx in range(8):
             tier_id = idx + 1
-            tier_meta = self.CYLINDER_TIERS.get(tier_id, {"binary": "0000", "val": 0, "name": "Undefined Axis"})
+            tier_meta = self.CYLINDER_TIERS.get(tier_id, {"binary": "0000", "val": 0, "name": "Undefined Layer"})
             
             node_val = input_nodes[idx % len(input_nodes)]
             force_val = force_nodes[idx % len(force_nodes)]
             
-            # Clockwise Radius Vector Calculation: Shifting data elements from linear rows into an active orbital ring
+            # Mathematical transformation converting linear blocks into active spatial rings
             orbital_angle_rad = ((node_val + force_val) % self.LIMIT) * (math.pi / 8)
             calculated_clockwise_radius = 2.0 + (math.sin(current_epoch_vector + tier_id) * 0.05)
             
