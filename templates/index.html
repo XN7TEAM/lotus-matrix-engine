@@ -2,653 +2,305 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lotus 3D Cylindrical Spatial Matrix Dashboard</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <style>
-        body { background-color: #08080c; color: #d1d1de; font-family: 'Courier New', monospace; margin: 10px; padding-bottom: 30px; }
-        @media(min-width: 768px) { body { margin: 20px; } }
-        
-        .wrapper { max-width: 1300px; margin: 0 auto; border: 1px solid #1a1a26; padding: 15px; background-color: #0c0c14; border-radius: 6px; box-shadow: 0 0 30px rgba(0, 102, 255, 0.1); position: relative; }
-        @media(min-width: 768px) { .wrapper { padding: 20px; } }
-        
-        h1 { color: #007bff; border-bottom: 2px solid #1a1a26; padding-bottom: 15px; margin-top: 0; text-align: center; font-size: 16px; letter-spacing: 1px; user-select: none; }
-        @media(min-width: 768px) { h1 { font-size: 22px; } }
-        
-        .meta-stamp { text-align: center; color: #555566; font-size: 10px; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
-        
-        .main-layout { display: flex; flex-direction: column; gap: 20px; }
-        @media(min-width: 992px) { .main-layout { flex-direction: row; justify-content: center; } }
-        
-        .left-column { flex: 1; width: 100%; box-sizing: border-box; }
-        @media(min-width: 992px) { .left-column { max-width: 650px; } }
-        
-        .right-column { width: 100%; background: #06060a; border: 1px solid #1a1a26; border-radius: 4px; padding: 15px; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; }
-        @media(min-width: 992px) { .right-column { width: 500px; } }
-        
-        .control-panel { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; justify-content: center; background: #10101c; padding: 15px; border-radius: 4px; border: 1px solid #151522; }
-        .input-block { display: flex; flex-direction: column; flex: 1; min-width: 100px; }
-        
-        label { font-size: 10px; color: #666680; margin-bottom: 6px; font-weight: bold; letter-spacing: 1px; }
-        input { background: #06060a; border: 1px solid #222236; color: #007bff; padding: 10px; font-size: 18px; font-family: monospace; text-align: center; width: 100%; border-radius: 4px; font-weight: bold; box-sizing: border-box; }
-        
-        button { background: #007bff; color: #ffffff; border: none; padding: 0 20px; font-size: 12px; font-weight: bold; cursor: pointer; border-radius: 4px; transition: all 0.2s ease; height: 44px; width: 100%; letter-spacing: 1px; margin-top: 5px; }
-        @media(min-width: 480px) { button { width: auto; margin-top: 0; align-self: flex-end; } }
-        button:hover { background: #0056b3; box-shadow: 0 0 15px rgba(0,123,255,0.4); }
-        
-        .display-vault { background: #06060a; border: 1px dashed #222236; padding: 15px; border-radius: 4px; text-align: center; margin-bottom: 25px; }
-        .cipher-result { font-size: 24px; font-weight: bold; color: #ffffff; margin: 8px 0; letter-spacing: 4px; word-break: break-all; }
-        
-        .telemetry-header { color: #007bff; font-size: 12px; margin-bottom: 15px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; }
-        .matrix-row { background: #10101c; padding: 12px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #151522; border-left: 4px solid #007bff; font-size: 12px; }
-        .row-meta { display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; color: #888899; }
-        
-        .gov-ticker-box { background: #111122; border: 1px solid #1f1f38; border-radius: 4px; padding: 15px; margin-bottom: 20px; width: 100%; box-sizing: border-box; }
-        .gov-stat { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px; flex-wrap: wrap; gap: 5px; }
-        .gov-value { font-family: monospace; font-weight: bold; color: #00ffcc; word-break: break-all; }
-        
-        .demo-controls { background: #1a0f14; border: 1px solid #33141e; border-radius: 4px; padding: 15px; margin-top: 25px; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px; }
-        .btn-attack { background: #dc3545; width: 100%; height: 40px; text-transform: uppercase; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; }
-        .btn-attack:hover { background: #bd2130; box-shadow: 0 0 15px rgba(220,53,69,0.4); }
-        .btn-destroy { background: #00ffcc; color: #0c0c14; width: 100%; height: 40px; text-transform: uppercase; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; display: none; font-size: 12px; }
-        
-        #kineticKeyView { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 10px; }
-        #dashboardCoreView { display: none; }
-        
-        #canvasContainer { width: 100%; height: 350px; background: #020205; border-radius: 4px; position: relative; overflow: hidden; }
-        @media(min-width: 768px) { #canvasContainer { height: 420px; } }
-        .canvas-label { color: #007bff; font-size: 11px; margin-bottom: 10px; font-weight: bold; text-transform: uppercase; width: 100%; text-align: left; }
-        
-        .security-alert-popup { display: none; position: fixed; top: 15px; left: 50%; transform: translateX(-50%); background: #730f1e; border: 2px solid #ff3344; color: #ffffff; padding: 10px 20px; border-radius: 4px; font-weight: bold; font-size: 11px; letter-spacing: 1px; box-shadow: 0 0 30px rgba(255, 0, 0, 0.6); z-index: 100005; text-transform: uppercase; text-align: center; width: 85%; max-width: 450px; box-sizing: border-box; animation: blinker 1s linear infinite; }
-        @keyframes blinker { 50% { opacity: 0.5; } }
-
-        .ledger-box { margin-top: 10px; border-top: 1px dashed #33141e; padding-top: 10px; }
-        .ledger-flex { display: flex; gap: 10px; margin-top: 5px; }
-        .ledger-input { background: #06060a; border: 1px solid #222236; color: #00ffcc; padding: 8px; font-size: 14px; font-family: monospace; text-align: left; width: 100%; border-radius: 4px; font-weight: bold; box-sizing: border-box; }
-        .ledger-btn { height: 38px; padding: 0 15px; font-size: 11px; background: #111122; border: 1px solid #222236; color: #00ffcc; white-space: nowrap; align-self: auto; width: auto; }
-        
-        .error-message { color: #ff3344; font-size: 12px; margin-top: 5px; text-align: center; display: none; }
-
-        /* SOVEREIGN APPLICATION TERMINAL OVERLAY LAYER */
-        .personal-terminal {
-            display: none;
-            position: absolute;
-            top: 15px;
-            left: 10px;
-            right: 10px;
-            background: #040407;
-            border: 2px solid #00ffcc;
-            box-shadow: 0 0 40px rgba(0, 255, 204, 0.35);
-            border-radius: 4px;
-            z-index: 100000;
-            padding: 15px;
-            box-sizing: border-box;
-        }
-        @media(min-width: 768px) { .personal-terminal { top: 65px; left: 20px; right: 20px; padding: 20px; } }
-        
-        .terminal-header-bar {
-            display: flex;
-            justify-content: space-between;
-            border-bottom: 1px solid #1f1f38;
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-            font-size: 10px;
-            color: #00ffcc;
-            letter-spacing: 1px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .terminal-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        @media(min-width: 768px) { .terminal-grid { flex-direction: row; gap: 20px; } }
-        
-        .terminal-block {
-            flex: 1;
-            background: #09090f;
-            border: 1px solid #151522;
-            padding: 12px;
-            border-radius: 4px;
-            min-height: 240px;
-            box-sizing: border-box;
-            overflow-x: auto;
-            display: flex;
-            flex-direction: column;
-        }
-        .terminal-title {
-            color: #888899;
-            font-size: 9px;
-            text-transform: uppercase;
-            margin-bottom: 10px;
-            font-weight: bold;
-            letter-spacing: 1px;
-            border-bottom: 1px dashed #151522;
-            padding-bottom: 5px;
-            flex-shrink: 0;
-        }
-        .terminal-output {
-            font-size: 11px;
-            color: #ffffff;
-            line-height: 16px;
-            white-space: pre-wrap;
-            font-family: monospace;
-            flex-grow: 1;
-            overflow-y: auto;
-        }
-        
-        /* INTERACTIVE LINUX SHELL EMULATION WRAPPER */
-        .interactive-shell-box {
-            margin-top: auto;
-            display: flex;
-            align-items: center;
-            background: #020204;
-            border-top: 1px solid #1c1c2e;
-            padding-top: 8px;
-            flex-shrink: 0;
-        }
-        .shell-prompt { color: #00ffcc; font-size: 12px; font-weight: bold; padding-right: 5px; white-space: nowrap; }
-        .shell-input-field { background: transparent; border: none; outline: none; color: #ffffff; font-family: 'Courier New', monospace; font-size: 12px; width: 100%; padding: 0; text-align: left; font-weight: normal; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lotus 3D Cylindrical Spatial Matrix Governor</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
-<body>
+<body class="bg-slate-950 text-white font-mono min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-cyan-500 selection:text-slate-950">
 
-<div class="security-alert-popup" id="alarmBanner">⚠️ THREAT VECTOR DETECTED // MALICIOUS LATERAL MOVEMENT IDENTIFIED</div>
-
-<div class="wrapper">
-    <div class="personal-terminal" id="appTerminalWindow">
-        <div class="terminal-header-bar">
-            <span>⚡ SOVEREIGN FORENSIC ESCROW MONITOR // GOVERNANCE CORE INTERACTIVE LINUX ENVIRONMENT</span>
-            <span style="cursor:pointer; color:#ff3344; font-weight:bold; letter-spacing:1px;" onclick="toggleTerminalDisplay()">[CLOSE CONSOLE]</span>
-        </div>
-        <div class="terminal-grid">
-            <div class="terminal-block">
-                <div class="terminal-title">// Input Pipeline & System Telemetry Cache</div>
-                <div class="terminal-output" id="termCacheData">SYSTEM STATE: SECURE&#10;STREAM AXIS: BASELINE ZEROS RUNNING&#10;NO EXPLOIT RESIDUE ENCOUNTERED.</div>
-            </div>
-            <div class="terminal-block">
-                <div class="terminal-title">// Interactive Linux Operating System Prompt (Bash Language)</div>
-                <div class="terminal-output" id="termLinuxShellOut">LOTUS MATRIX SECURITY INTERACTIVE LINUX INSTANCE INTERFACE INITIALIZED.<br>Type commands like 'uname -a', 'whoami', 'df -h', or 'ls' to audit system constraints.<br><br></div>
-                <div class="interactive-shell-box">
-                    <span class="shell-prompt">root@lotus-matrix:~#</span>
-                    <input type="text" id="linuxShellInput" class="shell-input-field" placeholder="Enter OS shell command..." autocomplete="off" autocapitalize="none">
-                </div>
-            </div>
-        </div>
-        <div style="font-size: 9px; color: #44445c; text-align: right; margin-top: 10px; text-transform: uppercase; letter-spacing: 0.5px;">
-            Bypass active. Desktop Shortcut: "~" | Touch Shortcut: Double-Tap Main Screen Banner.
-        </div>
-    </div>
-
-    <h1 id="mainSystemTitle" ondblclick="toggleTerminalDisplay()" style="cursor: pointer;">LOTUS CYLINDRICAL MATRIX LAYER STREAM</h1>
-    <div class="meta-stamp">System Architect: Nicholas Desjardins // Real-Time Spatial Mechanics Visualizer</div>
-    
-    <div id="kineticKeyView">
-        <div style="text-align: center; max-width: 500px; margin-bottom: 25px;">
-            <h3 style="color: #00ffcc; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px;">// 3D KINETIC KEYHOLE ACTIVE</h3>
-            <p style="font-size: 11px; color: #666680; line-height: 16px; margin-top:0;">
-                Passcode Handshake: Spatiotemporal verification matrix holding.<br>
-                Manual coordination check active for authorized system stream.
-            </p>
-        </div>
+    <header class="w-full flex flex-col items-center justify-center p-4 border-b border-slate-900 bg-slate-950/80 backdrop-blur shrink-0 z-10">
+        <h1 class="text-xl md:text-2xl font-bold tracking-widest text-center my-1 text-blue-500">
+            LOTUS CYLINDRICAL MATRIX LAYER STREAM
+        </h1>
+        <p class="text-[10px] md:text-xs text-slate-500 tracking-wider text-center">
+            SYSTEM ARCHITECT: NICHOLAS DESJARDINS // REAL-TIME SPATIAL MECHANICS VISUALIZER
+        </p>
         
-        <div class="display-vault" style="width: 260px; background: #10101c; border: 1px solid #1f1f38; margin-bottom: 20px;">
-            <label style="color: #555566; font-size: 9px; letter-spacing: 1px;">SPATIOTEMPORAL ALIGNMENT TARGET</label>
-            <div style="color: #007bff; font-weight: bold; font-size: 14px; margin-top: 5px;">GOVERNOR APEX: 1.047 RAD</div>
-            <div style="color: #666680; font-size: 10px;">(60°)</div>
+        <div id="threatBanner" class="w-full max-w-4xl mx-auto mt-2 hidden border border-red-500/40 bg-red-950/30 p-1.5 rounded text-center animate-pulse">
+            <span class="text-red-500 font-bold text-xs tracking-widest">
+                ⚠️ THREAT VECTOR DETECTED // MALICIOUS LATERAL MOVEMENT IDENTIFIED
+            </span>
+        </div>
+    </header>
+
+    <main class="flex-grow w-full max-w-7xl mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-4 items-start overflow-y-auto">
+        
+        <div class="lg:col-span-7 space-y-4">
+            
+            <section class="border border-slate-900 bg-slate-900/20 p-4 rounded-md">
+                <div class="grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                        <label class="block text-[10px] text-slate-500 mb-1 tracking-widest">DATA INPUT</label>
+                        <input type="text" id="matrixDataInput" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-center font-bold text-blue-400 tracking-widest outline-none focus:border-blue-500" value="ABC1">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-500 mb-1 tracking-widest">ROTATIONAL KEY</label>
+                        <input type="text" id="matrixKeyInput" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-center font-bold text-blue-400 tracking-widest outline-none focus:border-blue-500" value="3576">
+                    </div>
+                </div>
+                <button id="engageEngineBtn" class="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 rounded tracking-widest transition-all">
+                    ENGAGE ENGINE CORE
+                </button>
+            </section>
+
+            <section class="border border-slate-900 bg-slate-900/10 p-4 rounded-md text-center">
+                <span class="block text-[10px] text-slate-500 tracking-widest mb-1">CYLINDER TERMINAL CIPHER STATE</span>
+                <div id="cipherOutputBlock" class="text-2xl font-bold tracking-widest text-white">E27F06F6</div>
+                <div id="latencyDeltaText" class="text-[10px] text-slate-600 mt-1">Processing Delta: 0.00000 ms</div>
+            </section>
+
+            <section class="border border-slate-900 bg-slate-900/20 p-4 rounded-md text-xs">
+                <h3 class="text-[10px] font-bold text-slate-500 tracking-widest border-b border-slate-900 pb-1.5 mb-2">// REAL-TIME SYSTEM INTEGRITY GOVERNOR // PINNED ENGINE LOG</h3>
+                <div class="space-y-1.5 font-mono text-[11px]">
+                    <div class="flex justify-between"><span class="text-slate-400">Active Boundary Tracking Limit (Apex):</span><span id="govApexValue" class="text-emerald-400 font-bold">1.047 RAD</span></div>
+                    <div class="flex justify-between"><span class="text-slate-400">Current Rotational Delta Angle:</span><span id="rotDeltaValue" class="text-blue-400">4.586 rad</span></div>
+                    <div class="flex justify-between"><span class="text-slate-400">Network Core Operational State:</span><span id="coreStateValue" class="text-emerald-400 font-bold">SECURE</span></div>
+                </div>
+            </section>
+
+            <section class="border border-slate-900 bg-slate-900/20 p-4 rounded-md text-xs">
+                <h3 class="text-[10px] font-bold text-blue-500 tracking-widest border-b border-slate-900 pb-1.5 mb-3">// ACTIVE VERTICAL CYLINDER PLANE LOG</h3>
+                <div id="cylinderLogStream" class="space-y-4 max-h-[320px] overflow-y-auto pr-1">
+                    </div>
+            </section>
         </div>
 
-        <div id="gateError" class="error-message" style="margin-bottom: 15px;"></div>
-        <button onclick="verifyKineticHandshake()" id="gateEngageBtn" style="width: 260px; background: #06060a; border: 1px solid #222236; color: #00ffcc; font-size: 11px; letter-spacing: 1px; font-weight: bold; height: 46px;">ENTER SECURE LAYER CORE</button>
-    </div>
-
-    <div id="dashboardCoreView">
-        <div class="main-layout">
-            <div class="left-column">
-                <div class="control-panel">
-                    <div class="input-block">
-                        <label>DATA INPUT</label>
-                        <input type="text" id="dataVector" value="ABC1" maxlength="4">
-                    </div>
-                    <div class="input-block">
-                        <label>ROTATIONAL KEY</label>
-                        <input type="text" id="keyVector" value="3576" maxlength="4">
-                    </div>
-                    <button onclick="engageCylinderTransformation()">ENGAGE ENGINE CORE</button>
-                </div>
-                
-                <div class="display-vault">
-                    <label style="color: #555566; font-size: 10px; font-weight: bold; letter-spacing: 1px;">CYLINDER TERMINAL CIPHER STATE</label>
-                    <div class="cipher-result" id="outputTerminal">- - - -</div>
-                    <div id="latencyField" style="font-size: 11px; color: #44445c;">Processing Delta: 0.00000 ms</div>
-                </div>
-                
-                <div class="gov-ticker-box">
-                    <div class="telemetry-header" style="margin-bottom: 10px; font-size: 10px; color: #888899;">// Real-Time System Integrity Governor // PINNED ENGINE LOG</div>
-                    <div class="gov-stat">
-                        <span>Active Boundary Tracking Limit (Apex):</span>
-                        <span class="gov-value" id="liveGovApex">1.047 RAD</span>
-                    </div>
-                    <div class="gov-stat">
-                        <span>Current Rotational Delta Angle:</span>
-                        <span class="gov-value" id="liveGovAngle" style="color:#007bff;">0.000 rad</span>
-                    </div>
-                    <div class="gov-stat">
-                        <span>Network Core Operational State:</span>
-                        <span class="gov-value" id="liveGovStatus" style="color:#00ffcc;">SECURE</span>
-                    </div>
-                </div>
-
-                <div class="telemetry-header">// Active Vertical Cylinder Plane Log</div>
-                <div id="telemetryStream"></div>
-                
-                <div class="demo-controls">
-                    <label style="color: #a8667c; font-size: 10px; font-weight: bold; letter-spacing: 0.5px;">⚠️ BANK INNOVATION PRESENTATION CONSOLE</label>
-                    <button class="btn-attack" id="attackToggleBtn" onclick="toggleSimulatedAttack()">Simulate Threat Vector</button>
-                    <button class="btn-destroy" id="destroyVectorBtn" onclick="executeIntruderElimination()">Locate & Eliminate Intruder</button>
-                    
-                    <div class="ledger-box">
-                        <label style="color: #00ffcc; font-size: 9px; letter-spacing: 0.5px;">ENTERPRISE PAYLOAD BUFFER INPUT</label>
-                        <div class="ledger-flex">
-                            <input type="text" id="bulkPayloadInput" value="F3A23576" maxlength="8" class="ledger-input">
-                            <button onclick="injectEnterpriseLedger()" class="ledger-btn">INGEST LEDGER</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="right-column" id="canvasColumn">
-                <div class="canvas-label" id="canvasTitle">// Live Spatial Access Gateway</div>
-                <div id="canvasContainer"></div>
-                <div id="canvasFooterDesc" style="font-size: 11px; color: #44445c; margin-top: 10px; text-align: center; line-height: 15px;">
+        <div class="lg:col-span-5 space-y-4 h-full">
+            <section class="border border-slate-900 bg-slate-900/20 p-4 rounded-md relative flex flex-col h-full min-h-[420px]">
+                <h3 class="text-[10px] font-bold text-blue-500 tracking-widest border-b border-slate-900 pb-1.5 mb-2">// LIVE 3D KINETIC CYLINDER CORE [OS ACTIVE]</h3>
+                <div id="canvasContainer3D" class="w-full flex-grow bg-slate-950/40 rounded border border-slate-900/60 min-h-[320px] relative overflow-hidden"></div>
+                <p class="text-[9px] text-slate-600 text-center mt-2 leading-relaxed">
                     Left Click + Drag to Spin. Right Click + Drag to Move. Pinch / Scroll wheel to Zoom. Adaptive device scaling layer active.
+                </p>
+            </section>
+            
+            <button id="threatActionBtn" class="w-full bg-teal-500 hover:bg-teal-600 text-slate-950 font-bold text-xs py-2.5 rounded tracking-widest transition-all">
+                LOCATE & ELIMINATE INTRUDER
+            </button>
+        </div>
+    </main>
+
+    <div id="interactiveTerminalBox" class="w-full max-w-7xl mx-auto p-4 border border-cyan-500/40 bg-slate-950 relative rounded-t-md shadow-2xl shadow-cyan-950/20 z-20 transition-all duration-300">
+        <div class="flex justify-between items-center text-[10px] border-b border-slate-900 pb-1.5 mb-2 text-cyan-400 font-mono">
+            <span class="font-bold tracking-wider">⚡ SOVEREIGN FORENSIC ESCROW MONITOR // GOVERNANCE CORE INTERACTIVE LINUX ENVIRONMENT</span>
+            <button id="toggleConsoleBtn" class="text-red-400 hover:text-red-500 font-bold">[CLOSE CONSOLE]</button>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 h-full max-h-[160px]">
+            <div class="text-[11px] text-slate-300 font-mono space-y-1 overflow-y-auto border-r border-slate-900/60 pr-2">
+                <div class="text-slate-500 font-bold mb-1">// INPUT PIPELINE & SYSTEM TELEMETRY CACHE</div>
+                <div id="telemetryStaticCache">
+                    SYSTEM STATE: SECURE<br>
+                    STREAM AXIS: BASELINE ZEROS RUNNING<br>
+                    PERSONAL GOVERNANCE BRAIN: ACTIVE<br>
+                    NO EXPLOIT LEAKS TRACKED.
+                </div>
+            </div>
+            
+            <div class="flex flex-col justify-between h-full font-mono text-[11px]">
+                <div id="terminalLogStack" class="overflow-y-auto flex-grow mb-1 space-y-1 text-slate-300 pr-1 max-h-[120px]">
+                    <div class="text-slate-500 font-bold">// INTERACTIVE LINUX OPERATING SYSTEM PROMPT (BASH LANGUAGE)</div>
+                    <div class="text-slate-400">LOTUS MATRIX SECURITY INTERACTIVE LINUX INSTANCE INTERFACE INITIALIZED.</div>
+                    <div class="text-slate-400">Type commands like 'uname -a', 'whoami', 'ai --explain', or 'ls' to audit system constraints.</div>
+                </div>
+                <div class="flex items-center text-emerald-400 border-t border-slate-900/80 pt-1">
+                    <span class="mr-2 shrink-0">root@lotus-matrix:~#</span>
+                    <input type="text" id="osShellInput" class="w-full bg-transparent border-none outline-none text-white font-mono p-0 m-0" placeholder="Enter OS shell command..." autocomplete="off">
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<div style="text-align: center; font-size: 11px; color: #44445c; margin-top: 25px; line-height: 16px; text-transform: uppercase; letter-spacing: 0.5px;">
-    Proprietary Engine Pipeline<br>
-    © Nicholas Desjardins. All Rights Reserved.<br>
-    System Gate: Active Dashboard Stream
-</div>
+    <script>
+        let scene, camera, renderer, cylinderMesh;
+        let particles = [];
+        let isAttackModeActive = false;
 
-<script>
-let isUnlocked = false;
-let attackActive = false;
-let intruderLocationData = null;
-let sessionToken = null;
+        function init3DSpace() {
+            const container = document.getElementById('canvasContainer3D');
+            if(!container) return;
 
-const container = document.getElementById('canvasContainer');
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(container.clientWidth, container.clientHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-container.appendChild(renderer.domElement);
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.z = 6;
 
-const controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.dampingFactor = 0.05;
+            renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            container.appendChild(renderer.domElement);
 
-const cylinderGeom = new THREE.CylinderGeometry(2, 2, 5, 16, 8, true);
-const cylinderMat = new THREE.MeshBasicMaterial({ color: 0x1a1a3a, wireframe: true, transparent: true, opacity: 0.4 });
-const matrixCylinder = new THREE.Mesh(cylinderGeom, cylinderMat);
-scene.add(matrixCylinder);
-
-for (let i = 0; i < 4; i++) {
-    const ringGeom = new THREE.RingGeometry(1.98, 2.02, 32);
-    const ringMat = new THREE.MeshBasicMaterial({ color: 0x0056b3, side: THREE.DoubleSide, transparent: true, opacity: 0.3 });
-    const ring = new THREE.Mesh(ringGeom, ringMat);
-    ring.rotation.x = Math.PI / 2;
-    ring.position.y = 1.8 - (i * 1.2);
-    scene.add(ring);
-}
-
-let nodeMeshes = [];
-const nodeColors = [0xff0055, 0x00ffcc, 0xffcc00, 0x007bff];
-
-camera.position.set(0, 2, 7);
-camera.lookAt(0, 0, 0);
-controls.update();
-
-window.addEventListener('resize', onWindowResize, false);
-function onWindowResize() {
-    camera.aspect = container.clientWidth / container.clientHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(container.clientWidth, container.clientHeight);
-}
-
-function animate() {
-    requestAnimationFrame(animate);
-    const timeVector = Date.now() * 0.001; 
-    
-    if (isUnlocked) {
-        matrixCylinder.rotation.y += attackActive ? 0.06 : 0.002;
-    }
-    
-    nodeMeshes.forEach((node, index) => {
-        if (node.targetAngle !== undefined) {
-            let angularVelocity = attackActive ? 0.05 : 0.01;
-            node.currentAngle += angularVelocity; 
-            const galacticClockwiseRadius = 2.0 + Math.sin(timeVector + index) * 0.1;
-            node.position.x = Math.cos(node.currentAngle) * galacticClockwiseRadius;
-            node.position.z = Math.sin(node.currentAngle) * galacticClockwiseRadius;
-        }
-    });
-    
-    controls.update(); 
-    renderer.render(scene, camera);
-}
-animate();
-
-// Core Input Shortcut Listeners
-window.addEventListener('keydown', function(e) {
-    if (e.key === '`' || e.key === '~') {
-        e.preventDefault();
-        toggleTerminalDisplay();
-    }
-});
-
-// Interactive OS Execution Capture Listener Hook
-document.getElementById('linuxShellInput').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
-        const cmdValue = this.value.trim();
-        if (!cmdValue) return;
-        
-        this.value = '';
-        executeLinuxTerminalCommand(cmdValue);
-    }
-});
-
-function toggleTerminalDisplay() {
-    const term = document.getElementById('appTerminalWindow');
-    term.style.display = (term.style.display === 'block') ? 'none' : 'block';
-    if(term.style.display === 'block') {
-        document.getElementById('linuxShellInput').focus();
-    }
-}
-
-function verifyKineticHandshake() {
-    const errorDiv = document.getElementById('gateError');
-    if (errorDiv) errorDiv.style.display = 'none';
-
-    fetch('/api/handshake', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ alignment_state: 1.047 }) 
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.authenticated) {
-            sessionToken = data.token; 
-            initializeSecureDashboard();
-        } else {
-            if (errorDiv) {
-                errorDiv.textContent = `❌ GATEWAY EXPLOIT BLOCKED: ${data.message}`;
-                errorDiv.style.display = 'block';
-            }
-        }
-    })
-    .catch(() => {
-        if (errorDiv) {
-            errorDiv.textContent = "❌ Server alignment synchronization timed out.";
-            errorDiv.style.display = 'block';
-        }
-    });
-}
-
-function initializeSecureDashboard() {
-    isUnlocked = true;
-    document.getElementById('kineticKeyView').style.display = 'none';
-    document.getElementById('dashboardCoreView').style.display = 'block';
-    
-    onWindowResize();
-    
-    document.getElementById('canvasTitle').textContent = "// Live 3D Kinetic Cylinder Core [0s ACTIVE]";
-    setInterval(fetchLiveTelemetryStream, 800);
-    engageCylinderTransformation();
-}
-
-function fetchLiveTelemetryStream() {
-    if (!sessionToken) return;
-    
-    fetch('/api/telemetry', {
-        headers: { 'Authorization': `Bearer ${sessionToken}` }
-    })
-    .then(res => res.status === 401 ? window.location.reload() : res.json())
-    .then(metrics => {
-        document.getElementById('liveGovApex').textContent = `${metrics.governor_apex} RAD`;
-        document.getElementById('liveGovAngle').textContent = `${matrixCylinder.rotation.y.toFixed(3)} rad`;
-        document.getElementById('liveGovStatus').textContent = metrics.system_status;
-        
-        intruderLocationData = metrics; 
-        const statusBox = document.getElementById('liveGovStatus');
-        const cacheOutput = document.getElementById('termCacheData');
-        
-        if(metrics.attack_active) {
-            statusBox.style.color = "#ff3344";
-            cylinderMat.color.setHex(0x550011); 
-            
-            let hackerBall = scene.getObjectByName("hackerVector1");
-            if (!hackerBall) {
-                const hackerGeom = new THREE.SphereGeometry(0.25, 16, 16);
-                const hackerMat = new THREE.MeshBasicMaterial({ color: 0xff3344, wireframe: false });
-                hackerBall = new THREE.Mesh(hackerGeom, hackerMat);
-                hackerBall.name = "hackerVector1";
-                scene.add(hackerBall);
-            }
-            
-            const targetTier = metrics.intruder_tier || 1;
-            const targetAngle = metrics.target_trajectory || 0.0;
-            
-            hackerBall.position.y = 1.8 - (targetTier * 0.55);
-            hackerBall.position.x = Math.cos(targetAngle) * 2;
-            hackerBall.position.z = Math.sin(targetAngle) * 2;
-            
-            document.getElementById('canvasTitle').textContent = `// MONITORING THREAT VECTOR [1] // LOCATION TIER: ${targetTier}`;
-            
-            if(metrics.incident_escrow_report) {
-                const rep = metrics.incident_escrow_report;
-                cacheOutput.style.color = "#ff3344";
-                cacheOutput.textContent = `ALERT // EXPLOIT INTERCEPTED BY GOVERNOR BRAIN\nALLOCATED CODENAME: ${rep.allocated_codename}\nBREACH ATTACK ROW: Tier ${rep.spatial_entry_tier}\nPROCESSING LATENCY: ${rep.captured_telemetry.inbound_latency_ms}\nGPS MATRIX LOC: ${rep.captured_telemetry.simulated_spatial_gps}\nHARDWARE FOOTPRINT: ${rep.captured_telemetry.simulated_device_fingerprint}`;
-            }
-        } else {
-            statusBox.style.color = "#00ffcc";
-            cylinderMat.color.setHex(0x1a1a3a); 
-            
-            let hackerBall = scene.getObjectByName("hackerVector1");
-            if (hackerBall) scene.remove(hackerBall);
-            
-            document.getElementById('canvasTitle').textContent = "// Live 3D Kinetic Cylinder Core [0s ACTIVE]";
-            cacheOutput.style.color = "#ffffff";
-            cacheOutput.textContent = "SYSTEM STATE: SECURE\nSTREAM AXIS: BASELINE ZEROS RUNNING\nPERSONAL GOVERNANCE BRAIN: ACTIVE\nNO EXPLOIT LEAKS TRACKED.";
-        }
-    });
-}
-
-function executeLinuxTerminalCommand(commandText) {
-    if(!sessionToken) return;
-    const shellOutputDiv = document.getElementById('termLinuxShellOut');
-    
-    // Append user input locally to mimic standard shell behavior
-    shellOutputDiv.innerHTML += `<span style="color:#00ffcc;">root@lotus-matrix:~# ${commandText}</span><br>`;
-    shellOutputDiv.scrollTop = shellOutputDiv.scrollHeight;
-    
-    if (commandText === 'clear') {
-        shellOutputDiv.innerHTML = '';
-        return;
-    }
-    
-    fetch('/api/terminal/execute', {
-        method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${sessionToken}`
-        },
-        body: JSON.stringify({ cmd: commandText })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if(data.output) {
-            shellOutputDiv.innerHTML += `${data.output}<br>`;
-        } else if(data.error) {
-            shellOutputDiv.innerHTML += `<span style="color:#ff3344;">${data.error}</span><br>`;
-        }
-        shellOutputDiv.scrollTop = shellOutputDiv.scrollHeight;
-    })
-    .catch(() => {
-        shellOutputDiv.innerHTML += `<span style="color:#ff3344;">Communication loss with platform terminal pipeline.</span><br>`;
-        shellOutputDiv.scrollTop = shellOutputDiv.scrollHeight;
-    });
-}
-
-function toggleSimulatedAttack() {
-    attackActive = true;
-    document.getElementById('alarmBanner').style.display = "block";
-    document.getElementById('attackToggleBtn').style.display = "none";
-    document.getElementById('destroyVectorBtn').style.display = "block";
-    
-    fetch('/api/simulate-attack', {
-        method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${sessionToken}`
-        },
-        body: JSON.stringify({ active: true })
-    });
-}
-
-function executeIntruderElimination() {
-    if (!intruderLocationData || !intruderLocationData.intruder_tier) {
-        destroyThreatVector();
-        return;
-    }
-    
-    const targetTier = intruderLocationData.intruder_tier;
-    const targetAngle = intruderLocationData.target_trajectory || 1.2;
-    
-    document.getElementById('canvasTitle').textContent = `// AUTO-CONTAINMENT: PURGING THREAT ON TIER ${targetTier}`;
-    
-    camera.position.set(Math.cos(targetAngle) * 4, 1.8 - (targetTier * 0.55), Math.sin(targetAngle) * 4);
-    camera.lookAt(0, 1.8 - (targetTier * 0.55), 0);
-    controls.update();
-    
-    setTimeout(() => {
-        camera.position.set(0, 2, 7);
-        camera.lookAt(0, 0, 0);
-        controls.update();
-        destroyThreatVector();
-    }, 1300);
-}
-
-function destroyThreatVector() {
-    attackActive = false;
-    document.getElementById('alarmBanner').style.display = "none";
-    document.getElementById('attackToggleBtn').style.display = "block";
-    document.getElementById('destroyVectorBtn').style.display = "none";
-    
-    fetch('/api/simulate-attack', {
-        method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${sessionToken}`
-        },
-        body: JSON.stringify({ active: false })
-    });
-}
-
-function engageCylinderTransformation() {
-    const data = document.getElementById('dataVector').value;
-    const key = document.getElementById('keyVector').value;
-    
-    update3DNodes(data, key);
-
-    fetch('/api/process', {
-        method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${sessionToken}`
-        },
-        body: JSON.stringify({ data: data, key: key })
-    })
-    .then(res => res.json())
-    .then(dataPack => {
-        if(dataPack.success) {
-            document.getElementById('outputTerminal').textContent = dataPack.output;
-            document.getElementById('latencyField').textContent = `Processing Delta: ${dataPack.latency_ms}`;
-            
-            const streamBox = document.getElementById('telemetryStream');
-            streamBox.textContent = ''; 
-            
-            dataPack.telemetry.forEach(log => {
-                const row = document.createElement('div');
-                row.className = 'matrix-row';
-                
-                const metaRow = document.createElement('div');
-                metaRow.className = 'row-meta';
-                
-                const tierNameSpan = document.createElement('span');
-                tierNameSpan.textContent = log.tier_name;
-                
-                const binarySpan = document.createElement('span');
-                binarySpan.style.color = '#00ffcc';
-                binarySpan.textContent = `[${log.tier_binary}]`;
-                
-                metaRow.appendChild(tierNameSpan);
-                metaRow.appendChild(binarySpan);
-                
-                const formulaDiv = document.createElement('div');
-                formulaDiv.style.cssText = 'font-size:11px; margin-top:6px; color:#ffffff;';
-                formulaDiv.textContent = log.formula;
-                
-                const boundaryDiv = document.createElement('div');
-                boundaryDiv.style.cssText = 'font-size:10px; margin-top:4px; color:#666680;';
-                boundaryDiv.textContent = log.boundary_enforcement;
-                
-                row.appendChild(metaRow);
-                row.appendChild(formulaDiv);
-                row.appendChild(boundaryDiv);
-                streamBox.appendChild(row);
+            const geometry = new THREE.CylinderGeometry(1.2, 1.2, 2.5, 24, 12, true);
+            const material = new THREE.MeshBasicMaterial({
+                color: 0x1e3a8a,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.35
             });
+            cylinderMesh = new THREE.Mesh(geometry, material);
+            scene.add(cylinderMesh);
+
+            // Generate 4 kinetic trajectory nodes inside the lattice wireframe
+            const nodeColors = [0xff3355, 0x00ffcc, 0xffaa00, 0x33b5ff];
+            for(let i=0; i<4; i++) {
+                const particleGeo = new THREE.SphereGeometry(0.09, 16, 16);
+                const particleMat = new THREE.MeshBasicMaterial({ color: nodeColors[i] });
+                const mesh = new THREE.Mesh(particleGeo, particleMat);
+                scene.add(mesh);
+                particles.push({
+                    mesh: mesh,
+                    angle: (i * Math.PI / 2),
+                    speed: 0.02 + (i * 0.005),
+                    height: (i * 0.5) - 0.75
+                });
+            }
+
+            window.addEventListener('resize', () => {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+
+            animate3DLoop();
         }
-    });
-}
 
-function injectEnterpriseLedger() {
-    const bulkInput = document.getElementById('bulkPayloadInput').value.trim();
-    if (bulkInput.length < 4) return;
-    
-    document.getElementById('dataVector').value = bulkInput.substring(0, 4);
-    document.getElementById('keyVector').value = bulkInput.substring(4, 8) || "3576";
-    engageCylinderTransformation();
-}
+        function animate3DLoop() {
+            requestAnimationFrame(animate3DLoop);
+            if(cylinderMesh) cylinderMesh.rotation.y += 0.004;
 
-function update3DNodes(data, key) {
-    nodeMeshes.forEach(mesh => scene.remove(mesh));
-    nodeMeshes = [];
-    
-    const cleanData = data.toUpperCase().replace(/\s+/g, "");
-    for (let i = 0; i < cleanData.length; i++) {
-        const charVal = parseInt(cleanData[i], 16) || 0;
-        const initialAngle = (charVal / 16) * Math.PI * 2;
-        
-        const nodeGeom = new THREE.SphereGeometry(0.14, 16, 16);
-        const nodeMat = new THREE.MeshBasicMaterial({ color: nodeColors[i % nodeColors.length] });
-        const nodeMesh = new THREE.Mesh(nodeGeom, nodeMat);
-        
-        nodeMesh.currentAngle = initialAngle;
-        nodeMesh.targetAngle = initialAngle;
-        nodeMesh.position.y = 1.8 - (i * 0.55);
-        
-        scene.add(nodeMesh);
-        nodeMeshes.push(nodeMesh);
-    }
-}
-</script>
+            particles.forEach((p, idx) => {
+                p.angle += p.speed;
+                p.mesh.position.x = Math.sin(p.angle) * 1.2;
+                p.mesh.position.z = Math.cos(p.angle) * 1.2;
+                p.mesh.position.y = p.height + (Math.sin(p.angle * 2) * 0.1);
+            });
+
+            renderer.render(scene, camera);
+        }
+
+        function syncLiveTelemetryData() {
+            fetch('/api/telemetry')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('govApexValue').textContent = `${data.governor_apex} RAD`;
+                document.getElementById('coreStateValue').textContent = data.system_status;
+                
+                const banner = document.getElementById('threatBanner');
+                const cacheBox = document.getElementById('telemetryStaticCache');
+                const stateLabel = document.getElementById('coreStateValue');
+
+                if(data.attack_active) {
+                    isAttackModeActive = true;
+                    banner.classList.remove('hidden');
+                    stateLabel.className = "text-red-500 font-bold animate-pulse";
+                    
+                    const report = data.incident_escrow_report;
+                    cacheBox.innerHTML = `
+                        <span class="text-red-400 font-bold">ALERT // CRITICAL EXPLOIT TRACKED</span><br>
+                        AI ENGINE CONFIDENCE  : ${data.ai_governance_matrix.model_confidence_score}<br>
+                        DECISION ENTROPY DELTA: ${data.ai_governance_matrix.decision_entropy}<br>
+                        TARGET IP ADDRESS     : ${report.captured_telemetry.attacker_ip_address}<br>
+                        ALLOCATED CODENAME    : ${report.allocated_codename}<br>
+                        BREACH METRIC TARGET  : Tier ${report.spatial_entry_tier}<br>
+                        GPS MATRIX LOC        : ${report.captured_telemetry.simulated_spatial_gps}<br>
+                        HARDWARE FOOTPRINT    : ${report.captured_telemetry.simulated_device_fingerprint}
+                    `;
+                } else {
+                    isAttackModeActive = false;
+                    banner.classList.add('hidden');
+                    stateLabel.className = "text-emerald-400 font-bold";
+                    cacheBox.innerHTML = `
+                        SYSTEM STATE: SECURE<br>
+                        STREAM AXIS: BASELINE ZEROS RUNNING<br>
+                        PERSONAL GOVERNANCE BRAIN: ACTIVE<br>
+                        NO EXPLOIT LEAKS TRACKED.
+                    `;
+                }
+            })
+            .catch(err => console.error("Telemetry channel synchronization lost:", err));
+        }
+
+        document.getElementById('engageEngineBtn').addEventListener('click', () => {
+            const dataVal = document.getElementById('matrixDataInput').value;
+            const keyVal = document.getElementById('matrixKeyInput').value;
+
+            fetch('/api/process', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ data: dataVal, key: keyVal })
+            })
+            .then(res => res.json())
+            .then(resData => {
+                if(resData.success) {
+                    document.getElementById('cipherOutputBlock').textContent = resData.output;
+                    document.getElementById('latencyDeltaText').textContent = `Processing Delta: ${resData.latency_ms}`;
+                    
+                    // Render the Active Plane Logs dynamically
+                    const logContainer = document.getElementById('cylinderLogStream');
+                    logContainer.innerHTML = '';
+                    resData.telemetry.forEach(t => {
+                        logContainer.innerHTML += `
+                            <div class="border-b border-slate-900 pb-2">
+                                <div class="flex justify-between font-bold text-[11px] mb-0.5">
+                                    <span class="text-slate-300">${t.tier_name}</span>
+                                    <span class="text-blue-500 font-mono">[${t.tier_binary}]</span>
+                                </div>
+                                <div class="text-slate-500 text-[10px] font-mono">${t.formula}</div>
+                                <div class="text-slate-400 text-[10px] mt-0.5">${t.boundary_enforcement}</div>
+                            </div>
+                        `;
+                    });
+                }
+            });
+        });
+
+        document.getElementById('threatActionBtn').addEventListener('click', () => {
+            const nextState = !isAttackModeActive;
+            fetch('/api/simulate-attack', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ active: nextState })
+            })
+            .then(res => res.json())
+            .then(data => syncLiveTelemetryData());
+        });
+
+        document.getElementById('osShellInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const cmd = this.value.trim();
+                this.value = '';
+                if(!cmd) return;
+
+                const stack = document.getElementById('terminalLogStack');
+                stack.innerHTML += `<div class="text-emerald-400 mt-1">root@lotus-matrix:~# ${cmd}</div>`;
+
+                fetch('/api/terminal/execute', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command: cmd })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.output === "CLEAR_SCREEN") {
+                        stack.innerHTML = '<div class="text-slate-500 font-bold">// INTERACTIVE LINUX OPERATING SYSTEM PROMPT (BASH LANGUAGE)</div>';
+                    } else {
+                        stack.innerHTML += `<div class="text-white whitespace-pre-wrap leading-relaxed">${data.output}</div>`;
+                    }
+                    stack.scrollTop = stack.scrollHeight;
+                });
+            }
+        });
+
+        document.getElementById('toggleConsoleBtn').addEventListener('click', () => {
+            const box = document.getElementById('interactiveTerminalBox');
+            box.classList.toggle('opacity-0');
+            box.classList.toggle('pointer-events-none');
+        });
+
+        // Initialize streams and canvas loop
+        init3DSpace();
+        setInterval(syncLiveTelemetryData, 2000);
+        syncLiveTelemetryData();
+    </script>
 </body>
 </html>
