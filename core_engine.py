@@ -1,11 +1,12 @@
 import math
 import time
 
-class LotusCylinderEngine:
-    def __init__(self):
-        self.LIMIT = 16
-        self.GOVERNOR_POLE_START = 0  
-        self.ANCHOR_POLE_END = 1      
+# Use a fixed start time for the engine instance to ensure 
+# consistent telemetry drift across all connected clients.
+ENGINE_START_TIME = time.time()
+
+def get_drift_offset():
+    return (time.time() - ENGINE_START_TIME) * 0.1     
         
         # Astrometric Space Scale Threshold: 100,000 Light Years mapped to light-travel metric limits
         self.GALACTIC_SPACE_TIME_RADIUS = 3.154e13 
