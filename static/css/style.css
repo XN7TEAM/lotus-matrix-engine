@@ -14,27 +14,22 @@ body {
     outline: none;
 }
 
-#terminalOutputLog::-webkit-scrollbar {
+#terminalLogStack::-webkit-scrollbar,
+#cylinderLogStream::-webkit-scrollbar {
     width: 4px;
 }
 
-#terminalOutputLog::-webkit-scrollbar-thumb {
+#terminalLogStack::-webkit-scrollbar-thumb,
+#cylinderLogStream::-webkit-scrollbar-thumb {
     background: #1e293b;
     border-radius: 2px;
 }
 
 @media screen and (max-height: 520px) and (orientation: landscape) {
-    #mainHeaderTitle, .system-architect-subtitle, #mobileAlertWrapper {
-        display: none !important;
-    }
-    header {
-        padding: 2px !important;
-        border-bottom: none !important;
-    }
-    main {
+    #mainHeaderBlock, #mainContentBlock {
         display: none !important; 
     }
-    .sovereign-terminal-overlay {
+    #interactiveTerminalBox {
         position: fixed !important;
         top: 0 !important;
         left: 0 !important;
@@ -43,14 +38,15 @@ body {
         max-width: 100% !important;
         background-color: #020617 !important;
         z-index: 9999 !important;
-        padding: 6px !important;
-        border-top: none !important;
+        padding: 8px !important;
+        border: none !important;
+        border-radius: 0 !important;
     }
-    #terminalOutputLog, #termCacheData, .terminal-input-field, .sovereign-terminal-overlay span {
+    #terminalLogStack, #telemetryStaticCache, .terminal-input-field, #interactiveTerminalBox span {
         font-size: 11px !important;
         line-height: 1.2 !important;
     }
-    #terminalOutputLog {
-        max-height: 70px !important;
+    #terminalLogStack {
+        max-height: 75px !important;
     }
 }
