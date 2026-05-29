@@ -1,36 +1,27 @@
-/* Copyright (C) 2026 Nicholas Desjardins. All Rights Reserved. */
-body {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+/* Lotus Matrix Engine — Static Stylesheet
+   © 2026 Nicholas Desjardins. All Rights Reserved.
+   Additional global styles that supplement inline styles in index.html */
 
-#terminalLogStack::-webkit-scrollbar,
-#cylinderLogStream::-webkit-scrollbar {
-    width: 4px;
-}
+* { box-sizing: border-box; }
 
-#terminalLogStack::-webkit-scrollbar-thumb,
-#cylinderLogStream::-webkit-scrollbar-thumb {
-    background: #1e293b;
-    border-radius: 2px;
-}
+/* Custom scrollbar — webkit */
+::-webkit-scrollbar       { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: #03030a; }
+::-webkit-scrollbar-thumb { background: #252540; border-radius: 2px; }
 
-/* Mobile responsive handling limits layout sizing conflicts */
+/* Smooth scroll for anchor links */
+html { scroll-behavior: smooth; }
+
+/* Mobile bottom-padding safety for fixed elements */
 @media (max-width: 768px) {
-    main {
-        padding-bottom: 240px !important;
-    }
-    #interactiveTerminalBox {
-        position: fixed !important;
-        bottom: 0 !important;
-        left: 0 !important;
-        width: 100vw !important;
-        background-color: #020617 !important;
-        border-t: 1px solid rgba(6, 182, 212, 0.4) !important;
-        padding: 10px !important;
-    }
-    #terminalLogStack {
-        max-height: 80px !important;
-    }
+  body { padding-bottom: 20px; }
+}
+
+/* Print — hide interactive chrome */
+@media print {
+  .threat-banner,
+  .terminal-overlay,
+  .btn-threat,
+  .btn-contain,
+  .demo-panel { display: none !important; }
 }
