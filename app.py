@@ -1,3 +1,4 @@
+# Copyright (C) 2026 Nicholas Desjardins. All Rights Reserved.
 from flask import Flask, render_template, jsonify, request, abort
 from core_engine import LotusCylinderEngine
 import time
@@ -12,7 +13,6 @@ app.config['ENV'] = 'production'
 app.config['DEBUG'] = False
 
 spatial_engine = LotusCylinderEngine()
-ACTIVE_SESSION_TOKENS = set()
 
 system_telemetry = {
     "governor_apex": 1.047,
@@ -30,44 +30,14 @@ def generate_threat_codename():
     suffix = "".join(random.choices(string.ascii_uppercase + string.digits, k=4))
     return f"{prefix}-{suffix}"
 
-def require_session_token(f):
-    def decorated_function(*args, **kwargs):
-        auth_header = request.headers.get("Authorization", "")
-        if not auth_header.startswith("Bearer "):
-            abort(401, description="Missing cryptographic session vector validation.")
-        token = auth_header.split(" ")[1]
-        if token not in ACTIVE_SESSION_TOKENS:
-            abort(401, description="Invalid cryptographic token signature.")
-        return f(*args, **kwargs)
-    decorated_function.__name__ = f.__name__
-    return decorated_function
-
 @app.route('/')
 def load_interface():
+    """Renders the primary visual matrix dashboard interface frame."""
     return render_template('index.html')
 
-@app.route('/api/handshake', methods=['POST'])
-def verify_handshake():
-    payload = request.get_json() or {}
-    alignment_state = payload.get("alignment_state", 0.0)
-    
-    if abs(alignment_state - 1.047) < 0.001:
-        new_token = secrets.token_hex(32)
-        ACTIVE_SESSION_TOKENS.add(new_token)
-        return jsonify({
-            "authenticated": True,
-            "token": new_token,
-            "message": "Spatiotemporal target confirmation match. Secure token minted."
-        })
-    
-    return jsonify({
-        "authenticated": False,
-        "message": "Kinetic coordination vector mismatch."
-    }), 403
-
 @app.route('/api/process', methods=['POST'])
-@require_session_token
 def handle_api_request():
+    """Processes clockwise spatial matrix transformations using custom core coordinate anchors."""
     payload = request.get_json() or {}
     data_input = payload.get("data", "").strip()
     key_input = payload.get("key", "").strip()
@@ -86,7 +56,7 @@ def handle_api_request():
             "success": True,
             "inventor": "Nicholas Desjardins",
             "output": matrix_results["cipher_output"],
-            "latency_ms": f"{system_telemetry['processing_delta']:.5f} ms",
+            "latency_ms": f"{system_telemetry['processing_delta']:.5f}",
             "telemetry": matrix_results["telemetry"]
         })
     except ValueError as val_err:
@@ -95,8 +65,8 @@ def handle_api_request():
         return jsonify({"success": False, "error": "Internal core structural failure."}), 500
 
 @app.route('/api/telemetry', methods=['GET'])
-@require_session_token
 def get_telemetry():
+    """Pipes live matrix tracking and telemetry updates straight down to the dashboard gauges."""
     if system_telemetry["attack_active"]:
         system_telemetry["governor_apex"] = round(random.uniform(2.500, 3.999), 3)
         system_telemetry["processing_delta"] = round(random.uniform(0.04500, 0.06500), 5)
@@ -105,24 +75,27 @@ def get_telemetry():
         
     return jsonify(system_telemetry)
 
-# CORE PLATFORM INTERACTIVE LINUX OS EXECUTION ENGINE GATEWAY
 @app.route('/api/terminal/execute', methods=['POST'])
-@require_session_token
 def execute_linux_shell_cmd():
-    """Intercepts string inputs from dashboard and drops down to sub-process shells."""
+    """Intercepts terminal stream inputs from the dashboard and passes commands to subprocess shells."""
     payload = request.get_json() or {}
-    raw_command = payload.get("cmd", "").strip()
+    
+    # Map key variable explicitly to frontend JavaScript request key
+    raw_command = payload.get("command", "").strip()
     
     if not raw_command:
-        return jsonify({"error": "Null execution string passed."}), 400
+        return jsonify({"output": "Execution Blocked: Null command string passed."}), 400
         
-    # Prevent presentation sessions from freezing on continuous monitoring loops (like non-terminated ping)
+    # Clear logs trigger capture
+    if raw_command.lower() in ["clear", "cls"]:
+        return jsonify({"output": "CLEAR_SCREEN"})
+        
+    # Prevent interactive background operations from dropping server pipelines
     forbidden_tokens = ["top", "htop", "watch", "nano", "vim", "gdb", "ssh", "sudo"]
     if any(token in raw_command.split() for token in forbidden_tokens):
         return jsonify({"output": "Execution Blocked: Interactive foreground editors or sudo access disabled for presentation stability."})
 
     try:
-        # Executes native Linux instruction loops securely inside system processing pipes
         completed_process = subprocess.run(
             raw_command,
             shell=True,
@@ -142,13 +115,13 @@ def execute_linux_shell_cmd():
         return jsonify({"output": combined_response})
         
     except subprocess.TimeoutExpired:
-        return jsonify({"error": "Command processing timed out (Execution limit exceeded 4.0s)."}), 408
+        return jsonify({"output": "Command processing timed out (Execution limit exceeded 4.0s)."}), 408
     except Exception as general_err:
-        return jsonify({"error": f"OS Shell Handshake Error: {str(general_err)}"}), 500
+        return jsonify({"output": f"OS Shell Handshake Error: {str(general_err)}"}), 500
 
 @app.route('/api/simulate-attack', methods=['POST'])
-@require_session_token
 def simulate_attack():
+    """Simulates localized network vector threats to test active integrity safeguards."""
     data = request.json or {}
     attack_state = data.get("active", False)
     system_telemetry["attack_active"] = attack_state
