@@ -1,4 +1,3 @@
-# Copyright (C) 2026 Nicholas Desjardins. All Rights Reserved.
 from flask import Flask, render_template, jsonify, request, abort
 from core_engine import LotusCylinderEngine
 import time
@@ -13,6 +12,7 @@ app.config['ENV'] = 'production'
 app.config['DEBUG'] = False
 
 spatial_engine = LotusCylinderEngine()
+ACTIVE_SESSION_TOKENS = set()
 
 system_telemetry = {
     "governor_apex": 1.047,
@@ -30,11 +30,43 @@ def generate_threat_codename():
     suffix = "".join(random.choices(string.ascii_uppercase + string.digits, k=4))
     return f"{prefix}-{suffix}"
 
+def require_session_token(f):
+    def decorated_function(*args, **kwargs):
+        auth_header = request.headers.get("Authorization", "")
+        if not auth_header.startswith("Bearer "):
+            abort(401, description="Missing cryptographic session vector validation.")
+        token = auth_header.split(" ")[1]
+        if token not in ACTIVE_SESSION_TOKENS:
+            abort(401, description="Invalid cryptographic token signature.")
+        return f(*args, **kwargs)
+    decorated_function.__name__ = f.__name__
+    return decorated_function
+
 @app.route('/')
 def load_interface():
     return render_template('index.html')
 
+@app.route('/api/handshake', methods=['POST'])
+def verify_handshake():
+    payload = request.get_json() or {}
+    alignment_state = payload.get("alignment_state", 0.0)
+    
+    if abs(alignment_state - 1.047) < 0.001:
+        new_token = secrets.token_hex(32)
+        ACTIVE_SESSION_TOKENS.add(new_token)
+        return jsonify({
+            "authenticated": True,
+            "token": new_token,
+            "message": "Spatiotemporal target confirmation match. Secure token minted."
+        })
+    
+    return jsonify({
+        "authenticated": False,
+        "message": "Kinetic coordination vector mismatch."
+    }), 403
+
 @app.route('/api/process', methods=['POST'])
+@require_session_token
 def handle_api_request():
     payload = request.get_json() or {}
     data_input = payload.get("data", "").strip()
@@ -54,7 +86,7 @@ def handle_api_request():
             "success": True,
             "inventor": "Nicholas Desjardins",
             "output": matrix_results["cipher_output"],
-            "latency_ms": f"{system_telemetry['processing_delta']:.5f}",
+            "latency_ms": f"{system_telemetry['processing_delta']:.5f} ms",
             "telemetry": matrix_results["telemetry"]
         })
     except ValueError as val_err:
@@ -63,6 +95,7 @@ def handle_api_request():
         return jsonify({"success": False, "error": "Internal core structural failure."}), 500
 
 @app.route('/api/telemetry', methods=['GET'])
+@require_session_token
 def get_telemetry():
     if system_telemetry["attack_active"]:
         system_telemetry["governor_apex"] = round(random.uniform(2.500, 3.999), 3)
@@ -72,22 +105,24 @@ def get_telemetry():
         
     return jsonify(system_telemetry)
 
+# CORE PLATFORM INTERACTIVE LINUX OS EXECUTION ENGINE GATEWAY
 @app.route('/api/terminal/execute', methods=['POST'])
+@require_session_token
 def execute_linux_shell_cmd():
+    """Intercepts string inputs from dashboard and drops down to sub-process shells."""
     payload = request.get_json() or {}
-    raw_command = payload.get("command", "").strip()
+    raw_command = payload.get("cmd", "").strip()
     
     if not raw_command:
-        return jsonify({"output": "Execution Blocked: Null command string passed."}), 400
+        return jsonify({"error": "Null execution string passed."}), 400
         
-    if raw_command.lower() in ["clear", "cls"]:
-        return jsonify({"output": "CLEAR_SCREEN"})
-        
+    # Prevent presentation sessions from freezing on continuous monitoring loops (like non-terminated ping)
     forbidden_tokens = ["top", "htop", "watch", "nano", "vim", "gdb", "ssh", "sudo"]
     if any(token in raw_command.split() for token in forbidden_tokens):
-        return jsonify({"output": "Execution Blocked: Interactive foreground tools or administrative elevation vectors disabled for deployment stability."})
+        return jsonify({"output": "Execution Blocked: Interactive foreground editors or sudo access disabled for presentation stability."})
 
     try:
+        # Executes native Linux instruction loops securely inside system processing pipes
         completed_process = subprocess.run(
             raw_command,
             shell=True,
@@ -100,18 +135,19 @@ def execute_linux_shell_cmd():
         error_output = completed_process.stderr
         
         if not response_output and not error_output:
-            combined_response = "Command executed cleanly with empty output buffer."
+            combined_response = "Command executed cleanly returning no stdout indicators."
         else:
             combined_response = response_output + error_output
             
         return jsonify({"output": combined_response})
         
     except subprocess.TimeoutExpired:
-        return jsonify({"output": "Command processing timed out (Execution limit exceeded 4.0s)."}), 408
+        return jsonify({"error": "Command processing timed out (Execution limit exceeded 4.0s)."}), 408
     except Exception as general_err:
-        return jsonify({"output": f"OS Shell Handshake Error: {str(general_err)}"}), 500
+        return jsonify({"error": f"OS Shell Handshake Error: {str(general_err)}"}), 500
 
 @app.route('/api/simulate-attack', methods=['POST'])
+@require_session_token
 def simulate_attack():
     data = request.json or {}
     attack_state = data.get("active", False)
@@ -123,14 +159,12 @@ def simulate_attack():
         system_telemetry["intruder_tier"] = random.randint(1, 4)
         system_telemetry["target_trajectory"] = round(random.uniform(0.0, 6.28), 3)
         
-        # Fixed: Explicitly mapped attacker_ip_address inside telemetry dictionary block
         system_telemetry["incident_escrow_report"] = {
             "allocated_codename": codename,
             "timestamp_epoch_ms": int(time.time() * 1000),
             "spatial_entry_tier": system_telemetry["intruder_tier"],
             "network_trajectory_vector": system_telemetry["target_trajectory"],
             "captured_telemetry": {
-                "attacker_ip_address": f"198.51.100.{random.randint(10, 250)}",
                 "inbound_latency_ms": f"{system_telemetry['processing_delta']:.5f} ms",
                 "simulated_device_fingerprint": secrets.token_hex(8).upper(),
                 "simulated_spatial_gps": "43.6532 N, 79.3832 W"
