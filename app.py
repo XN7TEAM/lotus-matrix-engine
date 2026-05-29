@@ -159,6 +159,9 @@ def simulate_attack():
         system_telemetry["intruder_tier"] = random.randint(1, 4)
         system_telemetry["target_trajectory"] = round(random.uniform(0.0, 6.28), 3)
         
+        # Generates a dynamic, high-fidelity simulated threat IP tracking coordinate
+        simulated_attacker_ip = f"185.{random.randint(10,254)}.{random.randint(0,254)}.{random.randint(1,254)}"
+        
         system_telemetry["incident_escrow_report"] = {
             "allocated_codename": codename,
             "timestamp_epoch_ms": int(time.time() * 1000),
@@ -167,7 +170,8 @@ def simulate_attack():
             "captured_telemetry": {
                 "inbound_latency_ms": f"{system_telemetry['processing_delta']:.5f} ms",
                 "simulated_device_fingerprint": secrets.token_hex(8).upper(),
-                "simulated_spatial_gps": "43.6532 N, 79.3832 W"
+                "simulated_spatial_gps": "43.6532 N, 79.3832 W",
+                "attacker_ip_address": simulated_attacker_ip
             },
             "status": "ISOLATED_AND_PASSED_TO_AUTHORITIES"
         }
