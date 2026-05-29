@@ -1,1 +1,1134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Lotus Matrix Engine — Cylindrical Spatial Security Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg-void:    #03030a;
+    --bg-deep:    #06060f;
+    --bg-panel:   #0a0a18;
+    --bg-card:    #0e0e1e;
+    --border:     #1a1a30;
+    --border-hi:  #252540;
+    --accent:     #0066ff;
+    --accent-hi:  #3388ff;
+    --accent-glow:rgba(0,102,255,0.25);
+    --teal:       #00e5cc;
+    --teal-glow:  rgba(0,229,204,0.2);
+    --red:        #ff2244;
+    --red-glow:   rgba(255,34,68,0.25);
+    --gold:       #f0b429;
+    --text-pri:   #e8e8f0;
+    --text-sec:   #8888aa;
+    --text-dim:   #44445a;
+    --font-mono:  'Share Tech Mono', monospace;
+    --font-hud:   'Orbitron', sans-serif;
+    --font-body:  'Inter', sans-serif;
+    --radius:     6px;
+    --transition: 0.18s ease;
+  }
 
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg-void);
+    color: var(--text-pri);
+    font-family: var(--font-mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0,102,255,0.08) 0%, transparent 60%),
+      repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(26,26,48,0.4) 40px),
+      repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(26,26,48,0.4) 40px);
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg-void); }
+  ::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px; }
+
+  /* ── LAYOUT ── */
+  .page-shell {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 16px;
+  }
+  @media(min-width:768px) { .page-shell { padding: 24px; } }
+
+  /* ── HEADER ── */
+  .site-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 0 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+    position: relative;
+    gap: 8px;
+  }
+  .header-eyebrow {
+    font-family: var(--font-hud);
+    font-size: 9px;
+    letter-spacing: 4px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+  .header-title {
+    font-family: var(--font-hud);
+    font-size: clamp(18px, 4vw, 32px);
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: var(--accent-hi);
+    text-shadow: 0 0 30px var(--accent-glow), 0 0 60px rgba(0,102,255,0.1);
+    text-transform: uppercase;
+    cursor: pointer;
+    user-select: none;
+    transition: text-shadow var(--transition);
+  }
+  .header-title:hover { text-shadow: 0 0 40px var(--accent-glow), 0 0 80px rgba(0,102,255,0.2); }
+  .header-sub {
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  .header-status-bar {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 6px;
+  }
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: var(--text-sec);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px;
+    letter-spacing: 0.5px;
+  }
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--teal);
+    box-shadow: 0 0 6px var(--teal);
+    animation: pulse-dot 2s ease infinite;
+  }
+  .status-dot.red { background: var(--red); box-shadow: 0 0 6px var(--red); }
+  @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* ── GATE SCREEN ── */
+  #gateView {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    gap: 24px;
+  }
+  .gate-ring {
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    border: 2px solid var(--border-hi);
+    border-top-color: var(--teal);
+    border-right-color: var(--teal);
+    display: flex; align-items: center; justify-content: center;
+    animation: spin-ring 4s linear infinite;
+    position: relative;
+  }
+  .gate-ring::after {
+    content: '';
+    position: absolute;
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    border-bottom-color: var(--accent);
+    animation: spin-ring 2.5s linear infinite reverse;
+  }
+  @keyframes spin-ring { to { transform: rotate(360deg); } }
+  .gate-inner-icon {
+    font-family: var(--font-hud);
+    font-size: 22px;
+    color: var(--teal);
+    z-index: 1;
+  }
+  .gate-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-hi);
+    border-radius: var(--radius);
+    padding: 28px 32px;
+    text-align: center;
+    max-width: 380px;
+    width: 100%;
+  }
+  .gate-label {
+    font-family: var(--font-hud);
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--teal);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  .gate-value {
+    font-family: var(--font-hud);
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--text-pri);
+    margin: 8px 0 4px;
+  }
+  .gate-value-sub { font-size: 11px; color: var(--text-dim); }
+  .gate-btn {
+    width: 100%;
+    height: 52px;
+    background: linear-gradient(135deg, var(--accent), #0044cc);
+    border: none;
+    border-radius: var(--radius);
+    color: #fff;
+    font-family: var(--font-hud);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    cursor: pointer;
+    transition: all var(--transition);
+    text-transform: uppercase;
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+  .gate-btn:hover { box-shadow: 0 0 35px rgba(0,102,255,0.5); transform: translateY(-1px); }
+  .gate-btn:active { transform: translateY(0); }
+  .gate-error { color: var(--red); font-size: 11px; text-align: center; margin-top: 8px; display: none; }
+
+  /* ── MAIN DASHBOARD ── */
+  #dashboardView { display: none; }
+  .dash-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  @media(min-width:1100px) {
+    .dash-grid {
+      grid-template-columns: 1fr 480px;
+      align-items: start;
+    }
+  }
+
+  /* ── PANELS ── */
+  .panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-card);
+  }
+  .panel-title {
+    font-family: var(--font-hud);
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--accent-hi);
+    text-transform: uppercase;
+  }
+  .panel-badge {
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .panel-body { padding: 16px; }
+
+  /* ── INPUT CONTROLS ── */
+  .input-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 10px;
+    align-items: end;
+    margin-bottom: 16px;
+  }
+  @media(max-width:480px) { .input-row { grid-template-columns: 1fr 1fr; } }
+
+  .field-group { display: flex; flex-direction: column; gap: 6px; }
+  .field-label {
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-family: var(--font-hud);
+  }
+  .field-input {
+    background: var(--bg-deep);
+    border: 1px solid var(--border-hi);
+    border-radius: var(--radius);
+    color: var(--accent-hi);
+    padding: 12px 14px;
+    font-family: var(--font-hud);
+    font-size: 20px;
+    font-weight: 700;
+    text-align: center;
+    width: 100%;
+    letter-spacing: 4px;
+    transition: border-color var(--transition), box-shadow var(--transition);
+  }
+  .field-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+
+  .btn-primary {
+    height: 52px;
+    padding: 0 22px;
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius);
+    color: #fff;
+    font-family: var(--font-hud);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all var(--transition);
+    text-transform: uppercase;
+  }
+  .btn-primary:hover { background: var(--accent-hi); box-shadow: 0 0 20px var(--accent-glow); }
+  @media(max-width:480px) { .btn-primary { grid-column: 1/-1; } }
+
+  /* ── CIPHER OUTPUT ── */
+  .cipher-display {
+    background: var(--bg-deep);
+    border: 1px dashed var(--border-hi);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .cipher-label { font-size: 9px; color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+  .cipher-value {
+    font-family: var(--font-hud);
+    font-size: clamp(22px, 4vw, 32px);
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: 8px;
+    word-break: break-all;
+    text-shadow: 0 0 20px rgba(255,255,255,0.15);
+  }
+  .cipher-latency { font-size: 10px; color: var(--text-dim); margin-top: 8px; }
+
+  /* ── GOV STATS ── */
+  .gov-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .gov-stat-card {
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+  }
+  .gov-stat-label { font-size: 9px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .gov-stat-value { font-family: var(--font-hud); font-size: 14px; font-weight: 700; color: var(--teal); word-break: break-all; }
+  .gov-stat-value.blue { color: var(--accent-hi); }
+  .gov-stat-value.red { color: var(--red); }
+
+  /* ── TELEMETRY LOG ── */
+  .telemetry-log { display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; }
+  .tier-row {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    transition: border-color var(--transition);
+  }
+  .tier-row.active { border-left-color: var(--teal); }
+  .tier-row-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .tier-name { font-family: var(--font-hud); font-size: 10px; color: var(--text-sec); letter-spacing: 1px; }
+  .tier-binary { font-size: 11px; color: var(--teal); letter-spacing: 2px; }
+  .tier-formula { font-size: 11px; color: var(--text-pri); margin-bottom: 3px; }
+  .tier-boundary { font-size: 10px; color: var(--text-dim); line-height: 1.4; }
+
+  /* ── 3D CANVAS ── */
+  .canvas-wrap {
+    width: 100%;
+    height: clamp(300px, 45vw, 460px);
+    background: var(--bg-void);
+    border-radius: var(--radius);
+    overflow: hidden;
+    position: relative;
+  }
+  .canvas-overlay-label {
+    position: absolute;
+    top: 10px; left: 12px;
+    font-family: var(--font-hud);
+    font-size: 9px;
+    color: var(--accent-hi);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    pointer-events: none;
+    text-shadow: 0 0 10px var(--accent-glow);
+  }
+  .canvas-hint {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-align: center;
+    margin-top: 8px;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── DEMO CONTROLS ── */
+  .demo-panel {
+    background: linear-gradient(135deg, rgba(20,8,12,1), rgba(10,5,8,1));
+    border: 1px solid #2a0f1a;
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-top: 16px;
+  }
+  .demo-panel-label {
+    font-size: 9px;
+    color: #a8667c;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    font-family: var(--font-hud);
+  }
+  .btn-threat {
+    width: 100%;
+    height: 44px;
+    background: linear-gradient(135deg, #c0172a, #8b0f1e);
+    border: 1px solid #ff2244;
+    border-radius: var(--radius);
+    color: #fff;
+    font-family: var(--font-hud);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all var(--transition);
+    box-shadow: 0 0 10px rgba(255,34,68,0.2);
+  }
+  .btn-threat:hover { box-shadow: 0 0 20px rgba(255,34,68,0.4); }
+  .btn-contain {
+    display: none;
+    width: 100%;
+    height: 44px;
+    background: linear-gradient(135deg, #007a66, #005a4d);
+    border: 1px solid var(--teal);
+    border-radius: var(--radius);
+    color: var(--bg-void);
+    font-family: var(--font-hud);
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all var(--transition);
+  }
+  .btn-contain:hover { box-shadow: 0 0 20px var(--teal-glow); }
+
+  /* ── LEDGER INPUT ── */
+  .ledger-section {
+    border-top: 1px dashed #2a0f1a;
+    padding-top: 12px;
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .ledger-label { font-size: 9px; color: var(--teal); letter-spacing: 2px; text-transform: uppercase; font-family: var(--font-hud); }
+  .ledger-row { display: flex; gap: 8px; }
+  .ledger-input {
+    flex: 1;
+    background: var(--bg-deep);
+    border: 1px solid var(--border-hi);
+    border-radius: var(--radius);
+    color: var(--teal);
+    padding: 10px 12px;
+    font-family: var(--font-hud);
+    font-size: 14px;
+    letter-spacing: 3px;
+    transition: border-color var(--transition);
+  }
+  .ledger-input:focus { outline: none; border-color: var(--teal); }
+  .btn-ledger {
+    height: 42px;
+    padding: 0 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-hi);
+    border-radius: var(--radius);
+    color: var(--teal);
+    font-family: var(--font-hud);
+    font-size: 10px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all var(--transition);
+    text-transform: uppercase;
+  }
+  .btn-ledger:hover { border-color: var(--teal); background: rgba(0,229,204,0.05); }
+
+  /* ── THREAT ALERT BANNER ── */
+  .threat-banner {
+    display: none;
+    position: fixed;
+    top: 16px; left: 50%; transform: translateX(-50%);
+    background: rgba(80, 5, 15, 0.95);
+    border: 1px solid var(--red);
+    color: #fff;
+    padding: 12px 28px;
+    border-radius: var(--radius);
+    font-family: var(--font-hud);
+    font-size: 11px;
+    letter-spacing: 2px;
+    box-shadow: 0 0 40px rgba(255,34,68,0.4);
+    z-index: 9999;
+    text-align: center;
+    width: 90%;
+    max-width: 500px;
+    animation: blink-threat 1.2s ease infinite;
+    text-transform: uppercase;
+  }
+  @keyframes blink-threat { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+  /* ── TERMINAL OVERLAY ── */
+  .terminal-overlay {
+    display: none;
+    position: absolute;
+    top: 80px; left: 12px; right: 12px;
+    background: rgba(4,4,10,0.98);
+    border: 1px solid var(--teal);
+    border-radius: var(--radius);
+    box-shadow: 0 0 50px var(--teal-glow);
+    z-index: 9000;
+    overflow: hidden;
+  }
+  @media(min-width:768px) { .terminal-overlay { top: 100px; left: 24px; right: 24px; } }
+  .term-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    background: rgba(0,229,204,0.05);
+    border-bottom: 1px solid var(--border);
+  }
+  .term-title { font-family: var(--font-hud); font-size: 10px; color: var(--teal); letter-spacing: 2px; text-transform: uppercase; }
+  .term-close { font-size: 11px; color: var(--red); cursor: pointer; letter-spacing: 1px; font-weight: 700; font-family: var(--font-hud); }
+  .term-close:hover { text-shadow: 0 0 8px var(--red); }
+  .term-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1px;
+    background: var(--border);
+  }
+  @media(min-width:768px) { .term-grid { grid-template-columns: 1fr 1fr; } }
+  .term-pane {
+    background: var(--bg-deep);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    min-height: 220px;
+  }
+  .term-pane-title { font-size: 9px; color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px dashed var(--border); font-family: var(--font-hud); }
+  .term-output { font-size: 11px; color: var(--text-pri); line-height: 1.6; white-space: pre-wrap; flex: 1; overflow-y: auto; max-height: 200px; }
+  .term-shell-row { display: flex; align-items: center; gap: 6px; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border); }
+  .term-prompt { color: var(--teal); font-size: 12px; font-weight: 700; white-space: nowrap; }
+  .term-shell-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  .term-footer { padding: 8px 16px; font-size: 9px; color: var(--text-dim); letter-spacing: 1px; text-align: right; }
+
+  /* ── FOOTER ── */
+  .site-footer {
+    text-align: center;
+    padding: 28px 0 16px;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-top: 1px solid var(--border);
+    margin-top: 32px;
+    line-height: 1.8;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeInUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+  .fadein { animation: fadeInUp 0.4s ease forwards; }
+
+  /* ── UTILITY ── */
+  .wrapper { position: relative; }
+</style>
+</head>
+<body>
+
+<!-- THREAT ALERT BANNER -->
+<div class="threat-banner" id="threatBanner">
+  ⚠ THREAT VECTOR DETECTED — MALICIOUS LATERAL MOVEMENT IDENTIFIED
+</div>
+
+<div class="page-shell">
+  <div class="wrapper">
+
+    <!-- TERMINAL OVERLAY -->
+    <div class="terminal-overlay" id="terminalOverlay">
+      <div class="term-topbar">
+        <span class="term-title">⚡ Sovereign Forensic Escrow Monitor — Governance Core</span>
+        <span class="term-close" onclick="toggleTerminal()">[CLOSE CONSOLE]</span>
+      </div>
+      <div class="term-grid">
+        <div class="term-pane">
+          <div class="term-pane-title">// System Telemetry Cache</div>
+          <div class="term-output" id="termCacheOutput">SYSTEM STATE: SECURE
+STREAM AXIS: BASELINE ZEROS RUNNING
+NO EXPLOIT RESIDUE ENCOUNTERED.</div>
+        </div>
+        <div class="term-pane">
+          <div class="term-pane-title">// Diagnostic Shell (read-only audit commands)</div>
+          <div class="term-output" id="termShellOutput">LOTUS MATRIX DIAGNOSTIC INTERFACE INITIALIZED.
+Available: status, governor, tiers, version, help
+</div>
+          <div class="term-shell-row">
+            <span class="term-prompt">lotus@matrix:~#</span>
+            <input type="text" id="termShellInput" class="term-shell-input" placeholder="Enter diagnostic command..." autocomplete="off" autocapitalize="none">
+          </div>
+        </div>
+      </div>
+      <div class="term-footer">Shortcut: ~ key to toggle | Double-tap header on mobile</div>
+    </div>
+
+    <!-- HEADER -->
+    <header class="site-header">
+      <div class="header-eyebrow">Proprietary Engine Pipeline // v2.0</div>
+      <h1 class="header-title" id="headerTitle" ondblclick="toggleTerminal()">
+        LOTUS CYLINDRICAL MATRIX ENGINE
+      </h1>
+      <div class="header-sub">System Architect: Nicholas Desjardins // Real-Time Spatial Mechanics Visualizer</div>
+      <div class="header-status-bar">
+        <div class="status-pill">
+          <span class="status-dot" id="connDot"></span>
+          <span id="connLabel">AWAITING HANDSHAKE</span>
+        </div>
+        <div class="status-pill">
+          <span class="status-dot" style="background:var(--accent);box-shadow:0 0 6px var(--accent);"></span>
+          <span>ENGINE CORE READY</span>
+        </div>
+        <div class="status-pill">
+          <span class="status-dot" style="background:var(--gold);box-shadow:0 0 6px var(--gold);animation:none;"></span>
+          <span>GOVERNOR APEX: 1.047 RAD</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ═══════════════════════ GATE SCREEN ═══════════════════════ -->
+    <div id="gateView">
+      <div class="gate-ring">
+        <span class="gate-inner-icon">⬡</span>
+      </div>
+      <div class="gate-card">
+        <div class="gate-label">Spatiotemporal Alignment Target</div>
+        <div class="gate-value">1.047 RAD</div>
+        <div class="gate-value-sub">60° — GOVERNOR APEX LOCK</div>
+      </div>
+      <div class="gate-card" style="padding:20px 32px;">
+        <p style="font-size:11px;color:var(--text-sec);line-height:1.6;margin-bottom:16px;text-align:center;">
+          Passcode Handshake: Spatiotemporal verification matrix holding.<br>
+          Manual coordination check active for authorized stream.
+        </p>
+        <button class="gate-btn" onclick="doHandshake()" id="gateBtn">
+          ENTER SECURE LAYER CORE
+        </button>
+        <div class="gate-error" id="gateError"></div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════ DASHBOARD ═══════════════════════ -->
+    <div id="dashboardView">
+      <div class="dash-grid">
+
+        <!-- LEFT COLUMN -->
+        <div style="display:flex;flex-direction:column;gap:16px;">
+
+          <!-- CIPHER ENGINE PANEL -->
+          <div class="panel fadein">
+            <div class="panel-header">
+              <span class="panel-title">// Cylinder Transform Engine</span>
+              <span class="panel-badge">HEX INPUT REQUIRED</span>
+            </div>
+            <div class="panel-body">
+              <div class="input-row">
+                <div class="field-group">
+                  <label class="field-label">Data Input</label>
+                  <input type="text" class="field-input" id="dataVector" value="ABC1" maxlength="4" placeholder="HEX">
+                </div>
+                <div class="field-group">
+                  <label class="field-label">Rotational Key</label>
+                  <input type="text" class="field-input" id="keyVector" value="3576" maxlength="4" placeholder="HEX">
+                </div>
+                <button class="btn-primary" onclick="runTransform()">ENGAGE</button>
+              </div>
+
+              <div class="cipher-display">
+                <div class="cipher-label">Cylinder Terminal Cipher State</div>
+                <div class="cipher-value" id="cipherOutput">— — — —</div>
+                <div class="cipher-latency" id="cipherLatency">Processing Delta: awaiting input</div>
+              </div>
+
+              <!-- GOV STATS -->
+              <div class="gov-grid">
+                <div class="gov-stat-card">
+                  <div class="gov-stat-label">Boundary Apex</div>
+                  <div class="gov-stat-value" id="statApex">1.047 RAD</div>
+                </div>
+                <div class="gov-stat-card">
+                  <div class="gov-stat-label">Rotational Delta</div>
+                  <div class="gov-stat-value blue" id="statAngle">0.000 rad</div>
+                </div>
+                <div class="gov-stat-card">
+                  <div class="gov-stat-label">Network Status</div>
+                  <div class="gov-stat-value" id="statStatus">SECURE</div>
+                </div>
+                <div class="gov-stat-card">
+                  <div class="gov-stat-label">Session Uptime</div>
+                  <div class="gov-stat-value blue" id="statUptime">00:00:00</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TELEMETRY LOG PANEL -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">// Active Vertical Cylinder Plane Log</span>
+              <span class="panel-badge" id="tierCount">0 TIERS</span>
+            </div>
+            <div class="panel-body">
+              <div class="telemetry-log" id="telemetryLog">
+                <div style="text-align:center;color:var(--text-dim);font-size:11px;padding:20px;">
+                  Engage engine to populate telemetry stream.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- DEMO / BANK PRESENTATION PANEL -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">// Bank Innovation Presentation Console</span>
+              <span class="panel-badge">DEMO MODE</span>
+            </div>
+            <div class="panel-body">
+              <div class="demo-panel">
+                <div class="demo-panel-label">⚠ Threat Simulation Controls</div>
+                <button class="btn-threat" id="btnThreat" onclick="startThreat()">
+                  SIMULATE THREAT VECTOR
+                </button>
+                <button class="btn-contain" id="btnContain" onclick="containThreat()">
+                  LOCATE &amp; ELIMINATE INTRUDER
+                </button>
+              </div>
+
+              <div class="ledger-section">
+                <div class="ledger-label">Enterprise Payload Buffer Input</div>
+                <div class="ledger-row">
+                  <input type="text" class="ledger-input" id="ledgerInput" value="F3A23576" maxlength="8" placeholder="8 HEX CHARS">
+                  <button class="btn-ledger" onclick="ingestLedger()">INGEST</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /LEFT COLUMN -->
+
+        <!-- RIGHT COLUMN -->
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title" id="canvasTitle">// Live Spatial Access Gateway</span>
+              <span class="panel-badge">3D LIVE</span>
+            </div>
+            <div class="panel-body" style="padding:12px;">
+              <div class="canvas-wrap" id="canvasContainer"></div>
+              <div class="canvas-hint">Drag to rotate · Scroll to zoom · Right-drag to pan</div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /dash-grid -->
+    </div><!-- /dashboardView -->
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+      Proprietary Engine Pipeline<br>
+      © 2026 Nicholas Desjardins. All Rights Reserved.<br>
+      System Gate: Active Dashboard Stream
+    </footer>
+
+  </div><!-- /wrapper -->
+</div><!-- /page-shell -->
+
+<script>
+/* ─────────────────────────────────────────────
+   LOTUS MATRIX ENGINE — DASHBOARD CONTROLLER
+   © 2026 Nicholas Desjardins
+───────────────────────────────────────────── */
+
+let sessionToken = null;
+let attackActive = false;
+let intruderData  = null;
+let sessionStart  = null;
+let uptimeInterval = null;
+let telemetryInterval = null;
+
+/* ── THREE.JS SETUP ── */
+const container = document.getElementById('canvasContainer');
+const scene     = new THREE.Scene();
+const camera    = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+const renderer  = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setClearColor(0x000000, 0);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+container.appendChild(renderer.domElement);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.minDistance   = 3;
+controls.maxDistance   = 15;
+
+/* Cylinder */
+const cylGeom = new THREE.CylinderGeometry(2, 2, 5, 24, 10, true);
+const cylMat  = new THREE.MeshBasicMaterial({ color: 0x1a1a3a, wireframe: true, transparent: true, opacity: 0.35 });
+const cylinder = new THREE.Mesh(cylGeom, cylMat);
+scene.add(cylinder);
+
+/* Rings */
+for (let i = 0; i < 5; i++) {
+  const rGeom = new THREE.RingGeometry(1.97, 2.03, 48);
+  const rMat  = new THREE.MeshBasicMaterial({ color: 0x0055cc, side: THREE.DoubleSide, transparent: true, opacity: 0.25 });
+  const ring  = new THREE.Mesh(rGeom, rMat);
+  ring.rotation.x = Math.PI / 2;
+  ring.position.y = 2 - (i * 1);
+  scene.add(ring);
+}
+
+/* Axis line */
+const axisGeom = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,-2.6,0), new THREE.Vector3(0,2.6,0)]);
+const axisMat  = new THREE.LineBasicMaterial({ color: 0x0066ff, transparent: true, opacity: 0.4 });
+scene.add(new THREE.Line(axisGeom, axisMat));
+
+let nodeMeshes = [];
+const NODE_COLORS = [0xff2244, 0x00e5cc, 0xf0b429, 0x0066ff, 0xcc44ff, 0x44ff88, 0xff8800, 0x00aaff];
+
+camera.position.set(0, 2, 7);
+camera.lookAt(0, 0, 0);
+controls.update();
+
+function resizeRenderer() {
+  const w = container.clientWidth, h = container.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+}
+resizeRenderer();
+window.addEventListener('resize', resizeRenderer);
+
+(function animate() {
+  requestAnimationFrame(animate);
+  const t = Date.now() * 0.001;
+  if (sessionToken) {
+    cylinder.rotation.y += attackActive ? 0.05 : 0.0015;
+  }
+  nodeMeshes.forEach((node, i) => {
+    node.currentAngle += attackActive ? 0.04 : 0.008;
+    const r = 2.0 + Math.sin(t + i) * 0.12;
+    node.position.x = Math.cos(node.currentAngle) * r;
+    node.position.z = Math.sin(node.currentAngle) * r;
+  });
+  controls.update();
+  renderer.render(scene, camera);
+})();
+
+/* ── TERMINAL ── */
+window.addEventListener('keydown', e => {
+  if (e.key === '`' || e.key === '~') { e.preventDefault(); toggleTerminal(); }
+});
+document.getElementById('termShellInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const cmd = e.target.value.trim();
+    e.target.value = '';
+    if (cmd) runDiagnosticCmd(cmd);
+  }
+});
+
+function toggleTerminal() {
+  const el = document.getElementById('terminalOverlay');
+  const visible = el.style.display === 'block';
+  el.style.display = visible ? 'none' : 'block';
+  if (!visible) document.getElementById('termShellInput').focus();
+}
+
+/* Safe read-only diagnostic commands — NO shell execution */
+const DIAG_CMDS = {
+  help:    () => `Available commands:\n  status    — current system state\n  governor  — boundary parameters\n  tiers     — cylinder tier definitions\n  version   — engine version info\n  clear     — clear output`,
+  status:  () => `SYSTEM STATUS: ${attackActive ? 'UNDER ATTACK' : 'SECURE'}\nSESSION: ${sessionToken ? 'ACTIVE' : 'INACTIVE'}\nUPTIME: ${document.getElementById('statUptime').textContent}`,
+  governor:() => `GOVERNOR APEX: 1.047 RAD (60°)\nROTATIONAL DELTA: ${document.getElementById('statAngle').textContent}\nBOUNDARY MODE: CLOCKWISE ENFORCEMENT`,
+  tiers:   () => `TIER LAYOUT:\n  1 Alpha Base Axis   [0001] val=1\n  2 Beta Plane Layer  [0010] val=2\n  3 Gamma Vector Ring [0100] val=4\n  4 Delta Polar Node  [1000] val=8\n  5 Epsilon Cross     [0011] val=3\n  6 Zeta Lateral      [0110] val=6\n  7 Eta High Boundary [1100] val=12\n  8 Theta Apex Gov    [1111] val=15`,
+  version: () => `LOTUS MATRIX ENGINE v2.0\nARCHITECT: Nicholas Desjardins\nBUILD: 2026 // CYLINDRICAL SPATIAL CORE`,
+  clear:   () => null
+};
+
+function runDiagnosticCmd(cmd) {
+  const out = document.getElementById('termShellOutput');
+  out.innerHTML += `<span style="color:var(--teal)">lotus@matrix:~# ${cmd}</span>\n`;
+  const fn = DIAG_CMDS[cmd.toLowerCase()];
+  if (fn) {
+    const res = fn();
+    if (res === null) { out.innerHTML = ''; }
+    else out.innerHTML += res + '\n\n';
+  } else {
+    out.innerHTML += `<span style="color:var(--red)">Unknown command: '${cmd}'. Type 'help' for options.</span>\n\n`;
+  }
+  out.scrollTop = out.scrollHeight;
+}
+
+/* ── HANDSHAKE ── */
+function doHandshake() {
+  const btn = document.getElementById('gateBtn');
+  const err = document.getElementById('gateError');
+  btn.textContent = 'SYNCHRONIZING...';
+  btn.disabled = true;
+  err.style.display = 'none';
+
+  fetch('/api/handshake', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ alignment_state: 1.047 })
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.authenticated) {
+      sessionToken = d.token;
+      bootDashboard();
+    } else {
+      err.textContent = `❌ GATEWAY BLOCKED: ${d.message}`;
+      err.style.display = 'block';
+      btn.textContent = 'ENTER SECURE LAYER CORE';
+      btn.disabled = false;
+    }
+  })
+  .catch(() => {
+    err.textContent = '❌ Server alignment synchronization timed out.';
+    err.style.display = 'block';
+    btn.textContent = 'ENTER SECURE LAYER CORE';
+    btn.disabled = false;
+  });
+}
+
+function bootDashboard() {
+  document.getElementById('gateView').style.display = 'none';
+  document.getElementById('dashboardView').style.display = 'block';
+  document.getElementById('connDot').style.background = 'var(--teal)';
+  document.getElementById('connDot').style.boxShadow  = '0 0 6px var(--teal)';
+  document.getElementById('connLabel').textContent = 'SESSION ACTIVE';
+
+  sessionStart = Date.now();
+  uptimeInterval = setInterval(updateUptime, 1000);
+  telemetryInterval = setInterval(fetchTelemetry, 1000);
+  resizeRenderer();
+  runTransform();
+}
+
+function updateUptime() {
+  const s = Math.floor((Date.now() - sessionStart) / 1000);
+  const h = String(Math.floor(s/3600)).padStart(2,'0');
+  const m = String(Math.floor((s%3600)/60)).padStart(2,'0');
+  const sec = String(s%60).padStart(2,'0');
+  document.getElementById('statUptime').textContent = `${h}:${m}:${sec}`;
+}
+
+/* ── TELEMETRY ── */
+function fetchTelemetry() {
+  if (!sessionToken) return;
+  fetch('/api/telemetry', { headers: { 'Authorization': `Bearer ${sessionToken}` } })
+  .then(r => r.status === 401 ? location.reload() : r.json())
+  .then(m => {
+    document.getElementById('statApex').textContent   = `${m.governor_apex} RAD`;
+    document.getElementById('statAngle').textContent  = `${cylinder.rotation.y.toFixed(3)} rad`;
+    document.getElementById('statStatus').textContent = m.system_status;
+
+    const statusEl = document.getElementById('statStatus');
+    const cacheOut = document.getElementById('termCacheOutput');
+
+    if (m.attack_active) {
+      statusEl.className = 'gov-stat-value red';
+      cylMat.color.setHex(0x550011);
+      intruderData = m;
+      updateThreatVisual(m);
+      if (m.incident_escrow_report) {
+        const r = m.incident_escrow_report;
+        cacheOut.style.color = '#ff2244';
+        cacheOut.textContent = `ALERT // EXPLOIT INTERCEPTED\nCODENAME: ${r.allocated_codename}\nBREACH TIER: ${r.spatial_entry_tier}\nLATENCY: ${r.captured_telemetry.inbound_latency_ms}\nFINGERPRINT: ${r.captured_telemetry.simulated_device_fingerprint}`;
+      }
+    } else {
+      statusEl.className = 'gov-stat-value';
+      cylMat.color.setHex(0x1a1a3a);
+      removeThreatVisual();
+      cacheOut.style.color = '#e8e8f0';
+      cacheOut.textContent = 'SYSTEM STATE: SECURE\nSTREAM AXIS: BASELINE ZEROS RUNNING\nGOVERNOR BRAIN: ACTIVE\nNO EXPLOIT LEAKS TRACKED.';
+    }
+  });
+}
+
+function updateThreatVisual(m) {
+  document.getElementById('canvasTitle').textContent = `// MONITORING THREAT [1] — TIER: ${m.intruder_tier}`;
+  let ball = scene.getObjectByName('hackerBall');
+  if (!ball) {
+    ball = new THREE.Mesh(
+      new THREE.SphereGeometry(0.28, 16, 16),
+      new THREE.MeshBasicMaterial({ color: 0xff2244 })
+    );
+    ball.name = 'hackerBall';
+    scene.add(ball);
+  }
+  const angle = m.target_trajectory || 0;
+  ball.position.set(Math.cos(angle)*2, 1.8 - (m.intruder_tier*0.55), Math.sin(angle)*2);
+}
+
+function removeThreatVisual() {
+  const ball = scene.getObjectByName('hackerBall');
+  if (ball) scene.remove(ball);
+  document.getElementById('canvasTitle').textContent = '// Live 3D Kinetic Cylinder Core';
+}
+
+/* ── TRANSFORM ── */
+function runTransform() {
+  const data = document.getElementById('dataVector').value.trim();
+  const key  = document.getElementById('keyVector').value.trim();
+  if (!data || !key) return;
+
+  rebuildNodes(data, key);
+
+  fetch('/api/process', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionToken}` },
+    body: JSON.stringify({ data, key })
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (!d.success) return;
+    document.getElementById('cipherOutput').textContent = d.output;
+    document.getElementById('cipherLatency').textContent = `Processing Delta: ${d.latency_ms}`;
+
+    const log = document.getElementById('telemetryLog');
+    log.innerHTML = '';
+    document.getElementById('tierCount').textContent = `${d.telemetry.length} TIERS`;
+    d.telemetry.forEach((t, i) => {
+      const row = document.createElement('div');
+      row.className = 'tier-row fadein';
+      row.style.animationDelay = `${i * 0.04}s`;
+      row.innerHTML = `
+        <div class="tier-row-head">
+          <span class="tier-name">${t.tier_name}</span>
+          <span class="tier-binary">[${t.tier_binary}]</span>
+        </div>
+        <div class="tier-formula">${t.formula}</div>
+        <div class="tier-boundary">${t.boundary_enforcement}</div>`;
+      log.appendChild(row);
+    });
+  });
+}
+
+function rebuildNodes(data, key) {
+  nodeMeshes.forEach(m => scene.remove(m));
+  nodeMeshes = [];
+  const clean = data.toUpperCase().replace(/\s+/g,'');
+  for (let i = 0; i < clean.length; i++) {
+    const val  = parseInt(clean[i], 16) || 0;
+    const mesh = new THREE.Mesh(
+      new THREE.SphereGeometry(0.15, 16, 16),
+      new THREE.MeshBasicMaterial({ color: NODE_COLORS[i % NODE_COLORS.length] })
+    );
+    mesh.currentAngle = (val / 16) * Math.PI * 2;
+    mesh.position.y   = 1.8 - (i * 0.55);
+    scene.add(mesh);
+    nodeMeshes.push(mesh);
+  }
+}
+
+/* ── THREAT SIM ── */
+function startThreat() {
+  attackActive = true;
+  document.getElementById('threatBanner').style.display = 'block';
+  document.getElementById('btnThreat').style.display   = 'none';
+  document.getElementById('btnContain').style.display  = 'block';
+  fetch('/api/simulate-attack', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionToken}` },
+    body: JSON.stringify({ active: true })
+  });
+}
+
+function containThreat() {
+  if (intruderData && intruderData.intruder_tier) {
+    const angle = intruderData.target_trajectory || 1.2;
+    const tier  = intruderData.intruder_tier;
+    document.getElementById('canvasTitle').textContent = `// AUTO-CONTAINMENT: PURGING TIER ${tier}`;
+    camera.position.set(Math.cos(angle)*4, 1.8-(tier*0.55), Math.sin(angle)*4);
+    camera.lookAt(0, 1.8-(tier*0.55), 0);
+    controls.update();
+    setTimeout(() => {
+      camera.position.set(0,2,7);
+      camera.lookAt(0,0,0);
+      controls.update();
+      clearThreat();
+    }, 1400);
+  } else { clearThreat(); }
+}
+
+function clearThreat() {
+  attackActive = false;
+  document.getElementById('threatBanner').style.display = 'none';
+  document.getElementById('btnThreat').style.display   = 'block';
+  document.getElementById('btnContain').style.display  = 'none';
+  fetch('/api/simulate-attack', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionToken}` },
+    body: JSON.stringify({ active: false })
+  });
+}
+
+/* ── LEDGER INGEST ── */
+function ingestLedger() {
+  const val = document.getElementById('ledgerInput').value.trim();
+  if (val.length < 4) return;
+  document.getElementById('dataVector').value = val.substring(0, 4);
+  document.getElementById('keyVector').value  = val.substring(4, 8) || '3576';
+  runTransform();
+}
+</script>
+</body>
+</html>
