@@ -1,141 +1,153 @@
+from flask import Flask, render_template, jsonify, request, abort
+from core_engine import LotusCylinderEngine
 import time
-import math
 import random
-import uuid
-from flask import Flask, request, jsonify, render_template
+import secrets
+import string
+import subprocess
 
 app = Flask(__name__)
 
-# Copyright (C) 2026 Nicholas Desjardins. All Rights Reserved.
-# Proprietary and Confidential. Autonomous Governance Matrix Ecosystem.
+app.config['ENV'] = 'production'
+app.config['DEBUG'] = False
 
-# =====================================================================
-# CORE KINETIC SPATIAL PHYSICS ENGINE
-# =====================================================================
-class LotusCylinderEngine:
-    def __init__(self):
-        self.LIMIT = 16
-        self.GOVERNOR_POLE_START = 0  
-        self.ANCHOR_POLE_END = 1      
-        self.GALACTIC_SPACE_TIME_RADIUS = 3.154e13 
-        
-        self.CYLINDER_TIERS = {
-            1: {"binary": "0001", "val": 1, "name": "Alpha Base Axis (NORTH)"},
-            2: {"binary": "0010", "val": 2, "name": "Beta Plane Layer (EAST)"},
-            3: {"binary": "0100", "val": 4, "name": "Gamma Vector Ring (SOUTH)"},
-            4: {"binary": "1000", "val": 8, "name": "Delta Polar Node (WEST)"},
-            5: {"binary": "0011", "val": 3, "name": "Epsilon Cross Sync (N-E)"},
-            6: {"binary": "0110", "val": 6, "name": "Zeta Lateral Shift (S-E)"},
-            7: {"binary": "1100", "val": 12, "name": "Eta High Boundary (S-W)"},
-            8: {"binary": "1111", "val": 15, "name": "Theta Apex Governor (N-W)"}
-        }
+spatial_engine = LotusCylinderEngine()
+ACTIVE_SESSION_TOKENS = set()
 
-    def process_clockwise_transform(self, data_stream: str, key_stream: str) -> dict:
-        clean_data = data_stream.upper().replace(" ", "")
-        clean_key = key_stream.upper().replace(" ", "")
-        
-        if not all(c in "0123456789ABCDEF" for c in clean_data + clean_key):
-            raise ValueError("Input vectors must contain valid hexadecimal syntax.")
-            
-        if len(clean_data) < 1 or len(clean_key) < 1:
-            raise ValueError("Input data and force key tracks cannot be null.")
-            
-        input_nodes = [int(char, 16) for char in clean_data]
-        force_nodes = [int(char, 16) for char in clean_key]
-        
-        output_hex_chars = []
-        telemetry_log = []
-        current_epoch_vector = time.time() % self.GALACTIC_SPACE_TIME_RADIUS
-
-        for idx in range(8):
-            tier_id = idx + 1
-            tier_meta = self.CYLINDER_TIERS.get(tier_id, {"binary": "0000", "val": 0, "name": "Undefined Layer"})
-            
-            node_val = input_nodes[idx % len(input_nodes)]
-            force_val = force_nodes[idx % len(force_nodes)]
-            
-            orbital_angle_rad = ((node_val + force_val) % self.LIMIT) * (math.pi / 8)
-            calculated_clockwise_radius = 2.0 + (math.sin(current_epoch_vector + tier_id) * 0.05)
-            
-            raw_trajectory = node_val + force_val + tier_meta["val"]
-            final_state = raw_trajectory % self.LIMIT
-            
-            if raw_trajectory >= self.LIMIT:
-                rotation_type = f"Orbital layer boundary shift ({raw_trajectory}). Rotated CLOCKWISE to coordinate {final_state}."
-            else:
-                rotation_type = "Clockwise orbital trajectory maintained within spatial bounds."
-
-            out_char = hex(final_state)[2:].upper()
-            output_hex_chars.append(out_char)
-
-            telemetry_log.append({
-                "tier": tier_id,
-                "tier_name": tier_meta["name"],
-                "tier_binary": tier_meta["binary"],
-                "formula": f"Input ({hex(node_val)[2:].upper()}) + Force [{tier_meta['binary']}] @ Radius: {calculated_clockwise_radius:.4f}",
-                "boundary_enforcement": f"Galactic Time-Scale Anchor -> {rotation_type} -> Coordinate Out: {out_char}"
-            })
-
-        return {"cipher_output": "".join(output_hex_chars), "telemetry": telemetry_log}
-
-# Initialize global cylinder physics coordinator
-cylinder_engine = LotusCylinderEngine()
-
-# =====================================================================
-# GLOBAL TELEMETRY STATES & ESCROW SESSION MEMORY
-# =====================================================================
 system_telemetry = {
-    "governor_apex": "1.047", 
-    "system_status": "SECURE // COGNITIVE SHIELD ACTIVE",
+    "governor_apex": 1.047,
+    "current_angle": 0.000,
+    "system_status": "SECURE",
     "attack_active": False,
+    "processing_delta": 0.02110,
     "intruder_tier": None,
     "target_trajectory": 0.0,
-    "processing_delta": 2.17320,
-    "incident_escrow_report": None,
-    "ai_governance_matrix": {
-        "model_confidence_score": "99.842%",
-        "active_neural_layer": "LAYER_64_TENSOR",
-        "decision_entropy": "0.0124",
-        "regulatory_compliance_check": "PASSED // OSFI-COMPLIANT"
-    }
+    "incident_escrow_report": None
 }
 
 def generate_threat_codename():
-    return random.choice(["VECTOR-MK1R", "SPECTRE-B9BC", "LOTUS-OMEGA"])
+    prefix = random.choice(["VECTOR", "PHANTOM", "SHADOW", "INTRUDER", "SPECTRE"])
+    suffix = "".join(random.choices(string.ascii_uppercase + string.digits, k=4))
+    return f"{prefix}-{suffix}"
 
-# =====================================================================
-# APPLICATION CONTROLLER ROUTING PORTS
-# =====================================================================
+def require_session_token(f):
+    def decorated_function(*args, **kwargs):
+        auth_header = request.headers.get("Authorization", "")
+        if not auth_header.startswith("Bearer "):
+            abort(401, description="Missing cryptographic session vector validation.")
+        token = auth_header.split(" ")[1]
+        if token not in ACTIVE_SESSION_TOKENS:
+            abort(401, description="Invalid cryptographic token signature.")
+        return f(*args, **kwargs)
+    decorated_function.__name__ = f.__name__
+    return decorated_function
+
 @app.route('/')
-def index():
+def load_interface():
     return render_template('index.html')
 
-@app.route('/api/telemetry', methods=['GET'])
-def get_telemetry():
-    # Seamless open access framework directly answering your index.html setInterval stream
-    return jsonify(system_telemetry)
+@app.route('/api/handshake', methods=['POST'])
+def verify_handshake():
+    payload = request.get_json() or {}
+    alignment_state = payload.get("alignment_state", 0.0)
+    
+    if abs(alignment_state - 1.047) < 0.001:
+        new_token = secrets.token_hex(32)
+        ACTIVE_SESSION_TOKENS.add(new_token)
+        return jsonify({
+            "authenticated": True,
+            "token": new_token,
+            "message": "Spatiotemporal target confirmation match. Secure token minted."
+        })
+    
+    return jsonify({
+        "authenticated": False,
+        "message": "Kinetic coordination vector mismatch."
+    }), 403
 
 @app.route('/api/process', methods=['POST'])
-def process_matrix_transform():
-    data = request.json or {}
-    data_vector = data.get("data", "ABC1")
-    key_vector = data.get("key", "3576")
-    
-    start_time = time.time()
+@require_session_token
+def handle_api_request():
+    payload = request.get_json() or {}
+    data_input = payload.get("data", "").strip()
+    key_input = payload.get("key", "").strip()
+
+    if not data_input or not key_input:
+        return jsonify({"success": False, "error": "Incomplete coordinate transmission vectors."}), 400
+
     try:
-        engine_result = cylinder_engine.process_clockwise_transform(data_vector, key_vector)
-        delta_ms = f"{(time.time() - start_time) * 1000:.5f} ms"
-        
+        start_time = time.perf_counter()
+        matrix_results = spatial_engine.process_clockwise_transform(data_input, key_input)
+        execution_delta = time.perf_counter() - start_time
+
+        system_telemetry["processing_delta"] = execution_delta * 1000
+
         return jsonify({
             "success": True,
-            "output": engine_result["cipher_output"],
-            "latency_ms": delta_ms,
-            "telemetry": engine_result["telemetry"]
+            "inventor": "Nicholas Desjardins",
+            "output": matrix_results["cipher_output"],
+            "latency_ms": f"{system_telemetry['processing_delta']:.5f} ms",
+            "telemetry": matrix_results["telemetry"]
         })
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 400
+    except ValueError as val_err:
+        return jsonify({"success": False, "error": str(val_err)}), 400
+    except Exception:
+        return jsonify({"success": False, "error": "Internal core structural failure."}), 500
+
+@app.route('/api/telemetry', methods=['GET'])
+@require_session_token
+def get_telemetry():
+    if system_telemetry["attack_active"]:
+        system_telemetry["governor_apex"] = round(random.uniform(2.500, 3.999), 3)
+        system_telemetry["processing_delta"] = round(random.uniform(0.04500, 0.06500), 5)
+    else:
+        system_telemetry["governor_apex"] = 1.047
+        
+    return jsonify(system_telemetry)
+
+# CORE PLATFORM INTERACTIVE LINUX OS EXECUTION ENGINE GATEWAY
+@app.route('/api/terminal/execute', methods=['POST'])
+@require_session_token
+def execute_linux_shell_cmd():
+    """Intercepts string inputs from dashboard and drops down to sub-process shells."""
+    payload = request.get_json() or {}
+    raw_command = payload.get("cmd", "").strip()
+    
+    if not raw_command:
+        return jsonify({"error": "Null execution string passed."}), 400
+        
+    # Prevent presentation sessions from freezing on continuous monitoring loops (like non-terminated ping)
+    forbidden_tokens = ["top", "htop", "watch", "nano", "vim", "gdb", "ssh", "sudo"]
+    if any(token in raw_command.split() for token in forbidden_tokens):
+        return jsonify({"output": "Execution Blocked: Interactive foreground editors or sudo access disabled for presentation stability."})
+
+    try:
+        # Executes native Linux instruction loops securely inside system processing pipes
+        completed_process = subprocess.run(
+            raw_command,
+            shell=True,
+            capture_output=True,
+            text=True,
+            timeout=4
+        )
+        
+        response_output = completed_process.stdout
+        error_output = completed_process.stderr
+        
+        if not response_output and not error_output:
+            combined_response = "Command executed cleanly returning no stdout indicators."
+        else:
+            combined_response = response_output + error_output
+            
+        return jsonify({"output": combined_response})
+        
+    except subprocess.TimeoutExpired:
+        return jsonify({"error": "Command processing timed out (Execution limit exceeded 4.0s)."}), 408
+    except Exception as general_err:
+        return jsonify({"error": f"OS Shell Handshake Error: {str(general_err)}"}), 500
 
 @app.route('/api/simulate-attack', methods=['POST'])
+@require_session_token
 def simulate_attack():
     data = request.json or {}
     attack_state = data.get("active", False)
@@ -143,7 +155,7 @@ def simulate_attack():
     
     if attack_state:
         codename = generate_threat_codename()
-        system_telemetry["system_status"] = "AI TRACE ALERT // MALICIOUS AGENT ISOLATED"
+        system_telemetry["system_status"] = f"UNDER ATTACK // ALLOCATED: {codename}"
         system_telemetry["intruder_tier"] = random.randint(1, 4)
         system_telemetry["target_trajectory"] = round(random.uniform(0.0, 6.28), 3)
         
@@ -154,59 +166,18 @@ def simulate_attack():
             "network_trajectory_vector": system_telemetry["target_trajectory"],
             "captured_telemetry": {
                 "inbound_latency_ms": f"{system_telemetry['processing_delta']:.5f} ms",
-                "simulated_device_fingerprint": "FDD90859E19633BF",
-                "simulated_spatial_gps": "43.6532 N, 79.3832 W",
-                "attacker_ip_address": "185.220.101.42"
+                "simulated_device_fingerprint": secrets.token_hex(8).upper(),
+                "simulated_spatial_gps": "43.6532 N, 79.3832 W"
             },
-            "status": "ISOLATED_BY_AUTONOMOUS_NEURAL_SHIELD"
+            "status": "ISOLATED_AND_PASSED_TO_AUTHORITIES"
         }
     else:
-        system_telemetry["system_status"] = "SECURE // COGNITIVE SHIELD ACTIVE"
+        system_telemetry["system_status"] = "SECURE"
         system_telemetry["intruder_tier"] = None
         system_telemetry["target_trajectory"] = 0.0
         system_telemetry["incident_escrow_report"] = None
         
     return jsonify({"status": "State Confirmed", "telemetry": system_telemetry})
 
-@app.route('/api/terminal/execute', methods=['POST'])
-def execute_terminal_command():
-    data = request.json or {}
-    
-    # Secure tracking for your frontend's 'body: JSON.stringify({ command: cmd })' field!
-    raw_command = data.get("command", "").strip()  
-    
-    if not raw_command:
-        return jsonify({"output": ""})
-
-    if raw_command == "ai --explain":
-        gov = system_telemetry["ai_governance_matrix"]
-        output_str = (
-            f"=== EXPLAINABLE AI (XAI) DECISION AUDIT LOG ===\n"
-            f"CURRENT MODEL CONFIDENCE : {gov['model_confidence_score']}\n"
-            f"INTERACTING COGNITIVE LAYER: {gov['active_neural_layer']}\n"
-            f"MATHEMATICAL ENTROPY RATIO: {gov['decision_entropy']}\n"
-            f"AUDIT COMPLIANCE STANDARDS: {gov['regulatory_compliance_check']}\n"
-            f"MECHANICS STATUS          : Human-in-the-Loop Override Pipeline clear."
-        )
-        return jsonify({"output": output_str})
-    
-    elif raw_command == "uname -a":
-        return jsonify({"output": "Linux srv-lotus-matrix-75768cfd9b-vq64z 6.8.0-1051-aws #54-Ubuntu SMP Fri May 2026 x86_64 GNU/Linux"})
-    
-    elif raw_command in ["ss -ant", "netstat"]:
-        return jsonify({"output": "ESTAB      0      0      10.0.4.12:8080      185.220.101.42:49321\nLISTEN     0      128    0.0.0.0:8080        0.0.0.0:*" })
-    
-    elif raw_command in ["whoami", "id"]:
-        return jsonify({"output": "root"})
-    
-    elif raw_command in ["ls", "dir"]:
-        return jsonify({"output": "app.py\ttemplates/\tstatic/\trequirements.txt"})
-    
-    elif raw_command == "clear":
-        # Alerts frontend event listener to purge current innerHTML element stack
-        return jsonify({"output": "CLEAR_SCREEN"})
-        
-    return jsonify({"output": f"bash: {raw_command}: command not found"})
-
-if __name__ == '__main__':
-    app.run(debug=True, port=8080)
+if __name__ == "__main__":
+    app.run(host="127.0.0.1", port=5000)
