@@ -5,15 +5,6 @@ body {
     box-sizing: border-box;
 }
 
-.sovereign-terminal-overlay {
-    transition: all 0.25s ease-in-out;
-}
-
-.terminal-input-field:focus {
-    box-shadow: none;
-    outline: none;
-}
-
 #terminalLogStack::-webkit-scrollbar,
 #cylinderLogStream::-webkit-scrollbar {
     width: 4px;
@@ -25,28 +16,21 @@ body {
     border-radius: 2px;
 }
 
-@media screen and (max-height: 520px) and (orientation: landscape) {
-    #mainHeaderBlock, #mainContentBlock {
-        display: none !important; 
+/* Mobile responsive handling limits layout sizing conflicts */
+@media (max-width: 768px) {
+    main {
+        padding-bottom: 240px !important;
     }
     #interactiveTerminalBox {
         position: fixed !important;
-        top: 0 !important;
+        bottom: 0 !important;
         left: 0 !important;
         width: 100vw !important;
-        height: 100vh !important;
-        max-width: 100% !important;
         background-color: #020617 !important;
-        z-index: 9999 !important;
-        padding: 8px !important;
-        border: none !important;
-        border-radius: 0 !important;
-    }
-    #terminalLogStack, #telemetryStaticCache, .terminal-input-field, #interactiveTerminalBox span {
-        font-size: 11px !important;
-        line-height: 1.2 !important;
+        border-t: 1px solid rgba(6, 182, 212, 0.4) !important;
+        padding: 10px !important;
     }
     #terminalLogStack {
-        max-height: 75px !important;
+        max-height: 80px !important;
     }
 }
