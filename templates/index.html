@@ -1,15 +1,16 @@
+@'
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lotus Matrix Engine - Autonomous Governance</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="/static/css/style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
-<body class="bg-slate-950 text-white font-mono min-h-screen flex flex-col justify-between overflow-x-hidden">
+<body class="bg-slate-950 text-white font-mono min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-teal-500 selection:text-slate-950">
 
-    <!-- Anti-Collision Mobile Header Stack -->
     <header class="w-full flex flex-col items-center justify-center p-3 border-b border-slate-800 bg-slate-900/60 backdrop-blur shrink-0">
         <h1 id="mainHeaderTitle" class="text-xl md:text-3xl font-bold tracking-widest text-center my-1 text-cyan-400">
             LOTUS CYLINDRICAL MATRIX LAYER STREAM
@@ -18,7 +19,6 @@
             SYSTEM ARCHITECT: NICHOLAS DESJARDINS // COGNITIVE AI EXPLAINABILITY & SPATIAL GOVERNANCE
         </p>
         
-        <!-- Clean Block-Level Drop Warning Container -->
         <div id="mobileAlertWrapper" class="w-full max-w-xl mx-auto mt-1 hidden border border-red-500/50 bg-red-950/40 p-2 rounded text-center">
             <span class="text-red-400 font-bold text-xs tracking-wider animate-pulse">
                 ⚠️ COGNITIVE ANOMALY INTERCEPTED BY SOVEREIGN NEURAL GOVERNOR
@@ -26,10 +26,8 @@
         </div>
     </header>
 
-    <!-- UI Metric Layout Viewport -->
     <main class="flex-grow w-full max-w-7xl mx-auto p-3 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start content-center overflow-y-auto">
         
-        <!-- Unified Network Forensics and Neural Trace Output Log -->
         <section class="border border-cyan-500/30 bg-slate-900/40 p-4 rounded-md shadow-lg shadow-cyan-950/10">
             <h3 class="text-xs font-bold tracking-widest text-cyan-400 border-b border-cyan-500/20 pb-2 mb-3">
                 // INPUT PIPELINE & COGNITIVE AI TELEMETRY CACHE
@@ -38,7 +36,6 @@
 Initializing Governance Matrix Pipeline Stream...</pre>
         </section>
 
-        <!-- Administrative System Modules -->
         <section class="border border-slate-800 bg-slate-900/40 p-4 rounded-md shadow-lg">
             <h3 class="text-xs font-bold tracking-widest text-slate-400 border-b border-slate-800 pb-2 mb-4">
                 AUTONOMOUS SYSTEM ACTIONS
@@ -56,7 +53,6 @@ Initializing Governance Matrix Pipeline Stream...</pre>
         </section>
     </main>
 
-    <!-- Dynamic Terminal System Console Area -->
     <div id="terminalOverlay" class="sovereign-terminal-overlay w-full max-w-5xl mx-auto p-3 border-t border-cyan-500/40 bg-slate-950 shrink-0">
         <div class="flex justify-between items-center text-[10px] border-b border-slate-800 pb-1 mb-2 text-cyan-400 font-mono">
             <span>⚡ SOVEREIGN AI CORE CONSOLE // HUMAN-ON-THE-LOOP EXECUTIVE CONTROL</span>
@@ -149,3 +145,4 @@ Initializing Governance Matrix Pipeline Stream...</pre>
     </script>
 </body>
 </html>
+'@ | Out-File -FilePath "templates/index.html" -Encoding utf8 -Force
