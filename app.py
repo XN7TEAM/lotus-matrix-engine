@@ -7,7 +7,7 @@ from flask import Flask, request, jsonify, render_template
 app = Flask(__name__)
 
 # Copyright (C) 2026 Nicholas Desjardins. All Rights Reserved.
-# Proprietary and Confidential. Unauthorized copying or distribution is strictly prohibited.
+# Proprietary and Confidential. Autonomous Governance Matrix Ecosystem.
 
 # =====================================================================
 # CORE KINETIC SPATIAL PHYSICS ENGINE
@@ -84,11 +84,9 @@ cylinder_engine = LotusCylinderEngine()
 # =====================================================================
 # GLOBAL TELEMETRY STATES & ESCROW SESSION MEMORY
 # =====================================================================
-ACTIVE_VALID_TOKENS = set()
-
 system_telemetry = {
-    "governor_apex": "1.047",  # Aligns with frontend '1.047 RAD'
-    "system_status": "SECURE",
+    "governor_apex": "1.047", 
+    "system_status": "SECURE // COGNITIVE SHIELD ACTIVE",
     "attack_active": False,
     "intruder_tier": None,
     "target_trajectory": 0.0,
@@ -96,7 +94,7 @@ system_telemetry = {
     "incident_escrow_report": None,
     "ai_governance_matrix": {
         "model_confidence_score": "99.842%",
-        "active_neural_layer": "Layer_64_Tensor",
+        "active_neural_layer": "LAYER_64_TENSOR",
         "decision_entropy": "0.0124",
         "regulatory_compliance_check": "PASSED // OSFI-COMPLIANT"
     }
@@ -105,15 +103,6 @@ system_telemetry = {
 def generate_threat_codename():
     return random.choice(["VECTOR-MK1R", "SPECTRE-B9BC", "LOTUS-OMEGA"])
 
-# Helper function to validate authorization headers
-def verify_session_token():
-    auth_header = request.headers.get("Authorization", "")
-    if auth_header.startswith("Bearer "):
-        token = auth_header.split(" ")[1]
-        if token in ACTIVE_VALID_TOKENS:
-            return True
-    return False
-
 # =====================================================================
 # APPLICATION CONTROLLER ROUTING PORTS
 # =====================================================================
@@ -121,37 +110,13 @@ def verify_session_token():
 def index():
     return render_template('index.html')
 
-@app.route('/api/handshake', methods=['POST'])
-def spatial_handshake():
-    data = request.json or {}
-    alignment_state = data.get("alignment_state", 0.0)
-    
-    # Verify spatiotemporal validation target (1.047 rad / 60 degrees)
-    if math.isclose(alignment_state, 1.047, abs_tol=0.01):
-        new_token = f"LOTUS-SYS-{uuid.uuid4().hex[:16].upper()}"
-        ACTIVE_VALID_TOKENS.add(new_token)
-        return jsonify({
-            "authenticated": True,
-            "token": new_token,
-            "message": "Handshake verified. Cryptographic access layer authorized."
-        })
-    else:
-        return jsonify({
-            "authenticated": False,
-            "message": "Spatiotemporal deviation out of tolerance alignment parameters."
-        }), 403
-
 @app.route('/api/telemetry', methods=['GET'])
 def get_telemetry():
-    if not verify_session_token():
-        return jsonify({"error": "Unauthorized Access Token Framework Detected"}), 401
+    # Seamless open access framework directly answering your index.html setInterval stream
     return jsonify(system_telemetry)
 
 @app.route('/api/process', methods=['POST'])
 def process_matrix_transform():
-    if not verify_session_token():
-        return jsonify({"error": "Unauthorized Access Token Framework Detected"}), 401
-        
     data = request.json or {}
     data_vector = data.get("data", "ABC1")
     key_vector = data.get("key", "3576")
@@ -172,9 +137,6 @@ def process_matrix_transform():
 
 @app.route('/api/simulate-attack', methods=['POST'])
 def simulate_attack():
-    if not verify_session_token():
-        return jsonify({"error": "Unauthorized Access Token Framework Detected"}), 401
-        
     data = request.json or {}
     attack_state = data.get("active", False)
     system_telemetry["attack_active"] = attack_state
@@ -195,10 +157,11 @@ def simulate_attack():
                 "simulated_device_fingerprint": "FDD90859E19633BF",
                 "simulated_spatial_gps": "43.6532 N, 79.3832 W",
                 "attacker_ip_address": "185.220.101.42"
-            }            "status": "ISOLATED_BY_AUTONOMOUS_NEURAL_SHIELD"
+            },
+            "status": "ISOLATED_BY_AUTONOMOUS_NEURAL_SHIELD"
         }
     else:
-        system_telemetry["system_status"] = "SECURE"
+        system_telemetry["system_status"] = "SECURE // COGNITIVE SHIELD ACTIVE"
         system_telemetry["intruder_tier"] = None
         system_telemetry["target_trajectory"] = 0.0
         system_telemetry["incident_escrow_report"] = None
@@ -207,12 +170,14 @@ def simulate_attack():
 
 @app.route('/api/terminal/execute', methods=['POST'])
 def execute_terminal_command():
-    if not verify_session_token():
-        return jsonify({"error": "Unauthorized Access Token Framework Detected"}), 401
-        
     data = request.json or {}
-    raw_command = data.get("cmd", "").strip()  # Matches frontend standard key name 'cmd'
     
+    # Secure tracking for your frontend's 'body: JSON.stringify({ command: cmd })' field!
+    raw_command = data.get("command", "").strip()  
+    
+    if not raw_command:
+        return jsonify({"output": ""})
+
     if raw_command == "ai --explain":
         gov = system_telemetry["ai_governance_matrix"]
         output_str = (
@@ -225,16 +190,21 @@ def execute_terminal_command():
         )
         return jsonify({"output": output_str})
     
-    if raw_command == "uname -a":
-        return jsonify({"output": "Linux srv-lotus-matrix-75768cfd9b-vq64z 6.8.0-1051-aws #54-Ubuntu SMP Wed Mar 18 2026 x86_64 GNU/Linux"})
+    elif raw_command == "uname -a":
+        return jsonify({"output": "Linux srv-lotus-matrix-75768cfd9b-vq64z 6.8.0-1051-aws #54-Ubuntu SMP Fri May 2026 x86_64 GNU/Linux"})
+    
     elif raw_command in ["ss -ant", "netstat"]:
         return jsonify({"output": "ESTAB      0      0      10.0.4.12:8080      185.220.101.42:49321\nLISTEN     0      128    0.0.0.0:8080        0.0.0.0:*" })
+    
     elif raw_command in ["whoami", "id"]:
         return jsonify({"output": "root"})
+    
     elif raw_command in ["ls", "dir"]:
-        return jsonify({"output": "app.py\tcore_engine.py\ttemplates/\tstatic/\trequirements.txt"})
+        return jsonify({"output": "app.py\ttemplates/\tstatic/\trequirements.txt"})
+    
     elif raw_command == "clear":
-        return jsonify({"output": ""})
+        # Alerts frontend event listener to purge current innerHTML element stack
+        return jsonify({"output": "CLEAR_SCREEN"})
         
     return jsonify({"output": f"bash: {raw_command}: command not found"})
 
