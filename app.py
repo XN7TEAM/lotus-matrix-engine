@@ -32,12 +32,10 @@ def generate_threat_codename():
 
 @app.route('/')
 def load_interface():
-    """Renders the primary visual matrix dashboard interface frame."""
     return render_template('index.html')
 
 @app.route('/api/process', methods=['POST'])
 def handle_api_request():
-    """Processes clockwise spatial matrix transformations using custom core coordinate anchors."""
     payload = request.get_json() or {}
     data_input = payload.get("data", "").strip()
     key_input = payload.get("key", "").strip()
@@ -66,7 +64,6 @@ def handle_api_request():
 
 @app.route('/api/telemetry', methods=['GET'])
 def get_telemetry():
-    """Pipes live matrix tracking and telemetry updates straight down to the dashboard gauges."""
     if system_telemetry["attack_active"]:
         system_telemetry["governor_apex"] = round(random.uniform(2.500, 3.999), 3)
         system_telemetry["processing_delta"] = round(random.uniform(0.04500, 0.06500), 5)
@@ -77,23 +74,18 @@ def get_telemetry():
 
 @app.route('/api/terminal/execute', methods=['POST'])
 def execute_linux_shell_cmd():
-    """Intercepts terminal stream inputs from the dashboard and passes commands to subprocess shells."""
     payload = request.get_json() or {}
-    
-    # Map key variable explicitly to frontend JavaScript request key
     raw_command = payload.get("command", "").strip()
     
     if not raw_command:
         return jsonify({"output": "Execution Blocked: Null command string passed."}), 400
         
-    # Clear logs trigger capture
     if raw_command.lower() in ["clear", "cls"]:
         return jsonify({"output": "CLEAR_SCREEN"})
         
-    # Prevent interactive background operations from dropping server pipelines
     forbidden_tokens = ["top", "htop", "watch", "nano", "vim", "gdb", "ssh", "sudo"]
     if any(token in raw_command.split() for token in forbidden_tokens):
-        return jsonify({"output": "Execution Blocked: Interactive foreground editors or sudo access disabled for presentation stability."})
+        return jsonify({"output": "Execution Blocked: Interactive foreground tools or administrative elevation vectors disabled for deployment stability."})
 
     try:
         completed_process = subprocess.run(
@@ -108,7 +100,7 @@ def execute_linux_shell_cmd():
         error_output = completed_process.stderr
         
         if not response_output and not error_output:
-            combined_response = "Command executed cleanly returning no stdout indicators."
+            combined_response = "Command executed cleanly with empty output buffer."
         else:
             combined_response = response_output + error_output
             
@@ -121,7 +113,6 @@ def execute_linux_shell_cmd():
 
 @app.route('/api/simulate-attack', methods=['POST'])
 def simulate_attack():
-    """Simulates localized network vector threats to test active integrity safeguards."""
     data = request.json or {}
     attack_state = data.get("active", False)
     system_telemetry["attack_active"] = attack_state
@@ -132,12 +123,14 @@ def simulate_attack():
         system_telemetry["intruder_tier"] = random.randint(1, 4)
         system_telemetry["target_trajectory"] = round(random.uniform(0.0, 6.28), 3)
         
+        # Fixed: Explicitly mapped attacker_ip_address inside telemetry dictionary block
         system_telemetry["incident_escrow_report"] = {
             "allocated_codename": codename,
             "timestamp_epoch_ms": int(time.time() * 1000),
             "spatial_entry_tier": system_telemetry["intruder_tier"],
             "network_trajectory_vector": system_telemetry["target_trajectory"],
             "captured_telemetry": {
+                "attacker_ip_address": f"198.51.100.{random.randint(10, 250)}",
                 "inbound_latency_ms": f"{system_telemetry['processing_delta']:.5f} ms",
                 "simulated_device_fingerprint": secrets.token_hex(8).upper(),
                 "simulated_spatial_gps": "43.6532 N, 79.3832 W"
