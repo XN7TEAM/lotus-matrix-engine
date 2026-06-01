@@ -3,7 +3,7 @@
 **© 2026 Nicholas Desjardins. All Rights Reserved.**
 
 🔗 **Live Demo:** [lotus-matrix-engine.onrender.com](https://lotus-matrix-engine.onrender.com)
-📁 **Repository:** [github.com/your-username/lotus-matrix-engine](https://github.com/XN7TEAM/lotus-matrix-engine)
+📁 **Repository:** [github.com/XN7TEAM/lotus-matrix-engine](https://github.com/XN7TEAM/lotus-matrix-engine)
 
 ---
 
