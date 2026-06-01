@@ -3,12 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lotus Matrix Engine — Cylindrical Spatial Security Dashboard</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js" crossorigin="anonymous"></script>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
+    /* ── MOBILE FULL-WIDTH FIX ── */
+    html, body { overflow-x: hidden; width: 100%; }
+    .shell { overflow-x: hidden; }
+    .dash-grid { min-width: 0; }
+    .dash-grid > div { min-width: 0; overflow-x: hidden; }
+    /* Portrait phone — stack everything, no clipping */
+    @media(max-width: 600px) {
+      .panel-body { padding: 10px 8px; }
+      .input-row { grid-template-columns: 1fr 1fr; }
+      .btn-eng { grid-column: 1/-1; }
+      .gov-grid { grid-template-columns: 1fr 1fr; }
+      .cipher-val { font-size: 20px; letter-spacing: 4px; }
+      .canvas-wrap { height: 300px; }
+      .rt-ticker { display: none; } /* hide on very small screens */
+      .sov-term { width: calc(100vw - 16px) !important; left: 8px !important; }
+    }
+
     :root {
       --bg0:#020208; --bg1:#06060f; --bg2:#0a0a1a; --bg3:#0e0e22;
       --border:#1a1a30; --border2:#252545;
@@ -32,11 +49,11 @@
     ::-webkit-scrollbar{width:3px;height:3px}
     ::-webkit-scrollbar-track{background:var(--bg0)}
     ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
- 
+
     /* ── PAGE SHELL ── */
     .shell{max-width:1440px;margin:0 auto;padding:12px}
     @media(min-width:768px){.shell{padding:20px}}
- 
+
     /* ── HEADER ── */
     .hdr{
       display:flex;flex-direction:column;align-items:center;
@@ -63,7 +80,7 @@
     .dot.blue{background:var(--blue);box-shadow:0 0 6px var(--blue)}
     .dot.gold{background:var(--gold);box-shadow:0 0 6px var(--gold);animation:none}
     @keyframes dot-pulse{0%,100%{opacity:1}50%{opacity:.35}}
- 
+
     /* ── GATE ── */
     #gateView{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:62vh;gap:20px}
     .gate-ring{
@@ -97,12 +114,12 @@
     .gate-btn:hover{box-shadow:0 0 40px rgba(0,102,255,.5);transform:translateY(-1px)}
     .gate-btn:disabled{opacity:.5;transform:none;cursor:not-allowed}
     .gate-err{color:var(--red);font-size:11px;text-align:center;margin-top:8px;display:none}
- 
+
     /* ── DASHBOARD ── */
     #dashView{display:none}
     .dash-grid{display:grid;grid-template-columns:1fr;gap:14px}
     @media(min-width:1100px){.dash-grid{grid-template-columns:1fr 460px;align-items:start}}
- 
+
     /* ── PANEL ── */
     .panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
     .panel-hdr{
@@ -112,7 +129,7 @@
     .panel-title{font-family:var(--hud);font-size:9px;letter-spacing:2px;color:var(--blue2);text-transform:uppercase}
     .panel-badge{font-size:8px;color:var(--dim);letter-spacing:1px;text-transform:uppercase}
     .panel-body{padding:14px}
- 
+
     /* ── INPUTS ── */
     .input-row{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;margin-bottom:14px}
     @media(max-width:480px){.input-row{grid-template-columns:1fr 1fr}}
@@ -132,7 +149,7 @@
     }
     .btn-eng:hover{background:var(--blue2);box-shadow:0 0 20px var(--blue-glow)}
     @media(max-width:480px){.btn-eng{grid-column:1/-1}}
- 
+
     /* ── CIPHER DISPLAY ── */
     .cipher-box{
       background:var(--bg1);border:1px dashed var(--border2);border-radius:var(--r);
@@ -145,14 +162,14 @@
       text-shadow:0 0 20px rgba(255,255,255,.12);
     }
     .cipher-lat{font-size:9px;color:var(--dim);margin-top:6px}
- 
+
     /* ── GOV STATS ── */
     .gov-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
     .gov-card{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px}
     .gov-lbl{font-size:8px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
     .gov-val{font-family:var(--hud);font-size:13px;font-weight:700;color:var(--teal);word-break:break-all}
     .gov-val.blue{color:var(--blue2)} .gov-val.red{color:var(--red)} .gov-val.gold{color:var(--gold)}
- 
+
     /* ── TELEMETRY LOG ── */
     .tele-log{display:flex;flex-direction:column;gap:6px;max-height:340px;overflow-y:auto}
     .tier-row{
@@ -166,7 +183,7 @@
     .tier-bin{font-size:10px;color:var(--teal);letter-spacing:2px}
     .tier-formula{font-size:11px;color:var(--white);margin-bottom:3px}
     .tier-boundary{font-size:9px;color:var(--dim);line-height:1.5}
- 
+
     /* ── REALTIME TICKER ── */
     .rt-ticker{
       background:linear-gradient(90deg,rgba(0,102,255,.06),rgba(0,229,204,.06));
@@ -180,7 +197,7 @@
     .rt-item{font-size:9px;color:var(--sec);letter-spacing:.5px}
     .rt-item span{color:var(--teal);font-weight:700}
     @keyframes ticker-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
- 
+
     /* ── DEMO CONTROLS ── */
     .demo-panel{
       background:linear-gradient(135deg,rgba(20,6,10,1),rgba(10,4,6,1));
@@ -219,7 +236,7 @@
       transition:all var(--tr);
     }
     .btn-ledger:hover{border-color:var(--teal);background:rgba(0,229,204,.05)}
- 
+
     /* ── 3D CANVAS ── */
     .canvas-wrap{
       width:100%;height:clamp(280px,42vw,450px);
@@ -231,7 +248,7 @@
       text-transform:uppercase;pointer-events:none;
     }
     .canvas-hint{font-size:9px;color:var(--dim);text-align:center;margin-top:6px;letter-spacing:.5px}
- 
+
     /* ── THREAT BANNER ── */
     .threat-banner{
       display:none;position:fixed;top:14px;left:50%;transform:translateX(-50%);
@@ -243,7 +260,7 @@
       animation:blink 1.2s ease infinite;
     }
     @keyframes blink{0%,100%{opacity:1}50%{opacity:.55}}
- 
+
     /* ══════════════════════════════════════════════
        SOVEREIGN TERMINAL — draggable, resizable,
        touch-pannable, full attack simulation
@@ -301,7 +318,7 @@
     .sov-stream-val{color:var(--teal);word-break:break-all}
     .sov-stream-val.red{color:var(--red)}
     .sov-stream-val.gold{color:var(--gold)}
- 
+
     /* KILL COMMANDS */
     .kill-bar{
       display:flex;flex-wrap:wrap;gap:5px;padding:8px 10px;
@@ -316,7 +333,7 @@
     .kill-btn:hover{background:var(--red);color:#fff;box-shadow:0 0 10px var(--red-glow)}
     .kill-btn.teal{color:var(--teal);border-color:var(--teal);background:rgba(0,229,204,.05)}
     .kill-btn.teal:hover{background:var(--teal);color:var(--bg0);box-shadow:0 0 10px var(--teal-glow)}
- 
+
     /* SHELL ROW */
     .sov-shell-row{
       display:flex;align-items:center;gap:5px;
@@ -328,7 +345,7 @@
       flex:1;background:transparent;border:none;outline:none;
       color:#fff;font-family:var(--mono);font-size:11px;
     }
- 
+
     /* RESIZE HANDLE */
     .sov-resize{
       position:absolute;bottom:0;right:0;
@@ -336,26 +353,26 @@
       background:linear-gradient(135deg,transparent 50%,var(--teal) 50%);
       opacity:.5;touch-action:none;
     }
- 
+
     /* ── FOOTER ── */
     .ft{
       text-align:center;padding:24px 0 14px;
       font-size:9px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;
       border-top:1px solid var(--border);margin-top:28px;line-height:2;
     }
- 
+
     /* ── WRAPPER ── */
     .wrapper{position:relative}
     </style>
 </head>
 <body>
- 
+
 <!-- THREAT BANNER -->
 <div class="threat-banner" id="threatBanner">⚠ THREAT VECTOR DETECTED — MALICIOUS LATERAL MOVEMENT IDENTIFIED</div>
- 
+
 <div class="shell">
 <div class="wrapper">
- 
+
   <!-- ══════════ SOVEREIGN TERMINAL ══════════ -->
   <div class="sov-term" id="sovTerm">
     <div class="sov-topbar" id="sovDragHandle">
@@ -365,7 +382,7 @@
         <span class="sov-btn close" onclick="toggleTerm()">[CLOSE]</span>
       </div>
     </div>
- 
+
     <div class="sov-grid">
       <!-- LEFT — LIVE ATTACK STREAM -->
       <div class="sov-pane" style="min-width:0">
@@ -384,13 +401,13 @@
           <button class="kill-btn teal" onclick="killCmd('NEUTRALIZE')">✓ NEUTRALIZE</button>
         </div>
       </div>
- 
+
       <!-- RIGHT — DIAGNOSTIC SHELL -->
       <div class="sov-pane" style="min-width:0">
         <div class="sov-pane-title">// Governance Diagnostic Shell</div>
         <div class="sov-out" id="sovShellOut">LOTUS MATRIX v2.0 DIAGNOSTIC INTERFACE INITIALIZED.
 Commands: <span style="color:var(--teal)">status, governor, tiers, attacker, trace, location, version, help, clear</span>
- 
+
 </div>
         <div class="sov-shell-row">
           <span class="sov-prompt">lotus@matrix:~#</span>
@@ -398,12 +415,12 @@ Commands: <span style="color:var(--teal)">status, governor, tiers, attacker, tra
         </div>
       </div>
     </div>
- 
+
     <!-- RESIZE HANDLE -->
     <div class="sov-resize" id="sovResize" title="Drag to resize"></div>
   </div>
   <!-- ══════════ /SOVEREIGN TERMINAL ══════════ -->
- 
+
   <!-- HEADER -->
   <header class="hdr">
     <div class="hdr-eye">Proprietary Engine Pipeline // v2.0</div>
@@ -415,7 +432,7 @@ Commands: <span style="color:var(--teal)">status, governor, tiers, attacker, tra
       <div class="pill"><span class="dot gold"></span><span>GOVERNOR APEX: 1.047 RAD</span></div>
     </div>
   </header>
- 
+
   <!-- ═══ GATE ═══ -->
   <div id="gateView">
     <div class="gate-ring"><span class="gate-icon">⬡</span></div>
@@ -433,14 +450,14 @@ Commands: <span style="color:var(--teal)">status, governor, tiers, attacker, tra
       <div class="gate-err" id="gateErr"></div>
     </div>
   </div>
- 
+
   <!-- ═══ DASHBOARD ═══ -->
   <div id="dashView">
     <div class="dash-grid">
- 
+
       <!-- LEFT -->
       <div style="display:flex;flex-direction:column;gap:12px">
- 
+
         <!-- ENGINE PANEL -->
         <div class="panel">
           <div class="panel-hdr">
@@ -459,13 +476,13 @@ Commands: <span style="color:var(--teal)">status, governor, tiers, attacker, tra
               </div>
               <button class="btn-eng" onclick="runTransform()">ENGAGE</button>
             </div>
- 
+
             <div class="cipher-box">
               <div class="cipher-lbl">Cylinder Terminal Cipher State</div>
               <div class="cipher-val" id="cipherOut">— — — —</div>
               <div class="cipher-lat" id="cipherLat">Processing Delta: awaiting input</div>
             </div>
- 
+
             <!-- REALTIME TICKER -->
             <div class="rt-ticker">
               <div class="rt-ticker-inner" id="rtTicker">
@@ -488,7 +505,7 @@ Commands: <span style="color:var(--teal)">status, governor, tiers, attacker, tra
                 <span class="rt-item">NODES <span>0</span></span>
               </div>
             </div>
- 
+
             <div class="gov-grid">
               <div class="gov-card"><div class="gov-lbl">Boundary Apex</div><div class="gov-val" id="sApex">1.047 RAD</div></div>
               <div class="gov-card"><div class="gov-lbl">Rotational Delta</div><div class="gov-val blue" id="sAngle">0.000 rad</div></div>
@@ -497,7 +514,7 @@ Commands: <span style="color:var(--teal)">status, governor, tiers, attacker, tra
             </div>
           </div>
         </div>
- 
+
         <!-- TELEMETRY LOG -->
         <div class="panel">
           <div class="panel-hdr">
@@ -510,7 +527,7 @@ Commands: <span style="color:var(--teal)">status, governor, tiers, attacker, tra
             </div>
           </div>
         </div>
- 
+
         <!-- DEMO CONTROLS -->
         <div class="panel">
           <div class="panel-hdr">
@@ -532,9 +549,9 @@ Commands: <span style="color:var(--teal)">status, governor, tiers, attacker, tra
             </div>
           </div>
         </div>
- 
+
       </div><!-- /LEFT -->
- 
+
       <!-- RIGHT — 3D CANVAS -->
       <div style="display:flex;flex-direction:column;gap:12px">
         <div class="panel">
@@ -550,28 +567,28 @@ Commands: <span style="color:var(--teal)">status, governor, tiers, attacker, tra
           </div>
         </div>
       </div>
- 
+
     </div><!-- /dash-grid -->
   </div><!-- /dashView -->
- 
+
   <footer class="ft">
     Proprietary Engine Pipeline<br>
     © 2026 Nicholas Desjardins. All Rights Reserved.<br>
     System Gate: Active Dashboard Stream
   </footer>
- 
+
 </div><!-- /wrapper -->
 </div><!-- /shell -->
- 
+
 <script>
 /* ═══════════════════════════════════════════════════
    LOTUS MATRIX ENGINE — DASHBOARD CONTROLLER v2.0
    © 2026 Nicholas Desjardins. All Rights Reserved.
 ═══════════════════════════════════════════════════ */
- 
+
 let sessionToken = null, attackActive = false, intruderData = null;
 let sessionStart = null, uptimeIv = null;
- 
+
 /* ── THREE.JS ────────────────────────────────── */
 const canvasWrap = document.getElementById('canvasWrap');
 const scene    = new THREE.Scene();
@@ -580,16 +597,27 @@ const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setClearColor(0x000000, 0);
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 canvasWrap.appendChild(renderer.domElement);
- 
+
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true; controls.dampingFactor = 0.06;
-controls.minDistance = 3; controls.maxDistance = 14;
- 
+controls.enableDamping  = true;
+controls.dampingFactor  = 0.06;
+controls.minDistance    = 2;
+controls.maxDistance    = 18;
+controls.enablePan      = true;       // free pan with right-click drag (desktop)
+controls.panSpeed       = 1.2;
+controls.rotateSpeed    = 0.8;
+controls.zoomSpeed      = 1.2;
+// On mobile: one finger = rotate, two fingers = pan+zoom (natural)
+controls.touches = {
+  ONE: THREE.TOUCH ? THREE.TOUCH.ROTATE : 0,
+  TWO: THREE.TOUCH ? THREE.TOUCH.DOLLY_PAN : 1,
+};
+
 // Cylinder
 const cylMat = new THREE.MeshBasicMaterial({ color: 0x1a1a3a, wireframe: true, transparent: true, opacity: 0.35 });
 const cyl    = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 5, 24, 10, true), cylMat);
 scene.add(cyl);
- 
+
 // Rings
 for (let i = 0; i < 5; i++) {
   const r = new THREE.Mesh(
@@ -599,25 +627,25 @@ for (let i = 0; i < 5; i++) {
   r.rotation.x = Math.PI / 2; r.position.y = 2 - i;
   scene.add(r);
 }
- 
+
 // Axis
 scene.add(new THREE.Line(
   new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,-2.6,0), new THREE.Vector3(0,2.6,0)]),
   new THREE.LineBasicMaterial({ color: 0x0066ff, transparent: true, opacity: 0.35 })
 ));
- 
+
 // Particles
 const partGeom = new THREE.BufferGeometry();
 const partPos  = new Float32Array(300);
 for (let i = 0; i < 300; i++) partPos[i] = (Math.random() - .5) * 12;
 partGeom.setAttribute('position', new THREE.BufferAttribute(partPos, 3));
 scene.add(new THREE.Points(partGeom, new THREE.PointsMaterial({ color: 0x1a1a4a, size: 0.04 })));
- 
+
 let nodeMeshes = [];
 const NODE_COLORS = [0xff2244, 0x00e5cc, 0xf0b429, 0x0066ff, 0xcc44ff, 0x44ff88, 0xff8800, 0x00aaff];
- 
+
 camera.position.set(0, 2, 7); camera.lookAt(0, 0, 0); controls.update();
- 
+
 function resizeRenderer() {
   const w = canvasWrap.clientWidth, h = canvasWrap.clientHeight;
   camera.aspect = w / h; camera.updateProjectionMatrix();
@@ -625,7 +653,7 @@ function resizeRenderer() {
 }
 resizeRenderer();
 window.addEventListener('resize', resizeRenderer);
- 
+
 (function animate() {
   requestAnimationFrame(animate);
   const t = Date.now() * 0.001;
@@ -638,16 +666,16 @@ window.addEventListener('resize', resizeRenderer);
   });
   controls.update(); renderer.render(scene, camera);
 })();
- 
+
 /* ── TERMINAL DRAG & RESIZE ─────────────────── */
 const sovTerm   = document.getElementById('sovTerm');
 const dragHandle = document.getElementById('sovDragHandle');
 const resizeHandle = document.getElementById('sovResize');
- 
+
 let dragging = false, resizing = false;
 let dragOX = 0, dragOY = 0, dragSX = 0, dragSY = 0;
 let resizeOX = 0, resizeOY = 0, resizeW0 = 0, resizeH0 = 0;
- 
+
 // Drag — mouse
 dragHandle.addEventListener('mousedown', e => {
   if (e.target.closest('.sov-btn')) return;
@@ -670,7 +698,7 @@ document.addEventListener('mousemove', e => {
   }
 });
 document.addEventListener('mouseup', () => { dragging = false; resizing = false; });
- 
+
 // Drag — touch
 dragHandle.addEventListener('touchstart', e => {
   if (e.target.closest('.sov-btn')) return;
@@ -695,7 +723,7 @@ document.addEventListener('touchmove', e => {
   }
 }, { passive: true });
 document.addEventListener('touchend', () => { dragging = false; resizing = false; });
- 
+
 // Resize handle — mouse + touch
 resizeHandle.addEventListener('mousedown', e => {
   resizing = true;
@@ -710,7 +738,7 @@ resizeHandle.addEventListener('touchstart', e => {
   resizeW0 = sovTerm.offsetWidth; resizeH0 = sovTerm.offsetHeight;
   e.stopPropagation();
 }, { passive: true });
- 
+
 function expandTerm() {
   const isExpanded = sovTerm.dataset.expanded === '1';
   if (!isExpanded) {
@@ -726,7 +754,7 @@ function expandTerm() {
     sovTerm.querySelector('.expand').textContent = '⤢ EXPAND';
   }
 }
- 
+
 /* ── KEYBOARD & TOGGLE ──────────────────────── */
 window.addEventListener('keydown', e => {
   if (e.key === '`' || e.key === '~') { e.preventDefault(); toggleTerm(); }
@@ -736,11 +764,11 @@ function toggleTerm() {
   sovTerm.style.display = vis ? 'none' : 'block';
   if (!vis) document.getElementById('sovShellIn').focus();
 }
- 
+
 /* ── DIAGNOSTIC COMMANDS (client-side) ──────── */
 let lastAttackerIP   = null;
 let lastAttackerData = null;
- 
+
 const CMDS = {
   help:     () => `Available commands:\n  status    — system state\n  governor  — boundary parameters\n  tiers     — cylinder tier layout\n  attacker  — last known attacker data\n  trace     — simulate deep IP trace\n  location  — GPS / geolocation data\n  version   — engine version\n  clear     — clear output`,
   status:   () => `SYSTEM STATUS: ${attackActive ? '\x1b[31mUNDER ATTACK\x1b[0m' : 'SECURE'}\nSESSION: ${sessionToken ? 'ACTIVE' : 'INACTIVE'}\nUPTIME: ${document.getElementById('sUptime').textContent}\nROTATION: ${cyl.rotation.y.toFixed(4)} rad`,
@@ -758,7 +786,7 @@ const CMDS = {
   version:  () => `LOTUS MATRIX ENGINE v2.0\nARCHITECT: Nicholas Desjardins\nBUILD: 2026 // CYLINDRICAL SPATIAL CORE\nTIERS: 8 // GALACTIC ANCHOR: ACTIVE\nSECURITY: TOKEN-BASED SESSION GATE`,
   clear:    () => null
 };
- 
+
 document.getElementById('sovShellIn').addEventListener('keydown', function(e) {
   if (e.key !== 'Enter') return;
   const cmd = this.value.trim().toLowerCase(); this.value = '';
@@ -775,7 +803,7 @@ document.getElementById('sovShellIn').addEventListener('keydown', function(e) {
   }
   out.scrollTop = out.scrollHeight;
 });
- 
+
 /* ── KILL COMMANDS ──────────────────────────── */
 function killCmd(action) {
   const out  = document.getElementById('sovStream');
@@ -791,7 +819,7 @@ function killCmd(action) {
   if (action === 'NEUTRALIZE') containThreat();
 }
 function ts() { return new Date().toTimeString().split(' ')[0]; }
- 
+
 /* ── HANDSHAKE ──────────────────────────────── */
 function doHandshake() {
   const btn = document.getElementById('gateBtn');
@@ -814,7 +842,7 @@ function doHandshake() {
     btn.textContent = 'ENTER SECURE LAYER CORE'; btn.disabled = false;
   });
 }
- 
+
 function bootDash() {
   document.getElementById('gateView').style.display = 'none';
   document.getElementById('dashView').style.display = 'block';
@@ -826,7 +854,7 @@ function bootDash() {
   setInterval(updateTickerLive, 3000);
   resizeRenderer(); runTransform();
 }
- 
+
 function updateUptime() {
   const s   = Math.floor((Date.now() - sessionStart) / 1000);
   const hh  = String(Math.floor(s/3600)).padStart(2,'0');
@@ -834,7 +862,7 @@ function updateUptime() {
   const ss  = String(s%60).padStart(2,'0');
   document.getElementById('sUptime').textContent = `${hh}:${mm}:${ss}`;
 }
- 
+
 /* ── LIVE TICKER UPDATE ──────────────────────── */
 function updateTickerLive() {
   const items = document.querySelectorAll('.rt-ticker-inner .rt-item');
@@ -848,7 +876,7 @@ function updateTickerLive() {
     if (el.textContent.startsWith('NODES')) spans[0].textContent = nodeMeshes.length;
   });
 }
- 
+
 /* ── TELEMETRY ──────────────────────────────── */
 function fetchTelemetry() {
   if (!sessionToken) return;
@@ -860,7 +888,7 @@ function fetchTelemetry() {
     document.getElementById('sStatus').textContent = m.system_status;
     const st = document.getElementById('sStatus');
     const sv = document.getElementById('sovStream');
- 
+
     if (m.attack_active) {
       st.className = 'gov-val red'; cylMat.color.setHex(0x550011);
       intruderData = m;
@@ -874,7 +902,7 @@ function fetchTelemetry() {
       ball.position.set(Math.cos(angle)*2, 1.8-(m.intruder_tier*0.55), Math.sin(angle)*2);
       document.getElementById('canvasTitle').textContent = `// MONITORING THREAT [1] — TIER: ${m.intruder_tier}`;
       document.getElementById('canvasLbl').textContent   = `THREAT TIER ${m.intruder_tier} LOCKED`;
- 
+
       if (m.incident_escrow_report) {
         const rep = m.incident_escrow_report;
         lastAttackerData = rep;
@@ -908,11 +936,11 @@ function fetchTelemetry() {
     }
   });
 }
- 
+
 function streamRow(time, val, cls) {
   return `<div class="sov-stream-row"><span class="sov-stream-ts">[${time}]</span><span class="sov-stream-val ${cls}">${val}</span></div>`;
 }
- 
+
 /* ── THREAT SIM ─────────────────────────────── */
 function startThreat() {
   attackActive = true;
@@ -944,7 +972,7 @@ function clearThreat() {
     body: JSON.stringify({ active: false })
   });
 }
- 
+
 /* ── TRANSFORM ──────────────────────────────── */
 function runTransform() {
   const data = document.getElementById('dataVec').value.trim();
@@ -979,7 +1007,7 @@ function runTransform() {
     });
   });
 }
- 
+
 function rebuildNodes(data, key) {
   nodeMeshes.forEach(m => scene.remove(m)); nodeMeshes = [];
   const clean = data.toUpperCase().replace(/\s+/g,'');
@@ -994,7 +1022,7 @@ function rebuildNodes(data, key) {
     scene.add(mesh); nodeMeshes.push(mesh);
   }
 }
- 
+
 function ingestLedger() {
   const v = document.getElementById('ledgerIn').value.trim();
   if (v.length < 4) return;
@@ -1005,4 +1033,3 @@ function ingestLedger() {
 </script>
 </body>
 </html>
- 
