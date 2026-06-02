@@ -46,7 +46,7 @@
     }
     /* Allow THREE canvas and interactive areas to capture touch freely */
     canvas { touch-action: none; }
-
+ 
     /* ── INPUT ZOOM FIX ──────────────────────────────────
        iOS Safari zooms in when an <input> font-size < 16px.
        Force 16px on all inputs; visual scaling via transform if needed. */
@@ -55,7 +55,7 @@
       -webkit-user-select: text;
       user-select: text;
     }
-
+ 
     /* ── SOVEREIGN TERMINAL — KEYBOARD-AWARE ─────────────
        When the soft keyboard opens on Android/iOS the browser shrinks
        the visual viewport.  We anchor the terminal to the visual viewport
@@ -68,13 +68,13 @@
       /* Sticky positioning keeps it in view while page scrolls */
       position: fixed !important;   /* fixed = visual-viewport anchored */
     }
-
+ 
     /* When keyboard is open, shrink the terminal automatically */
     @media (max-height: 500px) {
       .sov-term { max-height: 70dvh; }
       .sov-out  { max-height: 110px !important; }
     }
-
+ 
     /* ── SHELL INPUT — always above keyboard ─────────────
        padding-bottom uses safe-area so the row clears the home bar */
     .sov-shell-row {
@@ -87,12 +87,12 @@
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
     }
-
+ 
     /* ── MOBILE FULL-WIDTH FIX ──────────────────────────── */
     .shell { overflow-x: hidden; }
     .dash-grid { min-width: 0; }
     .dash-grid > div { min-width: 0; overflow-x: hidden; }
-
+ 
     /* Portrait phone — stack, no clip */
     @media (max-width: 600px) {
       .panel-body  { padding: 10px 8px; }
@@ -109,7 +109,7 @@
         top: 8px !important;
       }
     }
-
+ 
     /* ══════════════════════════════════════════════════════
        ORIGINAL DESIGN TOKENS (unchanged)
     ══════════════════════════════════════════════════════ */
@@ -135,10 +135,10 @@
     ::-webkit-scrollbar{width:3px;height:3px}
     ::-webkit-scrollbar-track{background:var(--bg0)}
     ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
-
+ 
     .shell{max-width:1440px;margin:0 auto;padding:12px}
     @media(min-width:768px){.shell{padding:20px}}
-
+ 
     .hdr{
       display:flex;flex-direction:column;align-items:center;
       padding:20px 0 16px;border-bottom:1px solid var(--border);
@@ -164,7 +164,7 @@
     .dot.blue{background:var(--blue);box-shadow:0 0 6px var(--blue)}
     .dot.gold{background:var(--gold);box-shadow:0 0 6px var(--gold);animation:none}
     @keyframes dot-pulse{0%,100%{opacity:1}50%{opacity:.35}}
-
+ 
     #gateView{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:62vh;gap:20px}
     .gate-ring{
       width:110px;height:110px;border-radius:50%;
@@ -199,11 +199,11 @@
     .gate-btn:hover{box-shadow:0 0 40px rgba(0,102,255,.5);transform:translateY(-1px)}
     .gate-btn:disabled{opacity:.5;transform:none;cursor:not-allowed}
     .gate-err{color:var(--red);font-size:11px;text-align:center;margin-top:8px;display:none}
-
+ 
     #dashView{display:none}
     .dash-grid{display:grid;grid-template-columns:1fr;gap:14px}
     @media(min-width:1100px){.dash-grid{grid-template-columns:1fr 460px;align-items:start}}
-
+ 
     .panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
     .panel-hdr{
       display:flex;align-items:center;justify-content:space-between;
@@ -212,7 +212,7 @@
     .panel-title{font-family:var(--hud);font-size:9px;letter-spacing:2px;color:var(--blue2);text-transform:uppercase}
     .panel-badge{font-size:8px;color:var(--dim);letter-spacing:1px;text-transform:uppercase}
     .panel-body{padding:14px}
-
+ 
     .input-row{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;margin-bottom:14px}
     @media(max-width:480px){.input-row{grid-template-columns:1fr 1fr}}
     .field{display:flex;flex-direction:column;gap:5px}
@@ -233,7 +233,7 @@
     }
     .btn-eng:hover{background:var(--blue2);box-shadow:0 0 20px var(--blue-glow)}
     @media(max-width:480px){.btn-eng{grid-column:1/-1}}
-
+ 
     .cipher-box{
       background:var(--bg1);border:1px dashed var(--border2);border-radius:var(--r);
       padding:18px;text-align:center;margin-bottom:14px;
@@ -245,13 +245,13 @@
       text-shadow:0 0 20px rgba(255,255,255,.12);
     }
     .cipher-lat{font-size:9px;color:var(--dim);margin-top:6px}
-
+ 
     .gov-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
     .gov-card{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px}
     .gov-lbl{font-size:8px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
     .gov-val{font-family:var(--hud);font-size:13px;font-weight:700;color:var(--teal);word-break:break-all}
     .gov-val.blue{color:var(--blue2)} .gov-val.red{color:var(--red)} .gov-val.gold{color:var(--gold)}
-
+ 
     .tele-log{display:flex;flex-direction:column;gap:6px;max-height:340px;overflow-y:auto}
     .tier-row{
       background:var(--bg3);border:1px solid var(--border);border-left:3px solid var(--blue);
@@ -264,7 +264,7 @@
     .tier-bin{font-size:10px;color:var(--teal);letter-spacing:2px}
     .tier-formula{font-size:11px;color:var(--white);margin-bottom:3px}
     .tier-boundary{font-size:9px;color:var(--dim);line-height:1.5}
-
+ 
     .rt-ticker{
       background:linear-gradient(90deg,rgba(0,102,255,.06),rgba(0,229,204,.06));
       border:1px solid var(--border2);border-radius:var(--r);
@@ -277,7 +277,7 @@
     .rt-item{font-size:9px;color:var(--sec);letter-spacing:.5px}
     .rt-item span{color:var(--teal);font-weight:700}
     @keyframes ticker-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-
+ 
     .demo-panel{
       background:linear-gradient(135deg,rgba(20,6,10,1),rgba(10,4,6,1));
       border:1px solid #2a0f1a;border-radius:var(--r);padding:12px 14px;margin-top:14px;
@@ -317,7 +317,7 @@
       transition:all var(--tr);min-height:48px;
     }
     .btn-ledger:hover{border-color:var(--teal);background:rgba(0,229,204,.05)}
-
+ 
     .canvas-wrap{
       width:100%;height:clamp(280px,42vw,450px);
       background:var(--bg0);border-radius:var(--r);overflow:hidden;position:relative;
@@ -328,7 +328,7 @@
       text-transform:uppercase;pointer-events:none;
     }
     .canvas-hint{font-size:9px;color:var(--dim);text-align:center;margin-top:6px;letter-spacing:.5px}
-
+ 
     .threat-banner{
       display:none;position:fixed;top:14px;left:50%;transform:translateX(-50%);
       background:rgba(70,4,12,.96);border:1px solid var(--red);color:#fff;
@@ -339,10 +339,16 @@
       animation:blink 1.2s ease infinite;
     }
     @keyframes blink{0%,100%{opacity:1}50%{opacity:.55}}
-
+ 
     /* ══════════════════════════════════════════════
-       SOVEREIGN TERMINAL — fluid text, reflow on resize
+       TERMINAL FONT SCALING
+       --term-font-scale is set by JS ResizeObserver.
+       All terminal text sizes are derived from it so
+       everything grows/shrinks together as you resize.
     ══════════════════════════════════════════════ */
+    #sovTerm {
+      --term-font-scale: 1;   /* JS updates this on every resize */
+    }
     .sov-term{
       position: fixed;
       top: 70px;
@@ -397,19 +403,27 @@
       border-radius: 50%;
       background: var(--teal);
     }
-    .sov-title{font-family:var(--hud);font-size:9px;color:var(--teal);letter-spacing:2px;text-transform:uppercase}
-    .sov-controls{display:flex;gap:10px;align-items:center}
+    .sov-title{
+      font-family:var(--hud);
+      font-size: calc(9px * var(--term-font-scale, 1));
+      color:var(--teal);letter-spacing:2px;text-transform:uppercase;
+      flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    }
+    .sov-controls{display:flex;gap:10px;align-items:center;flex-shrink:0}
     .sov-btn{
-      font-family:var(--hud);font-size:8px;letter-spacing:1px;
+      font-family:var(--hud);
+      font-size: max(8px, calc(8px * var(--term-font-scale, 1)));
+      letter-spacing:1px;
       cursor:pointer;padding:6px 10px;border-radius:3px;border:1px solid;
       text-transform:uppercase;transition:all var(--tr);
-      min-height:36px; /* bigger tap targets */
+      min-height:36px;
+      white-space: nowrap;
     }
     .sov-btn.close{color:var(--red);border-color:var(--red)}
     .sov-btn.close:hover{background:var(--red);color:#fff}
     .sov-btn.expand{color:var(--teal);border-color:var(--teal)}
     .sov-btn.expand:hover{background:rgba(0,229,204,.1)}
-
+ 
     .sov-grid{
       display: flex;
       flex-direction: column;
@@ -422,7 +436,7 @@
       overflow: hidden;
     }
     @media(min-width:600px){.sov-grid{flex-direction:row}}
-
+ 
     .sov-pane{
       /* Each pane is itself a flex column so its content scrolls inside it */
       flex: 1;
@@ -435,48 +449,47 @@
       overflow: hidden;
     }
     .sov-pane-title{
-      font-size:8px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;
+      /* Base 8px × scale */
+      font-size: calc(8px * var(--term-font-scale, 1));
+      color:var(--dim);letter-spacing:2px;text-transform:uppercase;
       margin-bottom:8px;padding-bottom:5px;border-bottom:1px dashed var(--border);
       font-family:var(--hud);
-      flex-shrink: 0;  /* title never shrinks */
-      /* Prevent long titles from overflowing */
+      flex-shrink: 0;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
     .sov-out{
-      /* Takes all remaining pane height and scrolls vertically */
       flex: 1;
-      min-height: 0;          /* CRITICAL for Chrome/Android flex scroll */
+      min-height: 0;
       overflow-y: auto;
       overflow-x: hidden;
-      /* Wrap long lines — no horizontal overflow */
       white-space: pre-wrap;
       word-break: break-word;
       overflow-wrap: break-word;
-      font-size: 10px;
+      /* Base 11px × scale — readable at default, grows with terminal */
+      font-size: calc(11px * var(--term-font-scale, 1));
       color: var(--white);
       line-height: 1.65;
       font-family: var(--mono);
-      /* Smooth momentum scroll on iOS */
       -webkit-overflow-scrolling: touch;
-      /* Custom scrollbar */
       scrollbar-width: thin;
       scrollbar-color: var(--border2) transparent;
     }
     .sov-out::-webkit-scrollbar { width: 3px; }
     .sov-out::-webkit-scrollbar-track { background: transparent; }
     .sov-out::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
-
+ 
     .sov-stream-row{
       display:flex;gap:6px;align-items:flex-start;
-      border-bottom:1px solid rgba(26,26,48,.6);padding:5px 0;font-size:9px;
+      border-bottom:1px solid rgba(26,26,48,.6);padding:5px 0;
+      font-size: calc(9px * var(--term-font-scale, 1));
     }
     .sov-stream-ts{color:var(--dim);white-space:nowrap;min-width:52px}
     .sov-stream-val{color:var(--teal);word-break:break-all}
     .sov-stream-val.red{color:var(--red)}
     .sov-stream-val.gold{color:var(--gold)}
-
+ 
     .kill-bar{
       display:flex;flex-wrap:wrap;gap:5px;padding:8px 10px;
       border-top:1px solid var(--border);background:rgba(0,0,0,.3);flex-shrink:0;
@@ -490,7 +503,7 @@
     .kill-btn:hover{background:var(--red);color:#fff;box-shadow:0 0 10px var(--red-glow)}
     .kill-btn.teal{color:var(--teal);border-color:var(--teal);background:rgba(0,229,204,.05)}
     .kill-btn.teal:hover{background:var(--teal);color:var(--bg0);box-shadow:0 0 10px var(--teal-glow)}
-
+ 
     /* Shell row — always visible above soft keyboard */
     .sov-shell-row{
       display:flex;align-items:center;gap:5px;
@@ -505,21 +518,25 @@
       bottom: 0;
       z-index: 20;
     }
-    .sov-prompt{color:var(--teal);font-size:11px;font-weight:700;white-space:nowrap}
+    .sov-prompt{
+      color:var(--teal);
+      font-size: calc(11px * var(--term-font-scale, 1));
+      font-weight:700;white-space:nowrap;
+    }
     .sov-shell-in{
       flex:1;background:transparent;border:none;outline:none;
       color:#fff;font-family:var(--mono);
-      /* 16px prevents iOS zoom; will look right in terminal context */
+      font-size: max(16px, calc(11px * var(--term-font-scale, 1)));
       caret-color: var(--teal);
     }
-
+ 
     .sov-resize{
       position:absolute;bottom:0;right:0;
       width:24px;height:24px;cursor:se-resize;
       background:linear-gradient(135deg,transparent 50%,var(--teal) 50%);
       opacity:.5;touch-action:none;
     }
-
+ 
     .ft{
       text-align:center;padding:24px 0 14px;
       font-size:9px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;
@@ -528,86 +545,135 @@
       padding-bottom: max(14px, env(safe-area-inset-bottom));
     }
     .wrapper{position:relative}
-
+ 
     /* ── ZOOM CONTROL BAR ──────────────────────────
        Floating zoom controls for environments where
        pinch-zoom is restricted (some PWAs / webviews) */
-    /* ── ZOOM BAR — always follows the user, everywhere ───────────
-       position:fixed anchors to the visual viewport on every browser.
-       On mobile, visualViewport scroll/resize events keep it re-clamped
-       so it never hides behind the keyboard or drifts off-screen.
-       A subtle drag handle lets users reposition it to any corner.    */
+    /* ══════════════════════════════════════════════════
+       ZOOM BAR — transparent, scalable, always on top
+       z-index 99999 beats every overlay including terminal
+    ══════════════════════════════════════════════════ */
     .zoom-bar {
       position: fixed;
-      /* Default: bottom-right, clear of safe-area / home bar */
-      bottom: max(18px, env(safe-area-inset-bottom, 18px));
-      right: 14px;
+      bottom: max(20px, env(safe-area-inset-bottom, 20px));
+      right: 16px;
       display: flex;
       flex-direction: column;
-      gap: 4px;
-      z-index: 8500;
-      /* Grouped pill look */
-      background: rgba(2,2,8,.82);
-      border: 1px solid rgba(0,229,204,.35);
-      border-radius: 12px;
-      padding: 6px;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      box-shadow: 0 0 18px rgba(0,229,204,.15), 0 4px 24px rgba(0,0,0,.55);
-      /* Smooth repositioning when JS nudges it */
-      transition: top 0.12s ease, left 0.12s ease,
-                  bottom 0.12s ease, right 0.12s ease,
-                  opacity 0.2s ease;
-      /* Allow drag */
+      align-items: center;
+      gap: 3px;
+      /* ABOVE everything — terminal, banners, overlays */
+      z-index: 99999;
+      /* Fully transparent background — glass only */
+      background: rgba(0,229,204,.04);
+      border: 1px solid rgba(0,229,204,.18);
+      border-radius: 14px;
+      padding: 5px;
+      backdrop-filter: blur(12px) saturate(1.4);
+      -webkit-backdrop-filter: blur(12px) saturate(1.4);
+      box-shadow:
+        0 0 0 1px rgba(0,229,204,.08) inset,
+        0 8px 32px rgba(0,0,0,.45),
+        0 0 20px rgba(0,229,204,.08);
+      /* Animate position changes smoothly */
+      transition: transform 0.08s ease, opacity 0.18s ease;
       cursor: grab;
       user-select: none;
       touch-action: none;
+      /* Allow JS to scale the whole bar via --zoom-bar-scale */
+      transform: scale(var(--zoom-bar-scale, 1));
+      transform-origin: bottom right;
+      /* Idle: slightly faded; active: full opacity */
+      opacity: 0.72;
     }
+    .zoom-bar:hover, .zoom-bar:focus-within { opacity: 1; }
     .zoom-bar:active { cursor: grabbing; }
-
-    /* Tiny drag-hint dot row at the top */
+ 
+    /* Grip pip row */
     .zoom-bar::before {
-      content: '⠿';
+      content: '';
       display: block;
-      text-align: center;
-      font-size: 10px;
-      color: rgba(0,229,204,.35);
+      width: 18px; height: 4px;
+      border-radius: 2px;
+      background: rgba(0,229,204,.22);
       margin-bottom: 2px;
       pointer-events: none;
+      flex-shrink: 0;
     }
-
+ 
     .zoom-btn {
-      width: 40px;
-      height: 40px;
-      background: rgba(0,229,204,.10);
-      border: 1px solid rgba(0,229,204,.4);
-      border-radius: 8px;
+      /* Size controlled by CSS custom property so JS can resize easily */
+      width:  var(--zbtn-size, 42px);
+      height: var(--zbtn-size, 42px);
+      min-width:  36px;
+      min-height: 36px;
+      background: rgba(0,229,204,.07);
+      border: 1px solid rgba(0,229,204,.28);
+      border-radius: 9px;
       color: var(--teal);
       font-family: var(--hud);
-      font-size: 20px;
+      font-size: calc(var(--zbtn-size, 42px) * 0.45);
       font-weight: 900;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.12s ease, transform 0.08s ease;
-      min-width: 44px;
-      min-height: 44px;
+      transition: background 0.1s ease, transform 0.07s ease, border-color 0.1s ease;
+      /* Tap highlight removal on Android */
+      -webkit-tap-highlight-color: transparent;
     }
-    .zoom-btn:hover  { background: rgba(0,229,204,.22); }
-    .zoom-btn:active { background: rgba(0,229,204,.35); transform: scale(0.93); }
+    .zoom-btn:hover   { background: rgba(0,229,204,.18); border-color: rgba(0,229,204,.5); }
+    .zoom-btn:active  { background: rgba(0,229,204,.32); transform: scale(0.91); }
     .zoom-reset {
-      font-size: 9px;
-      letter-spacing: 1px;
-      color: rgba(0,229,204,.7);
+      font-size: calc(var(--zbtn-size, 42px) * 0.22);
+      letter-spacing: 0.5px;
+      color: rgba(0,229,204,.8);
+    }
+ 
+    /* ── ZOOM BAR SIZE SLIDER (tiny, below buttons) ── */
+    .zoom-bar-sizer {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 2px;
+      opacity: 0.5;
+      transition: opacity 0.15s;
+    }
+    .zoom-bar:hover .zoom-bar-sizer { opacity: 1; }
+    .zoom-bar-sizer input[type=range] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 52px;
+      height: 3px;
+      background: rgba(0,229,204,.3);
+      border-radius: 2px;
+      outline: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      font-size: 16px; /* prevent iOS zoom */
+    }
+    .zoom-bar-sizer input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--teal);
+      cursor: pointer;
+      box-shadow: 0 0 4px rgba(0,229,204,.5);
+    }
+    .zoom-bar-sizer input[type=range]::-moz-range-thumb {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--teal);
+      border: none;
+      cursor: pointer;
     }
     </style>
 </head>
 <body>
-
+ 
 <!-- THREAT BANNER -->
 <div class="threat-banner" id="threatBanner">⚠ THREAT VECTOR DETECTED — MALICIOUS LATERAL MOVEMENT IDENTIFIED</div>
-
+ 
 <!-- ── FLOATING ZOOM CONTROLS ──────────────────────────────────────
      For locked-down WebViews / PWAs / browsers that restrict pinch-zoom.
      Uses CSS transform on <html> so everything scales uniformly.      -->
@@ -615,11 +681,15 @@
   <button class="zoom-btn" id="zoomIn"  title="Zoom in"  aria-label="Zoom in">+</button>
   <button class="zoom-btn zoom-reset" id="zoomReset" title="Reset zoom" aria-label="Reset zoom">1:1</button>
   <button class="zoom-btn" id="zoomOut" title="Zoom out" aria-label="Zoom out">−</button>
+  <div class="zoom-bar-sizer">
+    <input type="range" id="zoomBarSize" min="0.5" max="2" step="0.1" value="1"
+           title="Resize zoom bar" aria-label="Resize zoom bar">
+  </div>
 </div>
-
+ 
 <div class="shell">
 <div class="wrapper">
-
+ 
   <!-- ══════════ SOVEREIGN TERMINAL ══════════ -->
   <div class="sov-term" id="sovTerm">
     <div class="sov-topbar" id="sovDragHandle">
@@ -630,7 +700,7 @@
         <span class="sov-btn close" onclick="toggleTerm()">[CLOSE]</span>
       </div>
     </div>
-
+ 
     <div class="sov-grid">
       <!-- LEFT — LIVE ATTACK STREAM -->
       <div class="sov-pane" style="min-width:0">
@@ -648,13 +718,13 @@
           <button class="kill-btn teal" onclick="killCmd('NEUTRALIZE')">✓ NEUTRALIZE</button>
         </div>
       </div>
-
+ 
       <!-- RIGHT — DIAGNOSTIC SHELL -->
       <div class="sov-pane" style="min-width:0">
         <div class="sov-pane-title">// Governance Diagnostic Shell</div>
         <div class="sov-out" id="sovShellOut">LOTUS MATRIX v2.0 DIAGNOSTIC INTERFACE INITIALIZED.
 Commands: <span style="color:var(--teal)">status, governor, tiers, attacker, trace, location, version, help, clear</span>
-
+ 
 </div>
         <div class="sov-shell-row">
           <span class="sov-prompt">lotus@matrix:~#</span>
@@ -667,11 +737,11 @@ Commands: <span style="color:var(--teal)">status, governor, tiers, attacker, tra
         </div>
       </div>
     </div>
-
+ 
     <div class="sov-resize" id="sovResize" title="Drag to resize"></div>
   </div>
   <!-- ══════════ /SOVEREIGN TERMINAL ══════════ -->
-
+ 
   <!-- HEADER -->
   <header class="hdr">
     <div class="hdr-eye">Proprietary Engine Pipeline // v2.0</div>
@@ -683,7 +753,7 @@ Commands: <span style="color:var(--teal)">status, governor, tiers, attacker, tra
       <div class="pill"><span class="dot gold"></span><span>GOVERNOR APEX: 1.047 RAD</span></div>
     </div>
   </header>
-
+ 
   <!-- ═══ GATE ═══ -->
   <div id="gateView">
     <div class="gate-ring"><span class="gate-icon">⬡</span></div>
@@ -701,14 +771,14 @@ Commands: <span style="color:var(--teal)">status, governor, tiers, attacker, tra
       <div class="gate-err" id="gateErr"></div>
     </div>
   </div>
-
+ 
   <!-- ═══ DASHBOARD ═══ -->
   <div id="dashView">
     <div class="dash-grid">
-
+ 
       <!-- LEFT -->
       <div style="display:flex;flex-direction:column;gap:12px">
-
+ 
         <!-- ENGINE PANEL -->
         <div class="panel">
           <div class="panel-hdr">
@@ -729,13 +799,13 @@ Commands: <span style="color:var(--teal)">status, governor, tiers, attacker, tra
               </div>
               <button class="btn-eng" onclick="runTransform()">ENGAGE</button>
             </div>
-
+ 
             <div class="cipher-box">
               <div class="cipher-lbl">Cylinder Terminal Cipher State</div>
               <div class="cipher-val" id="cipherOut">— — — —</div>
               <div class="cipher-lat" id="cipherLat">Processing Delta: awaiting input</div>
             </div>
-
+ 
             <div class="rt-ticker">
               <div class="rt-ticker-inner" id="rtTicker">
                 <span class="rt-item">APEX <span>1.047 RAD</span></span>
@@ -756,7 +826,7 @@ Commands: <span style="color:var(--teal)">status, governor, tiers, attacker, tra
                 <span class="rt-item">NODES <span>0</span></span>
               </div>
             </div>
-
+ 
             <div class="gov-grid">
               <div class="gov-card"><div class="gov-lbl">Boundary Apex</div><div class="gov-val" id="sApex">1.047 RAD</div></div>
               <div class="gov-card"><div class="gov-lbl">Rotational Delta</div><div class="gov-val blue" id="sAngle">0.000 rad</div></div>
@@ -765,7 +835,7 @@ Commands: <span style="color:var(--teal)">status, governor, tiers, attacker, tra
             </div>
           </div>
         </div>
-
+ 
         <!-- TELEMETRY LOG -->
         <div class="panel">
           <div class="panel-hdr">
@@ -778,7 +848,7 @@ Commands: <span style="color:var(--teal)">status, governor, tiers, attacker, tra
             </div>
           </div>
         </div>
-
+ 
         <!-- DEMO CONTROLS -->
         <div class="panel">
           <div class="panel-hdr">
@@ -801,9 +871,9 @@ Commands: <span style="color:var(--teal)">status, governor, tiers, attacker, tra
             </div>
           </div>
         </div>
-
+ 
       </div>
-
+ 
       <!-- RIGHT — 3D CANVAS -->
       <div style="display:flex;flex-direction:column;gap:12px">
         <div class="panel">
@@ -819,28 +889,28 @@ Commands: <span style="color:var(--teal)">status, governor, tiers, attacker, tra
           </div>
         </div>
       </div>
-
+ 
     </div>
   </div>
-
+ 
   <footer class="ft">
     Proprietary Engine Pipeline<br>
     © 2026 Nicholas Desjardins. All Rights Reserved.<br>
     System Gate: Active Dashboard Stream
   </footer>
-
+ 
 </div>
 </div>
-
+ 
 <script>
 /* ═══════════════════════════════════════════════════
    LOTUS MATRIX ENGINE — DASHBOARD CONTROLLER v2.0
    © 2026 Nicholas Desjardins. All Rights Reserved.
 ═══════════════════════════════════════════════════ */
-
+ 
 let sessionToken = null, attackActive = false, intruderData = null;
 let sessionStart = null, uptimeIv = null;
-
+ 
 /* ══════════════════════════════════════════════════
    ZOOM CONTROLLER
    Works in two modes:
@@ -852,7 +922,7 @@ let sessionStart = null, uptimeIv = null;
   const MIN = 0.25, MAX = 5, STEP = 0.2;
   const root = document.documentElement;
   const bar  = document.getElementById('zoomBar');
-
+ 
   /* ── SCALE LOGIC ─────────────────────────────── */
   function applyScale(s) {
     scale = Math.min(MAX, Math.max(MIN, s));
@@ -864,7 +934,7 @@ let sessionStart = null, uptimeIv = null;
     root.style.transform       = `scale(${scale})`;
     root.style.width           = `${100 / scale}%`;
   }
-
+ 
   document.getElementById('zoomIn').addEventListener('click',  e => { e.stopPropagation(); applyScale(scale + STEP); });
   document.getElementById('zoomOut').addEventListener('click', e => { e.stopPropagation(); applyScale(scale - STEP); });
   document.getElementById('zoomReset').addEventListener('click', e => {
@@ -873,7 +943,18 @@ let sessionStart = null, uptimeIv = null;
     root.style.transform = '';
     root.style.width     = '';
   });
-
+ 
+  /* Bar size slider — changes --zbtn-size CSS var and --zoom-bar-scale */
+  const sizer = document.getElementById('zoomBarSize');
+  sizer.addEventListener('input', e => {
+    e.stopPropagation();
+    const s = parseFloat(sizer.value);
+    bar.style.setProperty('--zbtn-size', Math.round(42 * s) + 'px');
+    bar.style.setProperty('--zoom-bar-scale', s);
+  });
+  sizer.addEventListener('touchstart', e => e.stopPropagation(), { passive: true });
+  sizer.addEventListener('touchmove',  e => e.stopPropagation(), { passive: true });
+ 
   // Pinch-to-zoom supplement (CSS fallback for locked WebViews)
   let initDist = 0, initScale = 1;
   document.addEventListener('touchstart', e => {
@@ -895,21 +976,21 @@ let sessionStart = null, uptimeIv = null;
       applyScale(initScale * (dist / initDist));
     }
   }, { passive: true });
-
+ 
   // Ctrl+scroll (desktop)
   document.addEventListener('wheel', e => {
     if (!e.ctrlKey) return;
     e.preventDefault();
     applyScale(scale - e.deltaY * 0.005);
   }, { passive: false });
-
+ 
   /* ── DRAG THE ZOOM BAR ───────────────────────────
      Users can reposition it to any corner/edge.
      We switch to top+left positioning once dragged
      so it's not fighting bottom+right simultaneously. */
   let barDragging = false;
   let bDragOX = 0, bDragOY = 0;
-
+ 
   function getVP() {
     // Always use the visual viewport dimensions (accounts for keyboard, zoom)
     return {
@@ -919,7 +1000,7 @@ let sessionStart = null, uptimeIv = null;
       y: window.visualViewport ? window.visualViewport.offsetTop  : 0,
     };
   }
-
+ 
   function startBarDrag(cx, cy) {
     barDragging = true;
     bar.style.transition = 'none';
@@ -932,7 +1013,7 @@ let sessionStart = null, uptimeIv = null;
     bDragOX = cx - rect.left;
     bDragOY = cy - rect.top;
   }
-
+ 
   function moveBarDrag(cx, cy) {
     if (!barDragging) return;
     const vp  = getVP();
@@ -944,18 +1025,18 @@ let sessionStart = null, uptimeIv = null;
     bar.style.left = nx + 'px';
     bar.style.top  = ny + 'px';
   }
-
+ 
   function endBarDrag() {
     if (!barDragging) return;
     barDragging = false;
     bar.style.transition = '';
   }
-
+ 
   // Mouse drag
   bar.addEventListener('mousedown',  e => { if (e.target.closest('.zoom-btn')) return; startBarDrag(e.clientX, e.clientY); e.preventDefault(); });
   document.addEventListener('mousemove', e => moveBarDrag(e.clientX, e.clientY));
   document.addEventListener('mouseup',   () => endBarDrag());
-
+ 
   // Touch drag (single finger on bar, not on buttons)
   bar.addEventListener('touchstart', e => {
     if (e.target.closest('.zoom-btn')) return;
@@ -969,7 +1050,7 @@ let sessionStart = null, uptimeIv = null;
     }
   }, { passive: true });
   document.addEventListener('touchend', () => endBarDrag());
-
+ 
   /* ── VISUAL VIEWPORT TRACKING ────────────────────
      When the browser zooms natively OR the keyboard opens,
      the visual viewport shifts.  We re-clamp the bar position
@@ -980,7 +1061,7 @@ let sessionStart = null, uptimeIv = null;
     const vp  = getVP();
     const bw  = bar.offsetWidth;
     const bh  = bar.offsetHeight;
-
+ 
     // If we're in bottom/right mode (not dragged), nudge via margin
     const isTopLeft = bar.style.top && bar.style.top !== 'auto' && bar.style.left;
     if (isTopLeft) {
@@ -1005,7 +1086,7 @@ let sessionStart = null, uptimeIv = null;
       }
     }
   }
-
+ 
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', clampBarToViewport);
     window.visualViewport.addEventListener('scroll', clampBarToViewport);
@@ -1015,7 +1096,7 @@ let sessionStart = null, uptimeIv = null;
   // Run once on load
   clampBarToViewport();
 })();
-
+ 
 /* ── THREE.JS ────────────────────────────────── */
 const canvasWrap = document.getElementById('canvasWrap');
 const scene    = new THREE.Scene();
@@ -1024,7 +1105,7 @@ const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setClearColor(0x000000, 0);
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 canvasWrap.appendChild(renderer.domElement);
-
+ 
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping  = true;
 controls.dampingFactor  = 0.06;
@@ -1038,11 +1119,11 @@ controls.touches = {
   ONE: THREE.TOUCH ? THREE.TOUCH.ROTATE : 0,
   TWO: THREE.TOUCH ? THREE.TOUCH.DOLLY_PAN : 1,
 };
-
+ 
 const cylMat = new THREE.MeshBasicMaterial({ color: 0x1a1a3a, wireframe: true, transparent: true, opacity: 0.35 });
 const cyl    = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 5, 24, 10, true), cylMat);
 scene.add(cyl);
-
+ 
 for (let i = 0; i < 5; i++) {
   const r = new THREE.Mesh(
     new THREE.RingGeometry(1.97, 2.03, 48),
@@ -1051,23 +1132,23 @@ for (let i = 0; i < 5; i++) {
   r.rotation.x = Math.PI / 2; r.position.y = 2 - i;
   scene.add(r);
 }
-
+ 
 scene.add(new THREE.Line(
   new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,-2.6,0), new THREE.Vector3(0,2.6,0)]),
   new THREE.LineBasicMaterial({ color: 0x0066ff, transparent: true, opacity: 0.35 })
 ));
-
+ 
 const partGeom = new THREE.BufferGeometry();
 const partPos  = new Float32Array(300);
 for (let i = 0; i < 300; i++) partPos[i] = (Math.random() - .5) * 12;
 partGeom.setAttribute('position', new THREE.BufferAttribute(partPos, 3));
 scene.add(new THREE.Points(partGeom, new THREE.PointsMaterial({ color: 0x1a1a4a, size: 0.04 })));
-
+ 
 let nodeMeshes = [];
 const NODE_COLORS = [0xff2244, 0x00e5cc, 0xf0b429, 0x0066ff, 0xcc44ff, 0x44ff88, 0xff8800, 0x00aaff];
-
+ 
 camera.position.set(0, 2, 7); camera.lookAt(0, 0, 0); controls.update();
-
+ 
 function resizeRenderer() {
   const w = canvasWrap.clientWidth, h = canvasWrap.clientHeight;
   camera.aspect = w / h; camera.updateProjectionMatrix();
@@ -1079,7 +1160,7 @@ window.addEventListener('resize', resizeRenderer);
 if (window.visualViewport) {
   window.visualViewport.addEventListener('resize', resizeRenderer);
 }
-
+ 
 (function animate() {
   requestAnimationFrame(animate);
   const t = Date.now() * 0.001;
@@ -1092,7 +1173,7 @@ if (window.visualViewport) {
   });
   controls.update(); renderer.render(scene, camera);
 })();
-
+ 
 /* ══════════════════════════════════════════════════════════════
    TERMINAL DRAG, RESIZE & VIEWPORT CLAMP
    Pixel-perfect on Android Chrome (Pixel 6/7/8/9), iOS Safari,
@@ -1108,7 +1189,7 @@ if (window.visualViewport) {
 const sovTerm      = document.getElementById('sovTerm');
 const dragHandle   = document.getElementById('sovDragHandle');
 const resizeHandle = document.getElementById('sovResize');
-
+ 
 /* Helpers ─────────────────────────────────────────────────── */
 function vp() {
   // Always use visualViewport for correct coords on Android
@@ -1122,7 +1203,7 @@ function vp() {
   }
   return { w: window.innerWidth, h: window.innerHeight, ox: 0, oy: 0 };
 }
-
+ 
 // Ensure the terminal stays fully inside the visual viewport
 function clampTerm() {
   if (!sovTerm.classList.contains('open')) return;
@@ -1139,7 +1220,7 @@ function clampTerm() {
   sovTerm.style.left = newL + 'px';
   sovTerm.style.top  = newT + 'px';
 }
-
+ 
 // Set position using top+left (required for drag to work on Android fixed elements)
 function setTermPos(left, top) {
   const v  = vp();
@@ -1148,13 +1229,13 @@ function setTermPos(left, top) {
   sovTerm.style.left = Math.max(v.ox, Math.min(v.ox + v.w - tw, left)) + 'px';
   sovTerm.style.top  = Math.max(v.oy, Math.min(v.oy + v.h - th, top))  + 'px';
 }
-
+ 
 /* Drag state ──────────────────────────────────────────────── */
 let termDragging = false, termResizing = false;
 let dragStartX = 0, dragStartY = 0;   // pointer position at drag start
 let termStartL = 0, termStartT = 0;   // terminal position at drag start
 let resizeStartX = 0, resizeStartY = 0, resizeW0 = 0, resizeH0 = 0;
-
+ 
 function startTermDrag(cx, cy) {
   termDragging = true;
   dragStartX = cx;
@@ -1165,21 +1246,21 @@ function startTermDrag(cx, cy) {
   termStartT = r.top;
   sovTerm.style.transition = 'none';
 }
-
+ 
 function moveTermDrag(cx, cy) {
   if (!termDragging) return;
   const dx = cx - dragStartX;
   const dy = cy - dragStartY;
   setTermPos(termStartL + dx, termStartT + dy);
 }
-
+ 
 function startTermResize(cx, cy) {
   termResizing = true;
   resizeStartX = cx; resizeStartY = cy;
   resizeW0 = sovTerm.offsetWidth;
   resizeH0 = sovTerm.offsetHeight;
 }
-
+ 
 function moveTermResize(cx, cy) {
   if (!termResizing) return;
   const v = vp();
@@ -1189,13 +1270,13 @@ function moveTermResize(cx, cy) {
   sovTerm.style.width  = newW + 'px';
   sovTerm.style.height = newH + 'px';
 }
-
+ 
 function endTermInteraction() {
   termDragging  = false;
   termResizing  = false;
   sovTerm.style.transition = '';
 }
-
+ 
 /* Mouse events ────────────────────────────────────────────── */
 dragHandle.addEventListener('mousedown', e => {
   if (e.target.closest('.sov-btn')) return;
@@ -1207,12 +1288,12 @@ document.addEventListener('mousemove', e => {
   moveTermResize(e.clientX, e.clientY);
 });
 document.addEventListener('mouseup', endTermInteraction);
-
+ 
 resizeHandle.addEventListener('mousedown', e => {
   startTermResize(e.clientX, e.clientY);
   e.preventDefault(); e.stopPropagation();
 });
-
+ 
 /* Touch events ────────────────────────────────────────────── */
 dragHandle.addEventListener('touchstart', e => {
   if (e.target.closest('.sov-btn')) return;
@@ -1220,7 +1301,7 @@ dragHandle.addEventListener('touchstart', e => {
   startTermDrag(e.touches[0].clientX, e.touches[0].clientY);
   // Do NOT call preventDefault here — it would break button taps
 }, { passive: true });
-
+ 
 // NON-PASSIVE so we can call preventDefault and stop page scroll
 document.addEventListener('touchmove', e => {
   if (!termDragging && !termResizing) return;
@@ -1230,16 +1311,16 @@ document.addEventListener('touchmove', e => {
   if (termDragging)  moveTermDrag(t.clientX, t.clientY);
   if (termResizing)  moveTermResize(t.clientX, t.clientY);
 }, { passive: false });
-
+ 
 document.addEventListener('touchend',    endTermInteraction);
 document.addEventListener('touchcancel', endTermInteraction);
-
+ 
 resizeHandle.addEventListener('touchstart', e => {
   if (e.touches.length !== 1) return;
   startTermResize(e.touches[0].clientX, e.touches[0].clientY);
   e.stopPropagation();
 }, { passive: true });
-
+ 
 /* Viewport changes: keyboard open, rotate, zoom ───────────── */
 function onViewportChange() {
   clampTerm();
@@ -1253,24 +1334,35 @@ window.addEventListener('orientationchange', () => {
   setTimeout(onViewportChange, 300);
 });
 window.addEventListener('resize', onViewportChange);
-
-/* ── RESIZEOBSERVER: reflow text when terminal is resized ──────
-   When the user drags the resize handle (or the terminal width changes
-   due to rotation/expand), the sov-out elements need to:
-   1. Recalculate their scrollable height (flex handles width automatically)
-   2. Auto-scroll to the bottom so latest output stays visible
-   3. Ensure the shell-row input is still reachable
-   ResizeObserver fires synchronously after layout — perfect for this. */
+ 
+/* ── RESIZEOBSERVER: font scale + scroll-to-bottom on terminal resize ──
+   Terminal base width = 680px at scale 1.0.
+   We clamp scale between 0.7 (very narrow) and 1.6 (very wide / expanded)
+   so text stays readable across all sizes without going huge or tiny.    */
+const TERM_BASE_W = 680;
+const TERM_MIN_SCALE = 0.72;
+const TERM_MAX_SCALE = 1.6;
+ 
+function updateTermFontScale() {
+  const w = sovTerm.offsetWidth;
+  if (!w) return;
+  const s = Math.min(TERM_MAX_SCALE, Math.max(TERM_MIN_SCALE, w / TERM_BASE_W));
+  sovTerm.style.setProperty('--term-font-scale', s.toFixed(3));
+}
+ 
 if (window.ResizeObserver) {
   const termRO = new ResizeObserver(() => {
-    // Each output pane: scroll to bottom so latest lines are visible
+    updateTermFontScale();
+    // Auto-scroll outputs to bottom so latest content is visible
     document.querySelectorAll('.sov-out').forEach(el => {
       el.scrollTop = el.scrollHeight;
     });
   });
   termRO.observe(sovTerm);
 }
-
+// Also run on toggle/expand
+window.addEventListener('termOpened', updateTermFontScale);
+ 
 function expandTerm() {
   const isExpanded = sovTerm.dataset.expanded === '1';
   const v = vp();
@@ -1290,7 +1382,7 @@ function expandTerm() {
     document.getElementById('expandBtn').textContent = '⤢ EXPAND';
   }
 }
-
+ 
 /* ── KEYBOARD & TOGGLE ──────────────────────── */
 window.addEventListener('keydown', e => {
   if (e.key === '`' || e.key === '~') { e.preventDefault(); toggleTerm(); }
@@ -1312,14 +1404,15 @@ function toggleTerm() {
     }
     // Ensure it's within bounds after opening
     setTimeout(clampTerm, 50);
+    setTimeout(() => { if (typeof updateTermFontScale === 'function') updateTermFontScale(); }, 60);
     setTimeout(() => document.getElementById('sovShellIn').focus(), 80);
   }
 }
-
+ 
 /* ── DIAGNOSTIC COMMANDS ────────────────────── */
 let lastAttackerIP   = null;
 let lastAttackerData = null;
-
+ 
 const CMDS = {
   help:     () => `Available commands:\n  status    — system state\n  governor  — boundary parameters\n  tiers     — cylinder tier layout\n  attacker  — last known attacker data\n  trace     — simulate deep IP trace\n  location  — GPS / geolocation data\n  version   — engine version\n  clear     — clear output`,
   status:   () => `SYSTEM STATUS: ${attackActive ? 'UNDER ATTACK' : 'SECURE'}\nSESSION: ${sessionToken ? 'ACTIVE' : 'INACTIVE'}\nUPTIME: ${document.getElementById('sUptime').textContent}\nROTATION: ${cyl.rotation.y.toFixed(4)} rad`,
@@ -1337,7 +1430,7 @@ const CMDS = {
   version:  () => `LOTUS MATRIX ENGINE v2.0\nARCHITECT: Nicholas Desjardins\nBUILD: 2026 // CYLINDRICAL SPATIAL CORE\nTIERS: 8 // GALACTIC ANCHOR: ACTIVE`,
   clear:    () => null
 };
-
+ 
 document.getElementById('sovShellIn').addEventListener('keydown', function(e) {
   if (e.key !== 'Enter') return;
   const cmd = this.value.trim().toLowerCase(); this.value = '';
@@ -1356,7 +1449,7 @@ document.getElementById('sovShellIn').addEventListener('keydown', function(e) {
   // Scroll shell output pane into view on mobile after keyboard submit
   setTimeout(() => out.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 100);
 });
-
+ 
 /* ── KILL COMMANDS ──────────────────────────── */
 function killCmd(action) {
   const out = document.getElementById('sovStream');
@@ -1372,7 +1465,7 @@ function killCmd(action) {
   if (action === 'NEUTRALIZE') containThreat();
 }
 function ts() { return new Date().toTimeString().split(' ')[0]; }
-
+ 
 /* ── HANDSHAKE ──────────────────────────────── */
 function doHandshake() {
   const btn = document.getElementById('gateBtn');
@@ -1395,7 +1488,7 @@ function doHandshake() {
     btn.textContent = 'ENTER SECURE LAYER CORE'; btn.disabled = false;
   });
 }
-
+ 
 function bootDash() {
   document.getElementById('gateView').style.display = 'none';
   document.getElementById('dashView').style.display = 'block';
@@ -1407,7 +1500,7 @@ function bootDash() {
   setInterval(updateTickerLive, 3000);
   resizeRenderer(); runTransform();
 }
-
+ 
 function updateUptime() {
   const s   = Math.floor((Date.now() - sessionStart) / 1000);
   const hh  = String(Math.floor(s/3600)).padStart(2,'0');
@@ -1415,7 +1508,7 @@ function updateUptime() {
   const ss  = String(s%60).padStart(2,'0');
   document.getElementById('sUptime').textContent = `${hh}:${mm}:${ss}`;
 }
-
+ 
 function updateTickerLive() {
   const items = document.querySelectorAll('.rt-ticker-inner .rt-item');
   items.forEach(el => {
@@ -1425,7 +1518,7 @@ function updateTickerLive() {
     if (el.textContent.startsWith('NODES')) spans[0].textContent = nodeMeshes.length;
   });
 }
-
+ 
 function fetchTelemetry() {
   if (!sessionToken) return;
   fetch('/api/telemetry', { headers:{ 'Authorization':`Bearer ${sessionToken}` } })
@@ -1479,11 +1572,11 @@ function fetchTelemetry() {
     }
   });
 }
-
+ 
 function streamRow(time, val, cls) {
   return `<div class="sov-stream-row"><span class="sov-stream-ts">[${time}]</span><span class="sov-stream-val ${cls}">${val}</span></div>`;
 }
-
+ 
 function startThreat() {
   attackActive = true;
   document.getElementById('threatBanner').style.display = 'block';
@@ -1514,7 +1607,7 @@ function clearThreat() {
     body: JSON.stringify({ active: false })
   });
 }
-
+ 
 function runTransform() {
   const data = document.getElementById('dataVec').value.trim();
   const key  = document.getElementById('keyVec').value.trim();
@@ -1548,7 +1641,7 @@ function runTransform() {
     });
   });
 }
-
+ 
 function rebuildNodes(data, key) {
   nodeMeshes.forEach(m => scene.remove(m)); nodeMeshes = [];
   const clean = data.toUpperCase().replace(/\s+/g,'');
@@ -1563,7 +1656,7 @@ function rebuildNodes(data, key) {
     scene.add(mesh); nodeMeshes.push(mesh);
   }
 }
-
+ 
 function ingestLedger() {
   const v = document.getElementById('ledgerIn').value.trim();
   if (v.length < 4) return;
