@@ -364,10 +364,37 @@
     }
     .sov-topbar{
       display:flex;justify-content:space-between;align-items:center;
-      padding:8px 12px;background:rgba(0,229,204,.06);
-      border-bottom:1px solid var(--border);cursor:move;user-select:none;
-      touch-action:none;
+      padding:10px 12px;background:rgba(0,229,204,.06);
+      border-bottom:1px solid var(--border);
+      /* CRITICAL for Android: touch-action:none tells Chrome this element
+         handles its own touch events and must not scroll the page */
+      touch-action: none;
+      cursor: grab;
+      user-select: none;
       flex-shrink: 0;
+      /* Drag-hint strip at top */
+      border-top: 3px solid rgba(0,229,204,.25);
+    }
+    .sov-topbar:active { cursor: grabbing; }
+    /* Drag grip dots inside topbar */
+    .sov-drag-grip {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      padding: 0 6px 0 0;
+      opacity: 0.4;
+      pointer-events: none;
+      flex-shrink: 0;
+    }
+    .sov-drag-grip span {
+      display: flex; gap: 3px;
+    }
+    .sov-drag-grip span::before,
+    .sov-drag-grip span::after {
+      content: '';
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: var(--teal);
     }
     .sov-title{font-family:var(--hud);font-size:9px;color:var(--teal);letter-spacing:2px;text-transform:uppercase}
     .sov-controls{display:flex;gap:10px;align-items:center}
@@ -487,40 +514,74 @@
     /* ── ZOOM CONTROL BAR ──────────────────────────
        Floating zoom controls for environments where
        pinch-zoom is restricted (some PWAs / webviews) */
+    /* ── ZOOM BAR — always follows the user, everywhere ───────────
+       position:fixed anchors to the visual viewport on every browser.
+       On mobile, visualViewport scroll/resize events keep it re-clamped
+       so it never hides behind the keyboard or drifts off-screen.
+       A subtle drag handle lets users reposition it to any corner.    */
     .zoom-bar {
       position: fixed;
+      /* Default: bottom-right, clear of safe-area / home bar */
       bottom: max(18px, env(safe-area-inset-bottom, 18px));
       right: 14px;
       display: flex;
       flex-direction: column;
       gap: 4px;
       z-index: 8500;
+      /* Grouped pill look */
+      background: rgba(2,2,8,.82);
+      border: 1px solid rgba(0,229,204,.35);
+      border-radius: 12px;
+      padding: 6px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 0 18px rgba(0,229,204,.15), 0 4px 24px rgba(0,0,0,.55);
+      /* Smooth repositioning when JS nudges it */
+      transition: top 0.12s ease, left 0.12s ease,
+                  bottom 0.12s ease, right 0.12s ease,
+                  opacity 0.2s ease;
+      /* Allow drag */
+      cursor: grab;
+      user-select: none;
+      touch-action: none;
     }
+    .zoom-bar:active { cursor: grabbing; }
+
+    /* Tiny drag-hint dot row at the top */
+    .zoom-bar::before {
+      content: '⠿';
+      display: block;
+      text-align: center;
+      font-size: 10px;
+      color: rgba(0,229,204,.35);
+      margin-bottom: 2px;
+      pointer-events: none;
+    }
+
     .zoom-btn {
       width: 40px;
       height: 40px;
-      background: rgba(0,229,204,.12);
-      border: 1px solid var(--teal);
+      background: rgba(0,229,204,.10);
+      border: 1px solid rgba(0,229,204,.4);
       border-radius: 8px;
       color: var(--teal);
       font-family: var(--hud);
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 900;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background var(--tr);
-      /* Good tap target */
+      transition: background 0.12s ease, transform 0.08s ease;
       min-width: 44px;
       min-height: 44px;
     }
-    .zoom-btn:hover, .zoom-btn:active {
-      background: rgba(0,229,204,.25);
-    }
+    .zoom-btn:hover  { background: rgba(0,229,204,.22); }
+    .zoom-btn:active { background: rgba(0,229,204,.35); transform: scale(0.93); }
     .zoom-reset {
-      font-size: 10px;
+      font-size: 9px;
       letter-spacing: 1px;
+      color: rgba(0,229,204,.7);
     }
     </style>
 </head>
@@ -544,6 +605,7 @@
   <!-- ══════════ SOVEREIGN TERMINAL ══════════ -->
   <div class="sov-term" id="sovTerm">
     <div class="sov-topbar" id="sovDragHandle">
+      <div class="sov-drag-grip"><span></span><span></span></div>
       <span class="sov-title">⚡ Sovereign Forensic Escrow Monitor — Governance Core</span>
       <div class="sov-controls">
         <span class="sov-btn expand" id="expandBtn" onclick="expandTerm()">⤢ EXPAND</span>
@@ -771,13 +833,13 @@ let sessionStart = null, uptimeIv = null;
   let scale = 1;
   const MIN = 0.25, MAX = 5, STEP = 0.2;
   const root = document.documentElement;
+  const bar  = document.getElementById('zoomBar');
 
+  /* ── SCALE LOGIC ─────────────────────────────── */
   function applyScale(s) {
     scale = Math.min(MAX, Math.max(MIN, s));
-    // Only use CSS transform if native zoom is NOT available
-    // (detected by checking if visualViewport scale is controllable)
     if (window.visualViewport && window.visualViewport.scale !== 1) {
-      // Native zoom is active — just track, don't override
+      // Native browser zoom is active — let it handle scaling
       return;
     }
     root.style.transformOrigin = 'top left';
@@ -785,18 +847,19 @@ let sessionStart = null, uptimeIv = null;
     root.style.width           = `${100 / scale}%`;
   }
 
-  document.getElementById('zoomIn').addEventListener('click',  () => applyScale(scale + STEP));
-  document.getElementById('zoomOut').addEventListener('click', () => applyScale(scale - STEP));
-  document.getElementById('zoomReset').addEventListener('click',() => {
+  document.getElementById('zoomIn').addEventListener('click',  e => { e.stopPropagation(); applyScale(scale + STEP); });
+  document.getElementById('zoomOut').addEventListener('click', e => { e.stopPropagation(); applyScale(scale - STEP); });
+  document.getElementById('zoomReset').addEventListener('click', e => {
+    e.stopPropagation();
     scale = 1;
     root.style.transform = '';
     root.style.width     = '';
   });
 
-  // Pinch-to-zoom gesture on the page body (supplement browser native)
+  // Pinch-to-zoom supplement (CSS fallback for locked WebViews)
   let initDist = 0, initScale = 1;
   document.addEventListener('touchstart', e => {
-    if (e.touches.length === 2) {
+    if (e.touches.length === 2 && !barDragging) {
       initDist  = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
         e.touches[0].clientY - e.touches[1].clientY
@@ -805,13 +868,11 @@ let sessionStart = null, uptimeIv = null;
     }
   }, { passive: true });
   document.addEventListener('touchmove', e => {
-    if (e.touches.length !== 2) return;
+    if (e.touches.length !== 2 || barDragging) return;
     const dist = Math.hypot(
       e.touches[0].clientX - e.touches[1].clientX,
       e.touches[0].clientY - e.touches[1].clientY
     );
-    // Only apply CSS scale if browser native zoom isn't working
-    // (visualViewport.scale stays at 1 in locked WebViews)
     if (window.visualViewport && Math.abs(window.visualViewport.scale - 1) < 0.01) {
       applyScale(initScale * (dist / initDist));
     }
@@ -823,6 +884,118 @@ let sessionStart = null, uptimeIv = null;
     e.preventDefault();
     applyScale(scale - e.deltaY * 0.005);
   }, { passive: false });
+
+  /* ── DRAG THE ZOOM BAR ───────────────────────────
+     Users can reposition it to any corner/edge.
+     We switch to top+left positioning once dragged
+     so it's not fighting bottom+right simultaneously. */
+  let barDragging = false;
+  let bDragOX = 0, bDragOY = 0;
+
+  function getVP() {
+    // Always use the visual viewport dimensions (accounts for keyboard, zoom)
+    return {
+      w: window.visualViewport ? window.visualViewport.width  : window.innerWidth,
+      h: window.visualViewport ? window.visualViewport.height : window.innerHeight,
+      x: window.visualViewport ? window.visualViewport.offsetLeft : 0,
+      y: window.visualViewport ? window.visualViewport.offsetTop  : 0,
+    };
+  }
+
+  function startBarDrag(cx, cy) {
+    barDragging = true;
+    bar.style.transition = 'none';
+    // Convert to top+left positioning
+    const rect = bar.getBoundingClientRect();
+    bar.style.bottom = 'auto';
+    bar.style.right  = 'auto';
+    bar.style.top    = rect.top  + 'px';
+    bar.style.left   = rect.left + 'px';
+    bDragOX = cx - rect.left;
+    bDragOY = cy - rect.top;
+  }
+
+  function moveBarDrag(cx, cy) {
+    if (!barDragging) return;
+    const vp  = getVP();
+    const bw  = bar.offsetWidth;
+    const bh  = bar.offsetHeight;
+    // Clamp inside the visual viewport
+    const nx = Math.max(vp.x, Math.min(vp.x + vp.w - bw, cx - bDragOX));
+    const ny = Math.max(vp.y, Math.min(vp.y + vp.h - bh, cy - bDragOY));
+    bar.style.left = nx + 'px';
+    bar.style.top  = ny + 'px';
+  }
+
+  function endBarDrag() {
+    if (!barDragging) return;
+    barDragging = false;
+    bar.style.transition = '';
+  }
+
+  // Mouse drag
+  bar.addEventListener('mousedown',  e => { if (e.target.closest('.zoom-btn')) return; startBarDrag(e.clientX, e.clientY); e.preventDefault(); });
+  document.addEventListener('mousemove', e => moveBarDrag(e.clientX, e.clientY));
+  document.addEventListener('mouseup',   () => endBarDrag());
+
+  // Touch drag (single finger on bar, not on buttons)
+  bar.addEventListener('touchstart', e => {
+    if (e.target.closest('.zoom-btn')) return;
+    if (e.touches.length === 1) {
+      startBarDrag(e.touches[0].clientX, e.touches[0].clientY);
+    }
+  }, { passive: true });
+  document.addEventListener('touchmove', e => {
+    if (barDragging && e.touches.length === 1) {
+      moveBarDrag(e.touches[0].clientX, e.touches[0].clientY);
+    }
+  }, { passive: true });
+  document.addEventListener('touchend', () => endBarDrag());
+
+  /* ── VISUAL VIEWPORT TRACKING ────────────────────
+     When the browser zooms natively OR the keyboard opens,
+     the visual viewport shifts.  We re-clamp the bar position
+     on every resize/scroll event of the visual viewport so it
+     ALWAYS stays on screen no matter what.                     */
+  function clampBarToViewport() {
+    if (barDragging) return;
+    const vp  = getVP();
+    const bw  = bar.offsetWidth;
+    const bh  = bar.offsetHeight;
+
+    // If we're in bottom/right mode (not dragged), nudge via margin
+    const isTopLeft = bar.style.top && bar.style.top !== 'auto' && bar.style.left;
+    if (isTopLeft) {
+      const curL = parseFloat(bar.style.left) || 0;
+      const curT = parseFloat(bar.style.top)  || 0;
+      bar.style.left = Math.max(vp.x, Math.min(vp.x + vp.w - bw, curL)) + 'px';
+      bar.style.top  = Math.max(vp.y, Math.min(vp.y + vp.h - bh, curT)) + 'px';
+    } else {
+      // In fixed bottom/right mode — CSS already handles it.
+      // But when native zoom pans the viewport, fixed elements can
+      // drift.  Detect this by checking if bar is actually visible.
+      const rect = bar.getBoundingClientRect();
+      const offscreen = rect.left < 0 || rect.top < 0 ||
+                        rect.right  > vp.w ||
+                        rect.bottom > vp.h;
+      if (offscreen) {
+        // Convert to top+left and clamp
+        bar.style.bottom = 'auto';
+        bar.style.right  = 'auto';
+        bar.style.top    = Math.max(vp.y, vp.y + vp.h - bh - 18) + 'px';
+        bar.style.left   = Math.max(vp.x, vp.x + vp.w - bw - 14) + 'px';
+      }
+    }
+  }
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', clampBarToViewport);
+    window.visualViewport.addEventListener('scroll', clampBarToViewport);
+  }
+  window.addEventListener('scroll', clampBarToViewport, { passive: true });
+  window.addEventListener('resize', clampBarToViewport);
+  // Run once on load
+  clampBarToViewport();
 })();
 
 /* ── THREE.JS ────────────────────────────────── */
@@ -902,100 +1075,183 @@ if (window.visualViewport) {
   controls.update(); renderer.render(scene, camera);
 })();
 
-/* ── TERMINAL DRAG & RESIZE ─────────────────── */
-const sovTerm    = document.getElementById('sovTerm');
-const dragHandle = document.getElementById('sovDragHandle');
+/* ══════════════════════════════════════════════════════════════
+   TERMINAL DRAG, RESIZE & VIEWPORT CLAMP
+   Pixel-perfect on Android Chrome (Pixel 6/7/8/9), iOS Safari,
+   desktop. Key fixes vs old code:
+   ─ NEVER use offsetLeft/offsetTop on position:fixed elements —
+     Android Chrome returns 0 for both. Use getBoundingClientRect().
+   ─ touchmove must be { passive:false } + preventDefault() so the
+     page does NOT scroll while the user is dragging the terminal.
+   ─ All coordinates use the visualViewport API for accurate bounds
+     when the keyboard is open or native zoom is active.
+   ─ Orientation change re-clamps the terminal inside new bounds.
+══════════════════════════════════════════════════════════════ */
+const sovTerm      = document.getElementById('sovTerm');
+const dragHandle   = document.getElementById('sovDragHandle');
 const resizeHandle = document.getElementById('sovResize');
 
-let dragging = false, resizing = false;
-let dragOX = 0, dragOY = 0;
-let resizeOX = 0, resizeOY = 0, resizeW0 = 0, resizeH0 = 0;
+/* Helpers ─────────────────────────────────────────────────── */
+function vp() {
+  // Always use visualViewport for correct coords on Android
+  if (window.visualViewport) {
+    return {
+      w: window.visualViewport.width,
+      h: window.visualViewport.height,
+      ox: window.visualViewport.offsetLeft,
+      oy: window.visualViewport.offsetTop
+    };
+  }
+  return { w: window.innerWidth, h: window.innerHeight, ox: 0, oy: 0 };
+}
 
+// Ensure the terminal stays fully inside the visual viewport
+function clampTerm() {
+  if (!sovTerm.classList.contains('open')) return;
+  const v   = vp();
+  const tw  = sovTerm.offsetWidth;
+  const th  = sovTerm.offsetHeight;
+  // Read current position from getBoundingClientRect (reliable on fixed elements)
+  const r   = sovTerm.getBoundingClientRect();
+  let newL  = r.left;
+  let newT  = r.top;
+  // Clamp so terminal is fully visible
+  newL = Math.max(v.ox, Math.min(v.ox + v.w - tw, newL));
+  newT = Math.max(v.oy, Math.min(v.oy + v.h - th, newT));
+  sovTerm.style.left = newL + 'px';
+  sovTerm.style.top  = newT + 'px';
+}
+
+// Set position using top+left (required for drag to work on Android fixed elements)
+function setTermPos(left, top) {
+  const v  = vp();
+  const tw = sovTerm.offsetWidth;
+  const th = sovTerm.offsetHeight;
+  sovTerm.style.left = Math.max(v.ox, Math.min(v.ox + v.w - tw, left)) + 'px';
+  sovTerm.style.top  = Math.max(v.oy, Math.min(v.oy + v.h - th, top))  + 'px';
+}
+
+/* Drag state ──────────────────────────────────────────────── */
+let termDragging = false, termResizing = false;
+let dragStartX = 0, dragStartY = 0;   // pointer position at drag start
+let termStartL = 0, termStartT = 0;   // terminal position at drag start
+let resizeStartX = 0, resizeStartY = 0, resizeW0 = 0, resizeH0 = 0;
+
+function startTermDrag(cx, cy) {
+  termDragging = true;
+  dragStartX = cx;
+  dragStartY = cy;
+  // Use getBoundingClientRect — the only reliable method on Android fixed elements
+  const r = sovTerm.getBoundingClientRect();
+  termStartL = r.left;
+  termStartT = r.top;
+  sovTerm.style.transition = 'none';
+}
+
+function moveTermDrag(cx, cy) {
+  if (!termDragging) return;
+  const dx = cx - dragStartX;
+  const dy = cy - dragStartY;
+  setTermPos(termStartL + dx, termStartT + dy);
+}
+
+function startTermResize(cx, cy) {
+  termResizing = true;
+  resizeStartX = cx; resizeStartY = cy;
+  resizeW0 = sovTerm.offsetWidth;
+  resizeH0 = sovTerm.offsetHeight;
+}
+
+function moveTermResize(cx, cy) {
+  if (!termResizing) return;
+  const v = vp();
+  const r = sovTerm.getBoundingClientRect();
+  const newW = Math.max(260, Math.min(v.w - r.left - v.ox, resizeW0 + cx - resizeStartX));
+  const newH = Math.max(200, Math.min(v.h - r.top  - v.oy, resizeH0 + cy - resizeStartY));
+  sovTerm.style.width  = newW + 'px';
+  sovTerm.style.height = newH + 'px';
+}
+
+function endTermInteraction() {
+  termDragging  = false;
+  termResizing  = false;
+  sovTerm.style.transition = '';
+}
+
+/* Mouse events ────────────────────────────────────────────── */
 dragHandle.addEventListener('mousedown', e => {
   if (e.target.closest('.sov-btn')) return;
-  dragging = true;
-  dragOX = e.clientX - sovTerm.offsetLeft;
-  dragOY = e.clientY - sovTerm.offsetTop;
+  startTermDrag(e.clientX, e.clientY);
   e.preventDefault();
 });
 document.addEventListener('mousemove', e => {
-  if (dragging) {
-    const maxX = window.innerWidth  - sovTerm.offsetWidth;
-    const maxY = window.innerHeight - sovTerm.offsetHeight;
-    sovTerm.style.left = Math.max(0, Math.min(maxX, e.clientX - dragOX)) + 'px';
-    sovTerm.style.top  = Math.max(0, Math.min(maxY, e.clientY - dragOY)) + 'px';
-  }
-  if (resizing) {
-    sovTerm.style.width  = Math.max(260, resizeW0 + e.clientX - resizeOX) + 'px';
-    sovTerm.style.height = Math.max(200, resizeH0 + e.clientY - resizeOY) + 'px';
-  }
+  moveTermDrag(e.clientX, e.clientY);
+  moveTermResize(e.clientX, e.clientY);
 });
-document.addEventListener('mouseup', () => { dragging = false; resizing = false; });
-
-dragHandle.addEventListener('touchstart', e => {
-  if (e.target.closest('.sov-btn')) return;
-  const t = e.touches[0];
-  dragging = true;
-  dragOX = t.clientX - sovTerm.offsetLeft;
-  dragOY = t.clientY - sovTerm.offsetTop;
-}, { passive: true });
-document.addEventListener('touchmove', e => {
-  if (!dragging && !resizing) return;
-  const t = e.touches[0];
-  if (dragging) {
-    const vw = window.visualViewport ? window.visualViewport.width  : window.innerWidth;
-    const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-    sovTerm.style.left = Math.max(0, Math.min(vw - sovTerm.offsetWidth,  t.clientX - dragOX)) + 'px';
-    sovTerm.style.top  = Math.max(0, Math.min(vh - sovTerm.offsetHeight, t.clientY - dragOY)) + 'px';
-  }
-  if (resizing) {
-    sovTerm.style.width  = Math.max(260, resizeW0 + t.clientX - resizeOX) + 'px';
-    sovTerm.style.height = Math.max(200, resizeH0 + t.clientY - resizeOY) + 'px';
-  }
-}, { passive: true });
-document.addEventListener('touchend', () => { dragging = false; resizing = false; });
+document.addEventListener('mouseup', endTermInteraction);
 
 resizeHandle.addEventListener('mousedown', e => {
-  resizing = true;
-  resizeOX = e.clientX; resizeOY = e.clientY;
-  resizeW0 = sovTerm.offsetWidth; resizeH0 = sovTerm.offsetHeight;
+  startTermResize(e.clientX, e.clientY);
   e.preventDefault(); e.stopPropagation();
 });
-resizeHandle.addEventListener('touchstart', e => {
+
+/* Touch events ────────────────────────────────────────────── */
+dragHandle.addEventListener('touchstart', e => {
+  if (e.target.closest('.sov-btn')) return;
+  if (e.touches.length !== 1) return;
+  startTermDrag(e.touches[0].clientX, e.touches[0].clientY);
+  // Do NOT call preventDefault here — it would break button taps
+}, { passive: true });
+
+// NON-PASSIVE so we can call preventDefault and stop page scroll
+document.addEventListener('touchmove', e => {
+  if (!termDragging && !termResizing) return;
+  // Prevent the page from scrolling/panning while dragging the terminal
+  e.preventDefault();
   const t = e.touches[0];
-  resizing = true;
-  resizeOX = t.clientX; resizeOY = t.clientY;
-  resizeW0 = sovTerm.offsetWidth; resizeH0 = sovTerm.offsetHeight;
+  if (termDragging)  moveTermDrag(t.clientX, t.clientY);
+  if (termResizing)  moveTermResize(t.clientX, t.clientY);
+}, { passive: false });
+
+document.addEventListener('touchend',    endTermInteraction);
+document.addEventListener('touchcancel', endTermInteraction);
+
+resizeHandle.addEventListener('touchstart', e => {
+  if (e.touches.length !== 1) return;
+  startTermResize(e.touches[0].clientX, e.touches[0].clientY);
   e.stopPropagation();
 }, { passive: true });
 
-// Keep terminal visible when keyboard opens (visual viewport scroll)
-if (window.visualViewport) {
-  window.visualViewport.addEventListener('scroll', () => {
-    if (sovTerm.classList.contains('open')) {
-      // Re-clamp terminal position to stay in visual viewport
-      const vvTop = window.visualViewport.offsetTop;
-      const curTop = parseInt(sovTerm.style.top) || 70;
-      if (curTop < vvTop + 4) sovTerm.style.top = (vvTop + 4) + 'px';
-    }
-  });
+/* Viewport changes: keyboard open, rotate, zoom ───────────── */
+function onViewportChange() {
+  clampTerm();
 }
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', onViewportChange);
+  window.visualViewport.addEventListener('scroll', onViewportChange);
+}
+window.addEventListener('orientationchange', () => {
+  // Give browser 300ms to finish rotation before re-clamping
+  setTimeout(onViewportChange, 300);
+});
+window.addEventListener('resize', onViewportChange);
 
 function expandTerm() {
   const isExpanded = sovTerm.dataset.expanded === '1';
-  const vw = window.visualViewport ? window.visualViewport.width  : window.innerWidth;
-  const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  const v = vp();
   if (!isExpanded) {
     sovTerm.dataset.expanded = '1';
-    sovTerm.style.left   = '8px';
-    sovTerm.style.top    = (window.visualViewport ? window.visualViewport.offsetTop + 8 : 60) + 'px';
-    sovTerm.style.width  = (vw - 16) + 'px';
-    sovTerm.style.height = (vh - 80) + 'px';
+    sovTerm.style.width  = (v.w - 16) + 'px';
+    sovTerm.style.height = (v.h - 80) + 'px';
+    sovTerm.style.left   = (v.ox + 8)  + 'px';
+    sovTerm.style.top    = (v.oy + 8)  + 'px';
     document.getElementById('expandBtn').textContent = '⤡ RESTORE';
   } else {
     sovTerm.dataset.expanded = '0';
+    // Restore default size, keep current position clamped
     sovTerm.style.width  = '';
     sovTerm.style.height = '';
+    clampTerm();
     document.getElementById('expandBtn').textContent = '⤢ EXPAND';
   }
 }
@@ -1010,11 +1266,17 @@ function toggleTerm() {
     sovTerm.classList.remove('open');
   } else {
     sovTerm.classList.add('open');
-    // Position relative to visual viewport top so it's always on screen
-    const vvTop = window.visualViewport ? window.visualViewport.offsetTop : 0;
-    if (!sovTerm.style.top || parseInt(sovTerm.style.top) < vvTop) {
-      sovTerm.style.top = (vvTop + 70) + 'px';
+    const v = vp();
+    // On first open, or if terminal has drifted out of view, place it top-left of viewport
+    const r = sovTerm.getBoundingClientRect();
+    const outOfView = r.left < v.ox || r.top < v.oy ||
+                      r.right > v.ox + v.w || r.bottom > v.oy + v.h;
+    if (outOfView || (!sovTerm.style.top && !sovTerm.style.left)) {
+      sovTerm.style.left = (v.ox + 8) + 'px';
+      sovTerm.style.top  = (v.oy + 8) + 'px';
     }
+    // Ensure it's within bounds after opening
+    setTimeout(clampTerm, 50);
     setTimeout(() => document.getElementById('sovShellIn').focus(), 80);
   }
 }
