@@ -341,27 +341,28 @@
     @keyframes blink{0%,100%{opacity:1}50%{opacity:.55}}
 
     /* ══════════════════════════════════════════════
-       SOVEREIGN TERMINAL — upgraded for mobile
+       SOVEREIGN TERMINAL — fluid text, reflow on resize
     ══════════════════════════════════════════════ */
     .sov-term{
-      /* fixed so it's anchored to the visual viewport (above keyboard) */
       position: fixed;
       top: 70px;
       left: 12px;
       width: min(680px, calc(100vw - 24px));
       min-width: 260px;
       min-height: 200px;
-      max-height: min(85dvh, 85vh);   /* won't extend behind keyboard */
+      max-height: min(85dvh, 85vh);
       background: rgba(3,3,10,.97);
       border: 1.5px solid var(--teal);
       box-shadow: 0 0 50px var(--teal-glow), 0 0 100px rgba(0,229,204,.08);
       border-radius: var(--r);
       z-index: 9000;
-      display: none;
       overflow: hidden;
-      /* Allow content inside to scroll */
+      /* CRITICAL: flex column so topbar + sov-grid + shell fill height exactly */
       display: none;
+      flex-direction: column;
     }
+    /* .open class switches display:none → display:flex */
+    .sov-term.open { display: flex; }
     .sov-topbar{
       display:flex;justify-content:space-between;align-items:center;
       padding:10px 12px;background:rgba(0,229,204,.06);
@@ -410,11 +411,12 @@
     .sov-btn.expand:hover{background:rgba(0,229,204,.1)}
 
     .sov-grid{
-      display:flex;
-      flex-direction:column;
-      gap:1px;
-      background:var(--border);
-      /* fill remaining height within the terminal */
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      background: var(--border);
+      /* CRITICAL: flex:1 + min-height:0 lets it fill remaining terminal height
+         without overflowing. Without min-height:0 flex children ignore overflow. */
       flex: 1;
       min-height: 0;
       overflow: hidden;
@@ -422,24 +424,49 @@
     @media(min-width:600px){.sov-grid{flex-direction:row}}
 
     .sov-pane{
-      flex:1;background:var(--bg1);display:flex;flex-direction:column;
-      padding:10px;
-      min-height: 120px;
+      /* Each pane is itself a flex column so its content scrolls inside it */
+      flex: 1;
+      min-width: 0;    /* CRITICAL: prevents text from pushing pane wider than grid */
+      min-height: 0;   /* CRITICAL: prevents pane from growing past terminal height */
+      background: var(--bg1);
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
       overflow: hidden;
     }
     .sov-pane-title{
       font-size:8px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;
       margin-bottom:8px;padding-bottom:5px;border-bottom:1px dashed var(--border);
-      font-family:var(--hud);flex-shrink:0;
+      font-family:var(--hud);
+      flex-shrink: 0;  /* title never shrinks */
+      /* Prevent long titles from overflowing */
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .sov-out{
-      font-size:10px;color:var(--white);line-height:1.65;white-space:pre-wrap;
-      flex:1;overflow-y:auto;font-family:var(--mono);
-      /* Dynamic max-height so it scrolls inside the pane */
-      max-height: 40dvh;
+      /* Takes all remaining pane height and scrolls vertically */
+      flex: 1;
+      min-height: 0;          /* CRITICAL for Chrome/Android flex scroll */
+      overflow-y: auto;
+      overflow-x: hidden;
+      /* Wrap long lines — no horizontal overflow */
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-wrap: break-word;
+      font-size: 10px;
+      color: var(--white);
+      line-height: 1.65;
+      font-family: var(--mono);
       /* Smooth momentum scroll on iOS */
       -webkit-overflow-scrolling: touch;
+      /* Custom scrollbar */
+      scrollbar-width: thin;
+      scrollbar-color: var(--border2) transparent;
     }
+    .sov-out::-webkit-scrollbar { width: 3px; }
+    .sov-out::-webkit-scrollbar-track { background: transparent; }
+    .sov-out::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 
     .sov-stream-row{
       display:flex;gap:6px;align-items:flex-start;
@@ -484,15 +511,6 @@
       color:#fff;font-family:var(--mono);
       /* 16px prevents iOS zoom; will look right in terminal context */
       caret-color: var(--teal);
-    }
-
-    /* full flex container so shell row stays at bottom */
-    .sov-term {
-      display: none;
-      flex-direction: column;
-    }
-    .sov-term.open {
-      display: flex;
     }
 
     .sov-resize{
@@ -1235,6 +1253,23 @@ window.addEventListener('orientationchange', () => {
   setTimeout(onViewportChange, 300);
 });
 window.addEventListener('resize', onViewportChange);
+
+/* ── RESIZEOBSERVER: reflow text when terminal is resized ──────
+   When the user drags the resize handle (or the terminal width changes
+   due to rotation/expand), the sov-out elements need to:
+   1. Recalculate their scrollable height (flex handles width automatically)
+   2. Auto-scroll to the bottom so latest output stays visible
+   3. Ensure the shell-row input is still reachable
+   ResizeObserver fires synchronously after layout — perfect for this. */
+if (window.ResizeObserver) {
+  const termRO = new ResizeObserver(() => {
+    // Each output pane: scroll to bottom so latest lines are visible
+    document.querySelectorAll('.sov-out').forEach(el => {
+      el.scrollTop = el.scrollHeight;
+    });
+  });
+  termRO.observe(sovTerm);
+}
 
 function expandTerm() {
   const isExpanded = sovTerm.dataset.expanded === '1';
