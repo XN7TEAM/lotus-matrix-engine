@@ -3,29 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--
+      MOBILE-FIRST VIEWPORT:
+      - user-scalable=yes  → allows native pinch-zoom on every OS
+      - viewport-fit=cover → fills iPhone notch / Android cutout areas
+      - interactive-widget=resizes-content → keeps layout stable when keyboard opens
+        (Chrome 108+, avoids the "keyboard pushes everything up" bug)
+    -->
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, minimum-scale=0.25, maximum-scale=10.0,
+                   user-scalable=yes, viewport-fit=cover,
+                   interactive-widget=resizes-content">
+    <!-- Prevent iOS Safari from auto-zooming inputs (font-size>=16px handles it too) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Lotus Matrix Engine — Cylindrical Spatial Security Dashboard</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js" crossorigin="anonymous"></script>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-    /* ── MOBILE FULL-WIDTH FIX ── */
-    html, body { overflow-x: hidden; width: 100%; }
+    /* ════════════════════════════════════════════════════
+       GLOBAL MOBILE-SAFE RESETS
+       ════════════════════════════════════════════════════ */
+    html {
+      /* Allow the page to be zoomed freely by the browser */
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+      scroll-behavior: smooth;
+      overflow-x: hidden;
+      /* Safe-area insets (notch / home-bar on iOS & Android) */
+      padding: env(safe-area-inset-top)
+               env(safe-area-inset-right)
+               env(safe-area-inset-bottom)
+               env(safe-area-inset-left);
+    }
+    body {
+      overflow-x: hidden;
+      width: 100%;
+      /* Prevent rubber-band / over-scroll chrome changing zoom on double-tap */
+      touch-action: pan-x pan-y;
+      -webkit-overflow-scrolling: touch;
+    }
+    /* Allow THREE canvas and interactive areas to capture touch freely */
+    canvas { touch-action: none; }
+
+    /* ── INPUT ZOOM FIX ──────────────────────────────────
+       iOS Safari zooms in when an <input> font-size < 16px.
+       Force 16px on all inputs; visual scaling via transform if needed. */
+    input, textarea, select {
+      font-size: 16px !important;   /* suppress iOS auto-zoom */
+      -webkit-user-select: text;
+      user-select: text;
+    }
+
+    /* ── SOVEREIGN TERMINAL — KEYBOARD-AWARE ─────────────
+       When the soft keyboard opens on Android/iOS the browser shrinks
+       the visual viewport.  We anchor the terminal to the visual viewport
+       instead of the layout viewport so it stays above the keyboard.   */
+    .sov-term {
+      /* Use dvh (dynamic viewport height) where supported so the terminal
+         never hides behind the keyboard.  Falls back to vh. */
+      max-height: min(90dvh, 90vh);
+      overflow: hidden;
+      /* Sticky positioning keeps it in view while page scrolls */
+      position: fixed !important;   /* fixed = visual-viewport anchored */
+    }
+
+    /* When keyboard is open, shrink the terminal automatically */
+    @media (max-height: 500px) {
+      .sov-term { max-height: 70dvh; }
+      .sov-out  { max-height: 110px !important; }
+    }
+
+    /* ── SHELL INPUT — always above keyboard ─────────────
+       padding-bottom uses safe-area so the row clears the home bar */
+    .sov-shell-row {
+      padding-bottom: max(7px, env(safe-area-inset-bottom));
+      /* Sticky to bottom of the terminal container */
+      position: sticky;
+      bottom: 0;
+      z-index: 10;
+      background: rgba(0,0,0,.85);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+
+    /* ── MOBILE FULL-WIDTH FIX ──────────────────────────── */
     .shell { overflow-x: hidden; }
     .dash-grid { min-width: 0; }
     .dash-grid > div { min-width: 0; overflow-x: hidden; }
-    /* Portrait phone — stack everything, no clipping */
-    @media(max-width: 600px) {
-      .panel-body { padding: 10px 8px; }
-      .input-row { grid-template-columns: 1fr 1fr; }
-      .btn-eng { grid-column: 1/-1; }
-      .gov-grid { grid-template-columns: 1fr 1fr; }
-      .cipher-val { font-size: 20px; letter-spacing: 4px; }
+
+    /* Portrait phone — stack, no clip */
+    @media (max-width: 600px) {
+      .panel-body  { padding: 10px 8px; }
+      .input-row   { grid-template-columns: 1fr 1fr; }
+      .btn-eng     { grid-column: 1/-1; }
+      .gov-grid    { grid-template-columns: 1fr 1fr; }
+      .cipher-val  { font-size: 20px; letter-spacing: 4px; }
       .canvas-wrap { height: 300px; }
-      .rt-ticker { display: none; } /* hide on very small screens */
-      .sov-term { width: calc(100vw - 16px) !important; left: 8px !important; }
+      .rt-ticker   { display: none; }
+      /* On phone the terminal should open full-width, top-aligned */
+      .sov-term {
+        width: calc(100vw - 16px) !important;
+        left: 8px !important;
+        top: 8px !important;
+      }
     }
 
+    /* ══════════════════════════════════════════════════════
+       ORIGINAL DESIGN TOKENS (unchanged)
+    ══════════════════════════════════════════════════════ */
     :root {
       --bg0:#020208; --bg1:#06060f; --bg2:#0a0a1a; --bg3:#0e0e22;
       --border:#1a1a30; --border2:#252545;
@@ -37,10 +124,9 @@
       --r:6px; --tr:0.16s ease;
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    html{scroll-behavior:smooth}
     body{
       background:var(--bg0);color:var(--white);font-family:var(--mono);
-      min-height:100vh;overflow-x:hidden;
+      min-height:100vh;
       background-image:
         radial-gradient(ellipse 70% 40% at 50% -10%,rgba(0,102,255,0.07) 0%,transparent 60%),
         repeating-linear-gradient(0deg,transparent,transparent 49px,rgba(26,26,48,0.3) 50px),
@@ -50,11 +136,9 @@
     ::-webkit-scrollbar-track{background:var(--bg0)}
     ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 
-    /* ── PAGE SHELL ── */
     .shell{max-width:1440px;margin:0 auto;padding:12px}
     @media(min-width:768px){.shell{padding:20px}}
 
-    /* ── HEADER ── */
     .hdr{
       display:flex;flex-direction:column;align-items:center;
       padding:20px 0 16px;border-bottom:1px solid var(--border);
@@ -81,7 +165,6 @@
     .dot.gold{background:var(--gold);box-shadow:0 0 6px var(--gold);animation:none}
     @keyframes dot-pulse{0%,100%{opacity:1}50%{opacity:.35}}
 
-    /* ── GATE ── */
     #gateView{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:62vh;gap:20px}
     .gate-ring{
       width:110px;height:110px;border-radius:50%;
@@ -110,17 +193,17 @@
       font-family:var(--hud);font-size:11px;font-weight:700;letter-spacing:3px;
       cursor:pointer;transition:all var(--tr);text-transform:uppercase;
       box-shadow:0 0 20px var(--blue-glow);
+      /* Larger tap target on mobile */
+      min-height:48px;
     }
     .gate-btn:hover{box-shadow:0 0 40px rgba(0,102,255,.5);transform:translateY(-1px)}
     .gate-btn:disabled{opacity:.5;transform:none;cursor:not-allowed}
     .gate-err{color:var(--red);font-size:11px;text-align:center;margin-top:8px;display:none}
 
-    /* ── DASHBOARD ── */
     #dashView{display:none}
     .dash-grid{display:grid;grid-template-columns:1fr;gap:14px}
     @media(min-width:1100px){.dash-grid{grid-template-columns:1fr 460px;align-items:start}}
 
-    /* ── PANEL ── */
     .panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
     .panel-hdr{
       display:flex;align-items:center;justify-content:space-between;
@@ -130,27 +213,27 @@
     .panel-badge{font-size:8px;color:var(--dim);letter-spacing:1px;text-transform:uppercase}
     .panel-body{padding:14px}
 
-    /* ── INPUTS ── */
     .input-row{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;margin-bottom:14px}
     @media(max-width:480px){.input-row{grid-template-columns:1fr 1fr}}
     .field{display:flex;flex-direction:column;gap:5px}
     .field-lbl{font-size:8px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;font-family:var(--hud)}
     .field-input{
       background:var(--bg1);border:1px solid var(--border2);border-radius:var(--r);
-      color:var(--blue2);padding:11px 12px;font-family:var(--hud);font-size:18px;
+      color:var(--blue2);padding:11px 12px;font-family:var(--hud);
       font-weight:700;text-align:center;width:100%;letter-spacing:4px;
       transition:border-color var(--tr),box-shadow var(--tr);
+      /* 16px minimum to prevent iOS zoom, display larger via letter-spacing */
     }
     .field-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-glow)}
     .btn-eng{
       height:50px;padding:0 18px;background:var(--blue);border:none;border-radius:var(--r);
       color:#fff;font-family:var(--hud);font-size:10px;font-weight:700;letter-spacing:2px;
       cursor:pointer;white-space:nowrap;transition:all var(--tr);text-transform:uppercase;
+      min-height:48px;
     }
     .btn-eng:hover{background:var(--blue2);box-shadow:0 0 20px var(--blue-glow)}
     @media(max-width:480px){.btn-eng{grid-column:1/-1}}
 
-    /* ── CIPHER DISPLAY ── */
     .cipher-box{
       background:var(--bg1);border:1px dashed var(--border2);border-radius:var(--r);
       padding:18px;text-align:center;margin-bottom:14px;
@@ -163,14 +246,12 @@
     }
     .cipher-lat{font-size:9px;color:var(--dim);margin-top:6px}
 
-    /* ── GOV STATS ── */
     .gov-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
     .gov-card{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px}
     .gov-lbl{font-size:8px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
     .gov-val{font-family:var(--hud);font-size:13px;font-weight:700;color:var(--teal);word-break:break-all}
     .gov-val.blue{color:var(--blue2)} .gov-val.red{color:var(--red)} .gov-val.gold{color:var(--gold)}
 
-    /* ── TELEMETRY LOG ── */
     .tele-log{display:flex;flex-direction:column;gap:6px;max-height:340px;overflow-y:auto}
     .tier-row{
       background:var(--bg3);border:1px solid var(--border);border-left:3px solid var(--blue);
@@ -184,7 +265,6 @@
     .tier-formula{font-size:11px;color:var(--white);margin-bottom:3px}
     .tier-boundary{font-size:9px;color:var(--dim);line-height:1.5}
 
-    /* ── REALTIME TICKER ── */
     .rt-ticker{
       background:linear-gradient(90deg,rgba(0,102,255,.06),rgba(0,229,204,.06));
       border:1px solid var(--border2);border-radius:var(--r);
@@ -198,7 +278,6 @@
     .rt-item span{color:var(--teal);font-weight:700}
     @keyframes ticker-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 
-    /* ── DEMO CONTROLS ── */
     .demo-panel{
       background:linear-gradient(135deg,rgba(20,6,10,1),rgba(10,4,6,1));
       border:1px solid #2a0f1a;border-radius:var(--r);padding:12px 14px;margin-top:14px;
@@ -210,6 +289,7 @@
       border:1px solid var(--red);border-radius:var(--r);color:#fff;
       font-family:var(--hud);font-size:10px;font-weight:700;letter-spacing:2px;
       cursor:pointer;text-transform:uppercase;transition:all var(--tr);
+      min-height:48px;
     }
     .btn-threat:hover{box-shadow:0 0 20px var(--red-glow)}
     .btn-contain{
@@ -218,6 +298,7 @@
       border:1px solid var(--teal);border-radius:var(--r);
       color:var(--bg0);font-family:var(--hud);font-size:10px;font-weight:900;
       letter-spacing:2px;cursor:pointer;text-transform:uppercase;transition:all var(--tr);
+      min-height:48px;
     }
     .btn-contain:hover{box-shadow:0 0 20px var(--teal-glow)}
     .ledger-sec{border-top:1px dashed #2a0f1a;padding-top:10px;margin-top:10px}
@@ -225,19 +306,18 @@
     .ledger-row{display:flex;gap:6px}
     .ledger-in{
       flex:1;background:var(--bg1);border:1px solid var(--border2);border-radius:var(--r);
-      color:var(--teal);padding:9px 10px;font-family:var(--hud);font-size:13px;
-      letter-spacing:3px;transition:border-color var(--tr);
+      color:var(--teal);padding:9px 10px;font-family:var(--hud);letter-spacing:3px;
+      transition:border-color var(--tr);
     }
     .ledger-in:focus{outline:none;border-color:var(--teal)}
     .btn-ledger{
       height:40px;padding:0 14px;background:var(--bg3);border:1px solid var(--border2);
       border-radius:var(--r);color:var(--teal);font-family:var(--hud);font-size:9px;
       letter-spacing:1px;cursor:pointer;white-space:nowrap;text-transform:uppercase;
-      transition:all var(--tr);
+      transition:all var(--tr);min-height:48px;
     }
     .btn-ledger:hover{border-color:var(--teal);background:rgba(0,229,204,.05)}
 
-    /* ── 3D CANVAS ── */
     .canvas-wrap{
       width:100%;height:clamp(280px,42vw,450px);
       background:var(--bg0);border-radius:var(--r);overflow:hidden;position:relative;
@@ -249,7 +329,6 @@
     }
     .canvas-hint{font-size:9px;color:var(--dim);text-align:center;margin-top:6px;letter-spacing:.5px}
 
-    /* ── THREAT BANNER ── */
     .threat-banner{
       display:none;position:fixed;top:14px;left:50%;transform:translateX(-50%);
       background:rgba(70,4,12,.96);border:1px solid var(--red);color:#fff;
@@ -262,43 +341,64 @@
     @keyframes blink{0%,100%{opacity:1}50%{opacity:.55}}
 
     /* ══════════════════════════════════════════════
-       SOVEREIGN TERMINAL — draggable, resizable,
-       touch-pannable, full attack simulation
+       SOVEREIGN TERMINAL — upgraded for mobile
     ══════════════════════════════════════════════ */
     .sov-term{
-      position:absolute;
-      top:70px;left:12px;
-      width:min(680px,calc(100vw - 24px));
-      min-width:260px;min-height:200px;
-      background:rgba(3,3,10,.97);
-      border:1.5px solid var(--teal);
-      box-shadow:0 0 50px var(--teal-glow),0 0 100px rgba(0,229,204,.08);
-      border-radius:var(--r);z-index:9000;
-      display:none;overflow:hidden;
-      /* resize handle via JS, not CSS resize so mobile works */
+      /* fixed so it's anchored to the visual viewport (above keyboard) */
+      position: fixed;
+      top: 70px;
+      left: 12px;
+      width: min(680px, calc(100vw - 24px));
+      min-width: 260px;
+      min-height: 200px;
+      max-height: min(85dvh, 85vh);   /* won't extend behind keyboard */
+      background: rgba(3,3,10,.97);
+      border: 1.5px solid var(--teal);
+      box-shadow: 0 0 50px var(--teal-glow), 0 0 100px rgba(0,229,204,.08);
+      border-radius: var(--r);
+      z-index: 9000;
+      display: none;
+      overflow: hidden;
+      /* Allow content inside to scroll */
+      display: none;
     }
     .sov-topbar{
       display:flex;justify-content:space-between;align-items:center;
       padding:8px 12px;background:rgba(0,229,204,.06);
       border-bottom:1px solid var(--border);cursor:move;user-select:none;
       touch-action:none;
+      flex-shrink: 0;
     }
     .sov-title{font-family:var(--hud);font-size:9px;color:var(--teal);letter-spacing:2px;text-transform:uppercase}
     .sov-controls{display:flex;gap:10px;align-items:center}
     .sov-btn{
       font-family:var(--hud);font-size:8px;letter-spacing:1px;
-      cursor:pointer;padding:3px 8px;border-radius:3px;border:1px solid;
+      cursor:pointer;padding:6px 10px;border-radius:3px;border:1px solid;
       text-transform:uppercase;transition:all var(--tr);
+      min-height:36px; /* bigger tap targets */
     }
     .sov-btn.close{color:var(--red);border-color:var(--red)}
     .sov-btn.close:hover{background:var(--red);color:#fff}
     .sov-btn.expand{color:var(--teal);border-color:var(--teal)}
     .sov-btn.expand:hover{background:rgba(0,229,204,.1)}
-    .sov-grid{display:flex;flex-direction:column;gap:1px;background:var(--border)}
+
+    .sov-grid{
+      display:flex;
+      flex-direction:column;
+      gap:1px;
+      background:var(--border);
+      /* fill remaining height within the terminal */
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
     @media(min-width:600px){.sov-grid{flex-direction:row}}
+
     .sov-pane{
       flex:1;background:var(--bg1);display:flex;flex-direction:column;
-      padding:10px;min-height:160px;
+      padding:10px;
+      min-height: 120px;
+      overflow: hidden;
     }
     .sov-pane-title{
       font-size:8px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;
@@ -307,9 +407,13 @@
     }
     .sov-out{
       font-size:10px;color:var(--white);line-height:1.65;white-space:pre-wrap;
-      flex:1;overflow-y:auto;font-family:var(--mono);max-height:220px;
+      flex:1;overflow-y:auto;font-family:var(--mono);
+      /* Dynamic max-height so it scrolls inside the pane */
+      max-height: 40dvh;
+      /* Smooth momentum scroll on iOS */
+      -webkit-overflow-scrolling: touch;
     }
-    /* ATTACK DATA STREAM IN LEFT PANE */
+
     .sov-stream-row{
       display:flex;gap:6px;align-items:flex-start;
       border-bottom:1px solid rgba(26,26,48,.6);padding:5px 0;font-size:9px;
@@ -319,13 +423,12 @@
     .sov-stream-val.red{color:var(--red)}
     .sov-stream-val.gold{color:var(--gold)}
 
-    /* KILL COMMANDS */
     .kill-bar{
       display:flex;flex-wrap:wrap;gap:5px;padding:8px 10px;
       border-top:1px solid var(--border);background:rgba(0,0,0,.3);flex-shrink:0;
     }
     .kill-btn{
-      flex:1;min-width:90px;height:30px;
+      flex:1;min-width:90px;height:36px;
       background:rgba(255,34,68,.08);border:1px solid var(--red);
       border-radius:3px;color:var(--red);font-family:var(--hud);font-size:8px;
       letter-spacing:1px;cursor:pointer;text-transform:uppercase;transition:all var(--tr);
@@ -334,41 +437,106 @@
     .kill-btn.teal{color:var(--teal);border-color:var(--teal);background:rgba(0,229,204,.05)}
     .kill-btn.teal:hover{background:var(--teal);color:var(--bg0);box-shadow:0 0 10px var(--teal-glow)}
 
-    /* SHELL ROW */
+    /* Shell row — always visible above soft keyboard */
     .sov-shell-row{
       display:flex;align-items:center;gap:5px;
-      padding:7px 10px;border-top:1px solid var(--border);
-      background:rgba(0,0,0,.25);flex-shrink:0;
+      padding:7px 10px;
+      padding-bottom: max(9px, env(safe-area-inset-bottom));
+      border-top:1px solid var(--border);
+      background:rgba(0,0,0,.85);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      flex-shrink:0;
+      position: sticky;
+      bottom: 0;
+      z-index: 20;
     }
     .sov-prompt{color:var(--teal);font-size:11px;font-weight:700;white-space:nowrap}
     .sov-shell-in{
       flex:1;background:transparent;border:none;outline:none;
-      color:#fff;font-family:var(--mono);font-size:11px;
+      color:#fff;font-family:var(--mono);
+      /* 16px prevents iOS zoom; will look right in terminal context */
+      caret-color: var(--teal);
     }
 
-    /* RESIZE HANDLE */
+    /* full flex container so shell row stays at bottom */
+    .sov-term {
+      display: none;
+      flex-direction: column;
+    }
+    .sov-term.open {
+      display: flex;
+    }
+
     .sov-resize{
       position:absolute;bottom:0;right:0;
-      width:18px;height:18px;cursor:se-resize;
+      width:24px;height:24px;cursor:se-resize;
       background:linear-gradient(135deg,transparent 50%,var(--teal) 50%);
       opacity:.5;touch-action:none;
     }
 
-    /* ── FOOTER ── */
     .ft{
       text-align:center;padding:24px 0 14px;
       font-size:9px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;
       border-top:1px solid var(--border);margin-top:28px;line-height:2;
+      /* Extra bottom padding for devices with home bar */
+      padding-bottom: max(14px, env(safe-area-inset-bottom));
     }
-
-    /* ── WRAPPER ── */
     .wrapper{position:relative}
+
+    /* ── ZOOM CONTROL BAR ──────────────────────────
+       Floating zoom controls for environments where
+       pinch-zoom is restricted (some PWAs / webviews) */
+    .zoom-bar {
+      position: fixed;
+      bottom: max(18px, env(safe-area-inset-bottom, 18px));
+      right: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      z-index: 8500;
+    }
+    .zoom-btn {
+      width: 40px;
+      height: 40px;
+      background: rgba(0,229,204,.12);
+      border: 1px solid var(--teal);
+      border-radius: 8px;
+      color: var(--teal);
+      font-family: var(--hud);
+      font-size: 18px;
+      font-weight: 900;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background var(--tr);
+      /* Good tap target */
+      min-width: 44px;
+      min-height: 44px;
+    }
+    .zoom-btn:hover, .zoom-btn:active {
+      background: rgba(0,229,204,.25);
+    }
+    .zoom-reset {
+      font-size: 10px;
+      letter-spacing: 1px;
+    }
     </style>
 </head>
 <body>
 
 <!-- THREAT BANNER -->
 <div class="threat-banner" id="threatBanner">⚠ THREAT VECTOR DETECTED — MALICIOUS LATERAL MOVEMENT IDENTIFIED</div>
+
+<!-- ── FLOATING ZOOM CONTROLS ──────────────────────────────────────
+     For locked-down WebViews / PWAs / browsers that restrict pinch-zoom.
+     Uses CSS transform on <html> so everything scales uniformly.      -->
+<div class="zoom-bar" id="zoomBar">
+  <button class="zoom-btn" id="zoomIn"  title="Zoom in"  aria-label="Zoom in">+</button>
+  <button class="zoom-btn zoom-reset" id="zoomReset" title="Reset zoom" aria-label="Reset zoom">1:1</button>
+  <button class="zoom-btn" id="zoomOut" title="Zoom out" aria-label="Zoom out">−</button>
+</div>
 
 <div class="shell">
 <div class="wrapper">
@@ -378,7 +546,7 @@
     <div class="sov-topbar" id="sovDragHandle">
       <span class="sov-title">⚡ Sovereign Forensic Escrow Monitor — Governance Core</span>
       <div class="sov-controls">
-        <span class="sov-btn expand" onclick="expandTerm()">⤢ EXPAND</span>
+        <span class="sov-btn expand" id="expandBtn" onclick="expandTerm()">⤢ EXPAND</span>
         <span class="sov-btn close" onclick="toggleTerm()">[CLOSE]</span>
       </div>
     </div>
@@ -393,7 +561,6 @@
           GOVERNOR BRAIN: ACTIVE
           NO EXPLOIT LEAKS TRACKED.
         </div>
-        <!-- KILL COMMAND BAR -->
         <div class="kill-bar" id="killBar" style="display:none">
           <button class="kill-btn" onclick="killCmd('ISOLATE')">ISOLATE IP</button>
           <button class="kill-btn" onclick="killCmd('BLOCK')">FIREWALL BLOCK</button>
@@ -411,12 +578,16 @@ Commands: <span style="color:var(--teal)">status, governor, tiers, attacker, tra
 </div>
         <div class="sov-shell-row">
           <span class="sov-prompt">lotus@matrix:~#</span>
-          <input type="text" id="sovShellIn" class="sov-shell-in" placeholder="Enter diagnostic command..." autocomplete="off" autocapitalize="none" spellcheck="false">
+          <input type="text" id="sovShellIn" class="sov-shell-in"
+                 placeholder="Enter diagnostic command..."
+                 autocomplete="off" autocapitalize="none"
+                 autocorrect="off" spellcheck="false"
+                 inputmode="text"
+                 enterkeyhint="send">
         </div>
       </div>
     </div>
 
-    <!-- RESIZE HANDLE -->
     <div class="sov-resize" id="sovResize" title="Drag to resize"></div>
   </div>
   <!-- ══════════ /SOVEREIGN TERMINAL ══════════ -->
@@ -468,11 +639,13 @@ Commands: <span style="color:var(--teal)">status, governor, tiers, attacker, tra
             <div class="input-row">
               <div class="field">
                 <label class="field-lbl">Data Input</label>
-                <input type="text" class="field-input" id="dataVec" value="ABC1" maxlength="4" placeholder="HEX">
+                <input type="text" class="field-input" id="dataVec" value="ABC1" maxlength="4" placeholder="HEX"
+                       autocomplete="off" autocapitalize="characters" inputmode="text">
               </div>
               <div class="field">
                 <label class="field-lbl">Rotational Key</label>
-                <input type="text" class="field-input" id="keyVec" value="3576" maxlength="4" placeholder="HEX">
+                <input type="text" class="field-input" id="keyVec" value="3576" maxlength="4" placeholder="HEX"
+                       autocomplete="off" autocapitalize="characters" inputmode="text">
               </div>
               <button class="btn-eng" onclick="runTransform()">ENGAGE</button>
             </div>
@@ -483,7 +656,6 @@ Commands: <span style="color:var(--teal)">status, governor, tiers, attacker, tra
               <div class="cipher-lat" id="cipherLat">Processing Delta: awaiting input</div>
             </div>
 
-            <!-- REALTIME TICKER -->
             <div class="rt-ticker">
               <div class="rt-ticker-inner" id="rtTicker">
                 <span class="rt-item">APEX <span>1.047 RAD</span></span>
@@ -494,7 +666,6 @@ Commands: <span style="color:var(--teal)">status, governor, tiers, attacker, tra
                 <span class="rt-item">ENGINE <span>ACTIVE</span></span>
                 <span class="rt-item">BOUNDARY <span>CLOCKWISE</span></span>
                 <span class="rt-item">NODES <span>0</span></span>
-                <!-- duplicated for seamless loop -->
                 <span class="rt-item">APEX <span>1.047 RAD</span></span>
                 <span class="rt-item">TIER-1 <span>NORTH</span></span>
                 <span class="rt-item">TIER-5 <span>NE SYNC</span></span>
@@ -543,14 +714,15 @@ Commands: <span style="color:var(--teal)">status, governor, tiers, attacker, tra
             <div class="ledger-sec">
               <div class="ledger-lbl">Enterprise Payload Buffer Input</div>
               <div class="ledger-row">
-                <input type="text" class="ledger-in" id="ledgerIn" value="F3A23576" maxlength="8" placeholder="8 HEX CHARS">
+                <input type="text" class="ledger-in" id="ledgerIn" value="F3A23576" maxlength="8" placeholder="8 HEX CHARS"
+                       autocomplete="off" autocapitalize="characters" inputmode="text">
                 <button class="btn-ledger" onclick="ingestLedger()">INGEST</button>
               </div>
             </div>
           </div>
         </div>
 
-      </div><!-- /LEFT -->
+      </div>
 
       <!-- RIGHT — 3D CANVAS -->
       <div style="display:flex;flex-direction:column;gap:12px">
@@ -563,13 +735,13 @@ Commands: <span style="color:var(--teal)">status, governor, tiers, attacker, tra
             <div class="canvas-wrap" id="canvasWrap">
               <div class="canvas-lbl" id="canvasLbl">SPATIAL CORE INITIALIZING</div>
             </div>
-            <div class="canvas-hint">Drag to rotate · Scroll to zoom · Right-drag to pan</div>
+            <div class="canvas-hint">Pinch to zoom · Drag to rotate · Two fingers to pan</div>
           </div>
         </div>
       </div>
 
-    </div><!-- /dash-grid -->
-  </div><!-- /dashView -->
+    </div>
+  </div>
 
   <footer class="ft">
     Proprietary Engine Pipeline<br>
@@ -577,8 +749,8 @@ Commands: <span style="color:var(--teal)">status, governor, tiers, attacker, tra
     System Gate: Active Dashboard Stream
   </footer>
 
-</div><!-- /wrapper -->
-</div><!-- /shell -->
+</div>
+</div>
 
 <script>
 /* ═══════════════════════════════════════════════════
@@ -588,6 +760,70 @@ Commands: <span style="color:var(--teal)">status, governor, tiers, attacker, tra
 
 let sessionToken = null, attackActive = false, intruderData = null;
 let sessionStart = null, uptimeIv = null;
+
+/* ══════════════════════════════════════════════════
+   ZOOM CONTROLLER
+   Works in two modes:
+   1. Native browser zoom (user-scalable=yes viewport) — pinch/scroll
+   2. CSS transform fallback for locked-down WebViews / PWAs
+══════════════════════════════════════════════════ */
+(function initZoom() {
+  let scale = 1;
+  const MIN = 0.25, MAX = 5, STEP = 0.2;
+  const root = document.documentElement;
+
+  function applyScale(s) {
+    scale = Math.min(MAX, Math.max(MIN, s));
+    // Only use CSS transform if native zoom is NOT available
+    // (detected by checking if visualViewport scale is controllable)
+    if (window.visualViewport && window.visualViewport.scale !== 1) {
+      // Native zoom is active — just track, don't override
+      return;
+    }
+    root.style.transformOrigin = 'top left';
+    root.style.transform       = `scale(${scale})`;
+    root.style.width           = `${100 / scale}%`;
+  }
+
+  document.getElementById('zoomIn').addEventListener('click',  () => applyScale(scale + STEP));
+  document.getElementById('zoomOut').addEventListener('click', () => applyScale(scale - STEP));
+  document.getElementById('zoomReset').addEventListener('click',() => {
+    scale = 1;
+    root.style.transform = '';
+    root.style.width     = '';
+  });
+
+  // Pinch-to-zoom gesture on the page body (supplement browser native)
+  let initDist = 0, initScale = 1;
+  document.addEventListener('touchstart', e => {
+    if (e.touches.length === 2) {
+      initDist  = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      initScale = scale;
+    }
+  }, { passive: true });
+  document.addEventListener('touchmove', e => {
+    if (e.touches.length !== 2) return;
+    const dist = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    );
+    // Only apply CSS scale if browser native zoom isn't working
+    // (visualViewport.scale stays at 1 in locked WebViews)
+    if (window.visualViewport && Math.abs(window.visualViewport.scale - 1) < 0.01) {
+      applyScale(initScale * (dist / initDist));
+    }
+  }, { passive: true });
+
+  // Ctrl+scroll (desktop)
+  document.addEventListener('wheel', e => {
+    if (!e.ctrlKey) return;
+    e.preventDefault();
+    applyScale(scale - e.deltaY * 0.005);
+  }, { passive: false });
+})();
 
 /* ── THREE.JS ────────────────────────────────── */
 const canvasWrap = document.getElementById('canvasWrap');
@@ -603,22 +839,19 @@ controls.enableDamping  = true;
 controls.dampingFactor  = 0.06;
 controls.minDistance    = 2;
 controls.maxDistance    = 18;
-controls.enablePan      = true;       // free pan with right-click drag (desktop)
+controls.enablePan      = true;
 controls.panSpeed       = 1.2;
 controls.rotateSpeed    = 0.8;
 controls.zoomSpeed      = 1.2;
-// On mobile: one finger = rotate, two fingers = pan+zoom (natural)
 controls.touches = {
   ONE: THREE.TOUCH ? THREE.TOUCH.ROTATE : 0,
   TWO: THREE.TOUCH ? THREE.TOUCH.DOLLY_PAN : 1,
 };
 
-// Cylinder
 const cylMat = new THREE.MeshBasicMaterial({ color: 0x1a1a3a, wireframe: true, transparent: true, opacity: 0.35 });
 const cyl    = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 5, 24, 10, true), cylMat);
 scene.add(cyl);
 
-// Rings
 for (let i = 0; i < 5; i++) {
   const r = new THREE.Mesh(
     new THREE.RingGeometry(1.97, 2.03, 48),
@@ -628,13 +861,11 @@ for (let i = 0; i < 5; i++) {
   scene.add(r);
 }
 
-// Axis
 scene.add(new THREE.Line(
   new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,-2.6,0), new THREE.Vector3(0,2.6,0)]),
   new THREE.LineBasicMaterial({ color: 0x0066ff, transparent: true, opacity: 0.35 })
 ));
 
-// Particles
 const partGeom = new THREE.BufferGeometry();
 const partPos  = new Float32Array(300);
 for (let i = 0; i < 300; i++) partPos[i] = (Math.random() - .5) * 12;
@@ -653,6 +884,10 @@ function resizeRenderer() {
 }
 resizeRenderer();
 window.addEventListener('resize', resizeRenderer);
+// Also resize when visual viewport changes (keyboard open/close)
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', resizeRenderer);
+}
 
 (function animate() {
   requestAnimationFrame(animate);
@@ -668,15 +903,14 @@ window.addEventListener('resize', resizeRenderer);
 })();
 
 /* ── TERMINAL DRAG & RESIZE ─────────────────── */
-const sovTerm   = document.getElementById('sovTerm');
+const sovTerm    = document.getElementById('sovTerm');
 const dragHandle = document.getElementById('sovDragHandle');
 const resizeHandle = document.getElementById('sovResize');
 
 let dragging = false, resizing = false;
-let dragOX = 0, dragOY = 0, dragSX = 0, dragSY = 0;
+let dragOX = 0, dragOY = 0;
 let resizeOX = 0, resizeOY = 0, resizeW0 = 0, resizeH0 = 0;
 
-// Drag — mouse
 dragHandle.addEventListener('mousedown', e => {
   if (e.target.closest('.sov-btn')) return;
   dragging = true;
@@ -692,14 +926,12 @@ document.addEventListener('mousemove', e => {
     sovTerm.style.top  = Math.max(0, Math.min(maxY, e.clientY - dragOY)) + 'px';
   }
   if (resizing) {
-    const dx = e.clientX - resizeOX, dy = e.clientY - resizeOY;
-    sovTerm.style.width  = Math.max(260, resizeW0 + dx) + 'px';
-    sovTerm.style.height = Math.max(200, resizeH0 + dy) + 'px';
+    sovTerm.style.width  = Math.max(260, resizeW0 + e.clientX - resizeOX) + 'px';
+    sovTerm.style.height = Math.max(200, resizeH0 + e.clientY - resizeOY) + 'px';
   }
 });
 document.addEventListener('mouseup', () => { dragging = false; resizing = false; });
 
-// Drag — touch
 dragHandle.addEventListener('touchstart', e => {
   if (e.target.closest('.sov-btn')) return;
   const t = e.touches[0];
@@ -711,20 +943,18 @@ document.addEventListener('touchmove', e => {
   if (!dragging && !resizing) return;
   const t = e.touches[0];
   if (dragging) {
-    const maxX = window.innerWidth  - sovTerm.offsetWidth;
-    const maxY = window.innerHeight - sovTerm.offsetHeight;
-    sovTerm.style.left = Math.max(0, Math.min(maxX, t.clientX - dragOX)) + 'px';
-    sovTerm.style.top  = Math.max(0, Math.min(maxY, t.clientY - dragOY)) + 'px';
+    const vw = window.visualViewport ? window.visualViewport.width  : window.innerWidth;
+    const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    sovTerm.style.left = Math.max(0, Math.min(vw - sovTerm.offsetWidth,  t.clientX - dragOX)) + 'px';
+    sovTerm.style.top  = Math.max(0, Math.min(vh - sovTerm.offsetHeight, t.clientY - dragOY)) + 'px';
   }
   if (resizing) {
-    const dx = t.clientX - resizeOX, dy = t.clientY - resizeOY;
-    sovTerm.style.width  = Math.max(260, resizeW0 + dx) + 'px';
-    sovTerm.style.height = Math.max(200, resizeH0 + dy) + 'px';
+    sovTerm.style.width  = Math.max(260, resizeW0 + t.clientX - resizeOX) + 'px';
+    sovTerm.style.height = Math.max(200, resizeH0 + t.clientY - resizeOY) + 'px';
   }
 }, { passive: true });
 document.addEventListener('touchend', () => { dragging = false; resizing = false; });
 
-// Resize handle — mouse + touch
 resizeHandle.addEventListener('mousedown', e => {
   resizing = true;
   resizeOX = e.clientX; resizeOY = e.clientY;
@@ -739,19 +969,34 @@ resizeHandle.addEventListener('touchstart', e => {
   e.stopPropagation();
 }, { passive: true });
 
+// Keep terminal visible when keyboard opens (visual viewport scroll)
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('scroll', () => {
+    if (sovTerm.classList.contains('open')) {
+      // Re-clamp terminal position to stay in visual viewport
+      const vvTop = window.visualViewport.offsetTop;
+      const curTop = parseInt(sovTerm.style.top) || 70;
+      if (curTop < vvTop + 4) sovTerm.style.top = (vvTop + 4) + 'px';
+    }
+  });
+}
+
 function expandTerm() {
   const isExpanded = sovTerm.dataset.expanded === '1';
+  const vw = window.visualViewport ? window.visualViewport.width  : window.innerWidth;
+  const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
   if (!isExpanded) {
     sovTerm.dataset.expanded = '1';
-    sovTerm.style.left  = '8px'; sovTerm.style.top = '60px';
-    sovTerm.style.width  = (window.innerWidth  - 16) + 'px';
-    sovTerm.style.height = (window.innerHeight - 80) + 'px';
-    sovTerm.querySelector('.expand').textContent = '⤡ RESTORE';
+    sovTerm.style.left   = '8px';
+    sovTerm.style.top    = (window.visualViewport ? window.visualViewport.offsetTop + 8 : 60) + 'px';
+    sovTerm.style.width  = (vw - 16) + 'px';
+    sovTerm.style.height = (vh - 80) + 'px';
+    document.getElementById('expandBtn').textContent = '⤡ RESTORE';
   } else {
     sovTerm.dataset.expanded = '0';
-    sovTerm.style.width  = 'min(680px,calc(100vw - 24px))';
+    sovTerm.style.width  = '';
     sovTerm.style.height = '';
-    sovTerm.querySelector('.expand').textContent = '⤢ EXPAND';
+    document.getElementById('expandBtn').textContent = '⤢ EXPAND';
   }
 }
 
@@ -760,30 +1005,39 @@ window.addEventListener('keydown', e => {
   if (e.key === '`' || e.key === '~') { e.preventDefault(); toggleTerm(); }
 });
 function toggleTerm() {
-  const vis = sovTerm.style.display === 'block';
-  sovTerm.style.display = vis ? 'none' : 'block';
-  if (!vis) document.getElementById('sovShellIn').focus();
+  const isOpen = sovTerm.classList.contains('open');
+  if (isOpen) {
+    sovTerm.classList.remove('open');
+  } else {
+    sovTerm.classList.add('open');
+    // Position relative to visual viewport top so it's always on screen
+    const vvTop = window.visualViewport ? window.visualViewport.offsetTop : 0;
+    if (!sovTerm.style.top || parseInt(sovTerm.style.top) < vvTop) {
+      sovTerm.style.top = (vvTop + 70) + 'px';
+    }
+    setTimeout(() => document.getElementById('sovShellIn').focus(), 80);
+  }
 }
 
-/* ── DIAGNOSTIC COMMANDS (client-side) ──────── */
+/* ── DIAGNOSTIC COMMANDS ────────────────────── */
 let lastAttackerIP   = null;
 let lastAttackerData = null;
 
 const CMDS = {
   help:     () => `Available commands:\n  status    — system state\n  governor  — boundary parameters\n  tiers     — cylinder tier layout\n  attacker  — last known attacker data\n  trace     — simulate deep IP trace\n  location  — GPS / geolocation data\n  version   — engine version\n  clear     — clear output`,
-  status:   () => `SYSTEM STATUS: ${attackActive ? '\x1b[31mUNDER ATTACK\x1b[0m' : 'SECURE'}\nSESSION: ${sessionToken ? 'ACTIVE' : 'INACTIVE'}\nUPTIME: ${document.getElementById('sUptime').textContent}\nROTATION: ${cyl.rotation.y.toFixed(4)} rad`,
+  status:   () => `SYSTEM STATUS: ${attackActive ? 'UNDER ATTACK' : 'SECURE'}\nSESSION: ${sessionToken ? 'ACTIVE' : 'INACTIVE'}\nUPTIME: ${document.getElementById('sUptime').textContent}\nROTATION: ${cyl.rotation.y.toFixed(4)} rad`,
   governor: () => `GOVERNOR APEX: 1.047 RAD (60°)\nROTATIONAL DELTA: ${document.getElementById('sAngle').textContent}\nBOUNDARY MODE: CLOCKWISE ENFORCEMENT\nGALACTIC RADIUS: 3.154e13 s`,
   tiers:    () => `TIER LAYOUT:\n  1  Alpha Base Axis    [0001] val=1   NORTH\n  2  Beta Plane Layer   [0010] val=2   EAST\n  3  Gamma Vector Ring  [0100] val=4   SOUTH\n  4  Delta Polar Node   [1000] val=8   WEST\n  5  Epsilon Cross Sync [0011] val=3   N-E\n  6  Zeta Lateral Shift [0110] val=6   S-E\n  7  Eta High Boundary  [1100] val=12  S-W\n  8  Theta Apex Governor[1111] val=15  N-W`,
   attacker: () => lastAttackerData
-    ? `LAST KNOWN ATTACKER:\n  CODENAME:    ${lastAttackerData.allocated_codename}\n  IP ADDRESS:  ${lastAttackerData.captured_telemetry.threat_origin_ip || lastAttackerData.captured_telemetry.attacker_ip_address || 'UNKNOWN'}\n  TIER:        ${lastAttackerData.spatial_entry_tier}\n  GPS:         ${lastAttackerData.captured_telemetry.simulated_spatial_gps}\n  FINGERPRINT: ${lastAttackerData.captured_telemetry.simulated_device_fingerprint}\n  STATUS:      ${lastAttackerData.status}`
+    ? `LAST KNOWN ATTACKER:\n  CODENAME:    ${lastAttackerData.allocated_codename}\n  IP:          ${lastAttackerData.captured_telemetry.threat_origin_ip || lastAttackerData.captured_telemetry.attacker_ip_address || 'UNKNOWN'}\n  TIER:        ${lastAttackerData.spatial_entry_tier}\n  GPS:         ${lastAttackerData.captured_telemetry.simulated_spatial_gps}\n  FINGERPRINT: ${lastAttackerData.captured_telemetry.simulated_device_fingerprint}\n  STATUS:      ${lastAttackerData.status}`
     : 'NO ATTACKER DATA — run SIMULATE THREAT VECTOR first.',
   trace:    () => lastAttackerIP
-    ? `DEEP TRACE INITIATED: ${lastAttackerIP}\n\nROUTE HOP 1: 10.0.0.1        [LAN GATEWAY]      2ms\nROUTE HOP 2: 185.0.0.1       [BORDER ROUTER]    11ms\nROUTE HOP 3: 104.21.33.14    [CDN EDGE NODE]    28ms\nROUTE HOP 4: ${lastAttackerIP}  [THREAT ORIGIN]    44ms\n\nASN:        AS47622 — UNALLOCATED BLOCK\nCOUNTRY:    PROXY/TOR EXIT NODE\nTHREAT LVL: CRITICAL — ACTIVE EXPLOITATION DETECTED\nACTION:     PACKET DROP + BLOCK RULE APPLIED`
-    : 'NO ACTIVE THREAT — initiate threat simulation first.',
+    ? `DEEP TRACE: ${lastAttackerIP}\nHOP 1: 10.0.0.1       [LAN]    2ms\nHOP 2: 185.0.0.1     [BORDER]  11ms\nHOP 3: 104.21.33.14  [CDN]     28ms\nHOP 4: ${lastAttackerIP}  [ORIGIN]  44ms\nASN: AS47622 UNALLOCATED\nCOUNTRY: PROXY/TOR\nTHREAT: CRITICAL`
+    : 'NO ACTIVE THREAT — run threat simulation first.',
   location: () => lastAttackerData
-    ? `GPS COORDINATES: ${lastAttackerData.captured_telemetry.simulated_spatial_gps}\nCITY:    Toronto Metro Area (SIMULATED)\nCOUNTRY: CA — Proxied via offshore relay\nISP:     AS47622 Bulletproof Hosting Ltd.\nTZ:      America/Toronto UTC-5\nACCURACY: ±200m (cellular triangulation)`
+    ? `GPS: ${lastAttackerData.captured_telemetry.simulated_spatial_gps}\nCITY: Toronto Metro (SIMULATED)\nCOUNTRY: CA — Proxied\nISP: AS47622 Bulletproof Hosting\nTZ: America/Toronto UTC-5\nACCURACY: ±200m`
     : 'NO LOCATION DATA — run threat simulation first.',
-  version:  () => `LOTUS MATRIX ENGINE v2.0\nARCHITECT: Nicholas Desjardins\nBUILD: 2026 // CYLINDRICAL SPATIAL CORE\nTIERS: 8 // GALACTIC ANCHOR: ACTIVE\nSECURITY: TOKEN-BASED SESSION GATE`,
+  version:  () => `LOTUS MATRIX ENGINE v2.0\nARCHITECT: Nicholas Desjardins\nBUILD: 2026 // CYLINDRICAL SPATIAL CORE\nTIERS: 8 // GALACTIC ANCHOR: ACTIVE`,
   clear:    () => null
 };
 
@@ -802,17 +1056,19 @@ document.getElementById('sovShellIn').addEventListener('keydown', function(e) {
     out.innerHTML += `<span style="color:var(--red)">Unknown: '${cmd}'. Type 'help'.</span>\n\n`;
   }
   out.scrollTop = out.scrollHeight;
+  // Scroll shell output pane into view on mobile after keyboard submit
+  setTimeout(() => out.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 100);
 });
 
 /* ── KILL COMMANDS ──────────────────────────── */
 function killCmd(action) {
-  const out  = document.getElementById('sovStream');
-  const ip   = lastAttackerIP || '0.0.0.0';
+  const out = document.getElementById('sovStream');
+  const ip  = lastAttackerIP || '0.0.0.0';
   const msgs = {
-    ISOLATE:   `[${ts()}] ISOLATING ${ip}...\n[${ts()}] NETWORK SEGMENT QUARANTINED\n[${ts()}] ARP CACHE POISONED — TARGET ISOLATED\n`,
-    BLOCK:     `[${ts()}] FIREWALL RULE INJECTED: DROP src=${ip}\n[${ts()}] RULE PROPAGATED TO ALL EDGE NODES\n[${ts()}] IP ${ip} PERMANENTLY BLOCKED\n`,
-    TRACE:     `[${ts()}] INITIATING DEEP PACKET INSPECTION...\n[${ts()}] TRACING ROUTE: 4 HOPS TO ORIGIN\n[${ts()}] ATTACKER NODE FINGERPRINTED: ${lastAttackerData?.captured_telemetry?.simulated_device_fingerprint || 'N/A'}\n`,
-    NEUTRALIZE:`[${ts()}] NEUTRALIZATION PROTOCOL ACTIVE\n[${ts()}] SESSION TOKEN INVALIDATED\n[${ts()}] THREAT VECTOR ELIMINATED — SYSTEM RESTORED\n`,
+    ISOLATE:   `[${ts()}] ISOLATING ${ip}...\n[${ts()}] SEGMENT QUARANTINED\n[${ts()}] ARP POISONED — TARGET ISOLATED\n`,
+    BLOCK:     `[${ts()}] FIREWALL RULE: DROP src=${ip}\n[${ts()}] PROPAGATED TO EDGE NODES\n[${ts()}] IP ${ip} BLOCKED\n`,
+    TRACE:     `[${ts()}] DEEP PACKET INSPECTION...\n[${ts()}] ROUTE: 4 HOPS TO ORIGIN\n[${ts()}] FINGERPRINT: ${lastAttackerData?.captured_telemetry?.simulated_device_fingerprint || 'N/A'}\n`,
+    NEUTRALIZE:`[${ts()}] NEUTRALIZATION ACTIVE\n[${ts()}] TOKEN INVALIDATED\n[${ts()}] THREAT ELIMINATED\n`,
   };
   out.innerHTML += `<span style="color:var(--gold)">${msgs[action]}</span>`;
   out.scrollTop  = out.scrollHeight;
@@ -826,7 +1082,7 @@ function doHandshake() {
   const err = document.getElementById('gateErr');
   btn.textContent = 'SYNCHRONIZING...'; btn.disabled = true; err.style.display = 'none';
   fetch('/api/handshake', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ alignment_state: 1.047 })
   })
   .then(r => r.json())
@@ -863,24 +1119,19 @@ function updateUptime() {
   document.getElementById('sUptime').textContent = `${hh}:${mm}:${ss}`;
 }
 
-/* ── LIVE TICKER UPDATE ──────────────────────── */
 function updateTickerLive() {
   const items = document.querySelectorAll('.rt-ticker-inner .rt-item');
-  if (!items.length) return;
-  // Update orbit radius dynamically
-  const orbitVal = (2 + Math.sin(Date.now() * 0.0005) * 0.05).toFixed(4);
-  items.forEach((el, i) => {
+  items.forEach(el => {
     const spans = el.querySelectorAll('span');
     if (!spans.length) return;
-    if (el.textContent.startsWith('ORBIT')) spans[0].textContent = orbitVal + 'r';
+    if (el.textContent.startsWith('ORBIT')) spans[0].textContent = (2 + Math.sin(Date.now() * 0.0005) * 0.05).toFixed(4) + 'r';
     if (el.textContent.startsWith('NODES')) spans[0].textContent = nodeMeshes.length;
   });
 }
 
-/* ── TELEMETRY ──────────────────────────────── */
 function fetchTelemetry() {
   if (!sessionToken) return;
-  fetch('/api/telemetry', { headers: { 'Authorization': `Bearer ${sessionToken}` } })
+  fetch('/api/telemetry', { headers:{ 'Authorization':`Bearer ${sessionToken}` } })
   .then(r => r.status === 401 ? location.reload() : r.json())
   .then(m => {
     document.getElementById('sApex').textContent  = `${m.governor_apex} RAD`;
@@ -888,11 +1139,9 @@ function fetchTelemetry() {
     document.getElementById('sStatus').textContent = m.system_status;
     const st = document.getElementById('sStatus');
     const sv = document.getElementById('sovStream');
-
     if (m.attack_active) {
       st.className = 'gov-val red'; cylMat.color.setHex(0x550011);
       intruderData = m;
-      // Place hacker ball
       let ball = scene.getObjectByName('hackerBall');
       if (!ball) {
         ball = new THREE.Mesh(new THREE.SphereGeometry(0.28,16,16), new THREE.MeshBasicMaterial({ color:0xff2244 }));
@@ -902,18 +1151,15 @@ function fetchTelemetry() {
       ball.position.set(Math.cos(angle)*2, 1.8-(m.intruder_tier*0.55), Math.sin(angle)*2);
       document.getElementById('canvasTitle').textContent = `// MONITORING THREAT [1] — TIER: ${m.intruder_tier}`;
       document.getElementById('canvasLbl').textContent   = `THREAT TIER ${m.intruder_tier} LOCKED`;
-
       if (m.incident_escrow_report) {
         const rep = m.incident_escrow_report;
         lastAttackerData = rep;
         lastAttackerIP   = rep.captured_telemetry.threat_origin_ip || rep.captured_telemetry.attacker_ip_address;
-        // Show kill bar
         document.getElementById('killBar').style.display = 'flex';
-        // Stream live attack data into left pane
         sv.style.color = '#ff2244';
         const ip = lastAttackerIP;
         sv.innerHTML =
-          `<b style="color:var(--red)">⚠ EXPLOIT INTERCEPTED BY GOVERNOR BRAIN</b>\n` +
+          `<b style="color:var(--red)">⚠ EXPLOIT INTERCEPTED</b>\n` +
           streamRow(ts(), `CODENAME: ${rep.allocated_codename}`, 'gold') +
           streamRow(ts(), `BREACH TIER: ${rep.spatial_entry_tier}`, 'red') +
           streamRow(ts(), `ATTACKER IP: ${ip}`, 'red') +
@@ -921,7 +1167,7 @@ function fetchTelemetry() {
           streamRow(ts(), `LATENCY: ${rep.captured_telemetry.inbound_latency_ms}`, '') +
           streamRow(ts(), `FINGERPRINT: ${rep.captured_telemetry.simulated_device_fingerprint}`, '') +
           streamRow(ts(), `STATUS: ${rep.status}`, 'teal') +
-          `\n<span style="color:var(--dim)">Use KILL COMMANDS or type 'trace' / 'location' in shell ↓</span>`;
+          `\n<span style="color:var(--dim)">Use KILL COMMANDS or type 'trace'/'location' in shell ↓</span>`;
       }
     } else {
       st.className = 'gov-val';
@@ -941,7 +1187,6 @@ function streamRow(time, val, cls) {
   return `<div class="sov-stream-row"><span class="sov-stream-ts">[${time}]</span><span class="sov-stream-val ${cls}">${val}</span></div>`;
 }
 
-/* ── THREAT SIM ─────────────────────────────── */
 function startThreat() {
   attackActive = true;
   document.getElementById('threatBanner').style.display = 'block';
@@ -973,7 +1218,6 @@ function clearThreat() {
   });
 }
 
-/* ── TRANSFORM ──────────────────────────────── */
 function runTransform() {
   const data = document.getElementById('dataVec').value.trim();
   const key  = document.getElementById('keyVec').value.trim();
