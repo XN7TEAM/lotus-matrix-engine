@@ -2,18 +2,14 @@
    2026 Nicholas Desjardins. All Rights Reserved.
 */
 
-:root {
-  /* COLORS */
-  --bg0:#020208; --bg1:#06060f; --bg2:#0a0a1a; --bg3:#0e0e22;
-  --border:#1a1a30; --border2:#252545;
-  --blue:#0066ff; --blue2:#3388ff; --blue-glow:rgba(0,102,255,0.3);
-  --red:#ff2244; --red-glow:rgba(255,34,68,0.3);
-  --teal:#00e5cc; --teal-glow:rgba(0,229,204,0.25);
-  --gold:#f0b429; --white:#e8e8f8; --dim:#44445a; --sec:#8888aa;
-  /* TYPOGRAPHY & TIMING */
-  --mono: 'Share Tech Mono', monospace; --hud: 'Orbitron', sans-serif;
-  --r:6px; --tr:0.16s ease;
-}
+:root { --bg0:#020208; --teal:#00e5cc; --sec:#8888aa; }
+body { background:var(--bg0); color:#e8e8f8; font-family:'Share Tech Mono'; overflow:hidden; }
+#topbar { backdrop-filter:blur(16px); touch-action:pan-x; display:flex; overflow-x:auto; }
+.frame { position:absolute; background:rgba(6,6,15,0.96); border:1px solid #252545; border-radius:6px; touch-action:none; }
+.frame-titlebar { cursor:move; padding:6px; background:rgba(14,14,34,0.95); }
+.term-out { font-size:10px; flex:1; }
+/* Ensure windows resize dynamically */
+.frame-body { flex:1; overflow:auto; resize:both; }
 
 /* GLOBAL RESET */
 *, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
