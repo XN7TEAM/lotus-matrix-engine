@@ -1,27 +1,81 @@
-/* Lotus Matrix Engine — Static Stylesheet
-   © 2026 Nicholas Desjardins. All Rights Reserved.
-   Additional global styles that supplement inline styles in index.html */
+/* LOTUS MATRIX ENGINE — PRODUCTION STYLESHEET
+   2026 Nicholas Desjardins. All Rights Reserved.
+*/
 
-* { box-sizing: border-box; }
+:root {
+  /* COLORS */
+  --bg0:#020208; --bg1:#06060f; --bg2:#0a0a1a; --bg3:#0e0e22;
+  --border:#1a1a30; --border2:#252545;
+  --blue:#0066ff; --blue2:#3388ff; --blue-glow:rgba(0,102,255,0.3);
+  --red:#ff2244; --red-glow:rgba(255,34,68,0.3);
+  --teal:#00e5cc; --teal-glow:rgba(0,229,204,0.25);
+  --gold:#f0b429; --white:#e8e8f8; --dim:#44445a; --sec:#8888aa;
+  /* TYPOGRAPHY & TIMING */
+  --mono: 'Share Tech Mono', monospace; --hud: 'Orbitron', sans-serif;
+  --r:6px; --tr:0.16s ease;
+}
 
-/* Custom scrollbar — webkit */
-::-webkit-scrollbar       { width: 4px; height: 4px; }
+/* GLOBAL RESET */
+*, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
+html { scroll-behavior: smooth; height: 100%; }
+body { 
+  width:100%; height:100%; overflow:hidden; background:var(--bg0); 
+  font-family:var(--mono); color:var(--white); touch-action:none; user-select:none;
+}
+canvas { touch-action:none; }
+
+/* CUSTOM SCROLLBAR */
+::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: #03030a; }
 ::-webkit-scrollbar-thumb { background: #252540; border-radius: 2px; }
 
-/* Smooth scroll for anchor links */
-html { scroll-behavior: smooth; }
+/* APP LAYOUT */
+#app {
+  position:fixed; inset:0; overflow:hidden;
+  background:radial-gradient(ellipse 70% 40% at 50%-10%,rgba(0,102,255,0.06) 0%,transparent 60%), var(--bg0);
+}
+#gridCanvas { position:absolute; inset:0; pointer-events:none; z-index:0; }
+#canvas { position:absolute; width:0; height:0; transform-origin:0 0; will-change:transform; z-index:1; }
 
-/* Mobile bottom-padding safety for fixed elements */
-@media (max-width: 768px) {
-  body { padding-bottom: 20px; }
+/* WINDOW SYSTEM */
+.frame {
+  position:absolute; background:rgba(6,6,15,0.96); border:1px solid var(--border2);
+  border-radius:var(--r); overflow:hidden; will-change:transform;
+  min-width:200px; min-height:140px; display:flex; flex-direction:column;
+  transition:box-shadow 0.2s ease;
+}
+.frame.selected { border-color:var(--teal); box-shadow:0 0 0 1px var(--teal), 0 0 24px rgba(0,229,204,0.1); }
+.frame-titlebar {
+  display:flex; align-items:center; gap:6px; padding:6px 8px;
+  background:rgba(14,14,34,0.95); border-bottom:1px solid var(--border);
+  cursor:grab; flex-shrink:0; touch-action:none; user-select:none;
 }
 
-/* Print — hide interactive chrome */
+/* INTERFACE COMPONENTS (TopBar, Palette, Compass, HUD, Menus) */
+#topbar {
+  position:fixed; top:0; left:0; right:0; height:44px;
+  background:rgba(2,2,8,0.94); border-bottom:1px solid var(--border2);
+  display:flex; align-items:center; gap:6px; padding:0 12px; z-index:9000;
+  backdrop-filter:blur(16px);
+}
+.tb-btn {
+  height:28px; padding:0 9px; background:transparent; border:1px solid var(--border2);
+  border-radius:4px; color:var(--sec); font-family:var(--hud); font-size:8px;
+  text-transform:uppercase; cursor:pointer; transition:all var(--tr);
+}
+.tb-btn:hover { border-color:var(--teal); color:var(--teal); background:rgba(0,229,204,0.05); }
+
+/* MOBILE RESPONSIVE ADJUSTMENTS */
+@media (max-width:768px) {
+  body { padding-bottom:20px; }
+}
+@media (max-width:600px) {
+  #topbar { padding:0 8px; gap:3px; }
+  #compass { width:90px; height:90px; }
+  #minimap { display:none; }
+}
+
+/* PRINT UTILITY */
 @media print {
-  .threat-banner,
-  .terminal-overlay,
-  .btn-threat,
-  .btn-contain,
-  .demo-panel { display: none !important; }
+  .threat-banner, .terminal-overlay, .btn-threat, .btn-contain, .demo-panel { display:none !important; }
 }
