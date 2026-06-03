@@ -1,113 +1,175 @@
-import math
+from flask import Flask, render_template, jsonify, request, abort
+from functools import wraps
+from core_engine import LotusCylinderEngine
 import time
+import random
+import secrets
+import string
 
-# Module-level epoch anchor
-# Fixed at import time so every client sees the same drift curve.
-ENGINE_START_TIME: float = time.time()
+app = Flask(__name__)
+app.config['ENV'] = 'production'
+app.config['DEBUG'] = False
 
-def get_drift_offset() -> float:
-    """
-    Returns a slowly increasing float (0.1 units per second) based on
-    elapsed time since the engine was loaded. Used to produce a smooth,
-    shared radial drift across all active dashboard sessions.
-    """
-    return (time.time() - ENGINE_START_TIME) * 0.1
+spatial_engine = LotusCylinderEngine()
+ACTIVE_SESSION_TOKENS = set()
 
-class LotusCylinderEngine:
-    """
-    Processes hex input streams through an eight-tier cylindrical
-    spatial matrix. Each tier applies a named orbital-plane offset,
-    a radial position derived from galactic-scale time, and enforces
-    clockwise boundary wrapping within [0, 15].
-    """
-    # Maximum hex coordinate value (4-bit ceiling)
-    LIMIT: int = 16
+system_telemetry = {
+    "governor_apex": 1.047,
+    "current_angle": 0.000,
+    "system_status": "SECURE",
+    "attack_active": False,
+    "intruder tier": None,
+    "processing_delta": 0.02110,
+    "target_trajectory": 0.0,
+    "incident_escrow_report": None,
+}
 
-    # Astrometric scale: 100,000 light-years in seconds (light-travel metric)
-    GALACTIC_SPACE_TIME_RADIUS: float = 3.154e13
+# Helpers
+def generate_threat_codename():
+    prefix = random.choice(["VECTOR", "PHANTOM", "SHADOW", "INTRUDER", "SPECTRE"])
+    suffix = "".join(random.choices(string.ascii_uppercase + string.digits, k=4))
+    return f"{prefix}-{suffix}"
 
-    # Eight structural tiers: binary weight, cardinal value, and display name
-    CYLINDER_TIERS: dict = {
-        1: {"binary": "0001", "val": 1, "name": "Alpha Base Axis (NORTH)"},
-        2: {"binary": "0010", "val": 2, "name": "Beta Plane Layer (EAST)"},
-        3: {"binary": "0100", "val": 4, "name": "Gamma Vector Ring (SOUTH)"},
-        4: {"binary": "1000", "val": 8, "name": "Delta Polar Node (WEST)"},
-        5: {"binary": "0011", "val": 3, "name": "Epsilon Cross Sync (N-E)"},
-        6: {"binary": "0110", "val": 6, "name": "Zeta Lateral Shift (S-E)"},
-        7: {"binary": "1100", "val": 12, "name": "Eta High Boundary (S-W)"},
-        8: {"binary": "1111", "val": 15, "name": "Theta Apex Governor (N-W)"},
-    }
+def validate_hex(value: str) -> bool:
+    return bool(value) and all(c in "0123456789ABCDEFabcdef" for c in value)
 
-    def process_clockwise_transform(self, data_stream: str, key_stream: str) -> dict:
-        """
-        Transforms hex data through the 8-tier cylinder matrix.
-        """
-        clean_data = data_stream.upper().replace(" ", "")
-        clean_key = key_stream.upper().replace(" ", "")
+# Auth decorator
+def require_session_token(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth = request.headers.get("Authorization", "")
+        if not auth.startswith("Bearer "):
+            abort(401, description="Missing session token.")
+        token = auth.split(" ", 1)[1]
+        if token not in ACTIVE_SESSION_TOKENS:
+            abort(401, description="Invalid session token.")
+        return f(*args, **kwargs)
+    return decorated
 
-        if len(clean_data) < 1 or len(clean_key) < 1:
-            raise ValueError("Input data and force key tracks cannot be null.")
+# Routes
+@app.route("/")
+def load_interface():
+    return render_template("index.html")
 
-        if not all(c in "0123456789ABCDEF" for c in clean_data + clean_key):
-            raise ValueError("Input vectors must contain valid hexadecimal syntax.")
+@app.route("/api/handshake", methods=["POST"])
+def verify_handshake():
+    payload = request.get_json(silent=True) or {}
+    alignment_state = payload.get("alignment_state", 0.0)
+    if not isinstance(alignment_state, (int, float)):
+        return jsonify({"authenticated": False, "message": "Invalid payload."}), 400
+    if abs(float(alignment_state) - 1.047) < 0.001:
+        token = secrets.token_hex(32)
+        ACTIVE_SESSION_TOKENS.add(token)
+        return jsonify({
+            "authenticated": True,
+            "token": token,
+            "message": "Spatiotemporal target confirmation match. Secure token minted."
+        })
+    return jsonify({
+        "authenticated": False,
+        "message": "Kinetic coordination vector mismatch."
+    }), 403
 
-        input_nodes = [int(c, 16) for c in clean_data]
-        force_nodes = [int(c, 16) for c in clean_key]
+@app.route("/api/process", methods=["POST"])
+@require_session_token
+def handle_api_request():
+    payload = request.get_json(silent=True) or {}
+    data_input = payload.get("data", "").strip().upper()
+    key_input = payload.get("key", "").strip().upper()
 
-        output_hex_chars = []
-        telemetry_log = []
+    if not data_input or not key_input:
+        return jsonify({"success": False, "error": "Incomplete coordinate transmission vectors."}), 400
 
-        # Use the shared drift offset so all clients see the same radial curve.
-        # The modulo keeps the value within the galactic radius scale.
-        current_epoch_vector = (ENGINE_START_TIME + get_drift_offset()) % self.GALACTIC_SPACE_TIME_RADIUS
+    if not validate_hex(data_input) or not validate_hex(key_input):
+        return jsonify({"success": False, "error": "Inputs must be valid hexadecimal strings."}), 400
 
-        for idx in range(8):
-            tier_id = idx + 1
-            tier_meta = self.CYLINDER_TIERS.get(
-                tier_id,
-                {"binary": "0000", "val": 0, "name": "Undefined Layer"}
-            )
+    if len(data_input) > 32 or len(key_input) > 32:
+        return jsonify({"success": False, "error": "Input exceeds 32-character maximum."}), 400
 
-            node_val = input_nodes[idx % len(input_nodes)]
-            force_val = force_nodes[idx % len(force_nodes)]
+    try:
+        t0 = time.perf_counter()
+        result = spatial_engine.process_clockwise_transform(data_input, key_input)
+        elapsed_ms = (time.perf_counter() - t0) * 1000
+        system_telemetry["processing_delta"] = elapsed_ms
+        return jsonify({
+            "success": True,
+            "inventor": "Nicholas Desjardins",
+            "output": result["cipher_output"],
+            "latency_ms": f"{elapsed_ms:.5f} ms",
+            "telemetry": result["telemetry"],
+        })
+    except ValueError as e:
+        return jsonify({"success": False, "error": str(e)}), 400
+    except Exception:
+        return jsonify({"success": False, "error": "Internal core structural failure."}), 500
 
-            # Orbital angle: maps combined value (0-15) onto 0 to 2π in 16 steps
-            orbital_angle_rad = ((node_val + force_val) % self.LIMIT) * (math.pi / 8)
+@app.route("/api/telemetry", methods=["GET"])
+@require_session_token
+def get_telemetry():
+    if system_telemetry["attack_active"]:
+        system_telemetry["governor_apex"] = round(random.uniform(2.500, 3.999), 3)
+        system_telemetry["processing_delta"] = round(random.uniform(0.045, 0.065), 5)
+    else:
+        system_telemetry["governor_apex"] = 1.047
+    return jsonify(system_telemetry)
 
-            # Radial position: base 2.0 with small sinusoidal drift from epoch
-            calculated_clockwise_radius = 2.0 + (math.sin(current_epoch_vector + tier_id) * 0.05)
+@app.route("/api/simulate-attack", methods=["POST"])
+@require_session_token
+def simulate_attack():
+    payload = request.get_json(silent=True) or {}
+    attack_state = bool(payload.get("active", False))
+    system_telemetry["attack_active"] = attack_state
 
-            # Raw trajectory: node + force + tier cardinal weight
-            raw_trajectory = node_val + force_val + tier_meta["val"]
-            final_state = raw_trajectory % self.LIMIT
+    if attack_state:
+        codename = generate_threat_codename()
+        tier = random.randint(1, 4)
+        traj = round(random.uniform(0.0, 6.283), 3)
+        sim_ip = f"185.{random.randint(10,254)}.{random.randint(0,254)}.{random.randint(1,254)}"
+        system_telemetry.update({
+            "system_status": f"UNDER ATTACK // ALLOCATED: {codename}",
+            "intruder tier": tier,
+            "target_trajectory": traj,
+            "incident_escrow_report": {
+                "allocated codename": codename,
+                "timestamp_epoch_ms": int(time.time() * 1000),
+                "spatial_entry_tier": tier,
+                "network_trajectory_vector": traj,
+                "captured_telemetry": {
+                    "inbound_latency_ms": f"{system_telemetry['processing_delta']:.5f} ms",
+                    "simulated_device_fingerprint": secrets.token_hex(8).upper(),
+                    "simulated_spatial_gps": "43.6532 N, 79.3832 W",
+                    "attacker_ip_address": sim_ip,
+                },
+                "status": "ISOLATED_AND_PASSED_TO_AUTHORITIES",
+            },
+        })
+    else:
+        system_telemetry.update({
+            "system_status": "SECURE",
+            "intruder tier": None,
+            "target_trajectory": 0.0,
+            "incident_escrow_report": None,
+        })
 
-            if raw_trajectory >= self.LIMIT:
-                rotation_type = (
-                    f"Orbital layer boundary shift ({raw_trajectory}). "
-                    f"Rotated CLOCKWISE to coordinate {final_state}."
-                )
-            else:
-                rotation_type = "Clockwise orbital trajectory maintained within spatial bounds."
+    return jsonify({"status": "State Confirmed", "telemetry": system_telemetry})
 
-            out_char = hex(final_state)[2:].upper()
-            output_hex_chars.append(out_char)
+# Error handlers
+@app.errorhandler(401)
+def unauthorized(e):
+    return jsonify({"error": "Unauthorized", "message": str(e)}), 401
 
-            telemetry_log.append({
-                "tier": tier_id,
-                "tier_name": tier_meta["name"],
-                "tier_binary": tier_meta["binary"],
-                "formula": (
-                    f"Input ({hex(node_val)[2:].upper()}) "
-                    f"+ Force [{tier_meta['binary']}] "
-                    f"@ Radius: {calculated_clockwise_radius:.4f}"
-                ),
-                "boundary_enforcement": (
-                    f"Galactic Time-Scale Anchor -> {rotation_type} "
-                    f"-> Coordinate Out: {out_char}"
-                ),
-            })
+@app.errorhandler(403)
+def forbidden(e):
+    return jsonify({"error": "Forbidden", "message": str(e)}), 403
 
-        return {
-            "cipher_output": "".join(output_hex_chars),
-            "telemetry": telemetry_log,
-        }
+@app.errorhandler(404)
+def not_found(e):
+    return jsonify({"error": "Not found"}), 404
+
+@app.errorhandler(500)
+def server_error(e):
+    return jsonify({"error": "Internal server error"}), 500
+
+# Entry point
+if __name__ == "__main__":
+    app.run(host="127.0.0.1", port=5000, debug=False)
