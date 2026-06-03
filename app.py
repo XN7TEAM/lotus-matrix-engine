@@ -1,31 +1,28 @@
-from flask import Flask, render_template, jsonify, request, abort, send_from_directory
-from functools import wraps
+from flask import Flask, render_template, jsonify
 from core_engine import LotusCylinderEngine
-import time
 import random
-import secrets
-import string
-import os
 
-# Initialize Flask with explicit static/template folders
-app = Flask(__name__, static_folder='static', template_folder='templates')
+app = Flask(__name__)
+engine = LotusCylinderEngine()
 
-app.config['ENV'] = 'production'
-app.config['DEBUG'] = False
+@app.route('/')
+def index():
+    return render_template('index.html')
 
-spatial_engine = LotusCylinderEngine()
-ACTIVE_SESSION_TOKENS = set()
+@app.route('/api/telemetry')
+def get_telemetry():
+    # Simulate a threat if random trigger hits
+    threat = random.choice([True, False])
+    data, log = engine.process_transform("ABCDEF12", "12345678")
+    
+    return jsonify({
+        "status": "SECURE" if not threat else "ATTACK_ACTIVE",
+        "telemetry": log,
+        "threat_ip": f"185.{random.randint(10,254)}.0.{random.randint(1,254)}" if threat else None
+    })
 
-system_telemetry = {
-    "governor_apex": 1.047,
-    "current_angle": 0.000,
-    "system_status": "SECURE",
-    "attack_active": False,
-    "intruder tier": None,
-    "processing_delta": 0.02110,
-    "target_trajectory": 0.0,
-    "incident_escrow_report": None,
-}
+if __name__ == '__main__':
+    app.run(debug=True)
 
 # --- ROUTES ---
 
