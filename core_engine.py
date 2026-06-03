@@ -1,50 +1,17 @@
-"""
-Lotus Cylinder Engine — Core Transform Module
-© 2026 Nicholas Desjardins. All Rights Reserved.
-
-Implements the clockwise cylindrical spatial matrix transformation.
-Each hex character is mapped onto one of eight structural tiers,
-rotated by a force key, and boundary-enforced within a 16-value
-(4-bit) hexadecimal coordinate space.
-
-A fixed ENGINE_START_TIME ensures consistent telemetry drift
-across all connected clients for the lifetime of the server process.
-"""
-
 import math
 import time
 
-# ── Module-level epoch anchor ────────────────────────────────────────────────
-# Fixed at import time so every client sees the same drift curve.
-ENGINE_START_TIME: float = time.time()
-
-
-def get_drift_offset() -> float:
-    """
-    Returns a slowly increasing float (0.1 units per second) based on
-    elapsed time since the engine was loaded.  Used to produce a smooth,
-    shared radial drift across all active dashboard sessions.
-    """
-    return (time.time() - ENGINE_START_TIME) * 0.1
-
-
-# ── Engine class ─────────────────────────────────────────────────────────────
-
 class LotusCylinderEngine:
     """
-    Processes hex input streams through an eight-tier cylindrical
-    spatial matrix.  Each tier applies a named orbital-plane offset,
-    a radial position derived from galactic-scale time, and enforces
-    clockwise boundary wrapping within [0, 15].
+    Lotus Cylinder Engine — Core Transform Module
+    Implements the clockwise cylindrical spatial matrix transformation.
     """
-
-    # Maximum hex coordinate value (4-bit ceiling)
-    LIMIT: int = 16
-
-    # Astrometric scale: 100,000 light-years in seconds (light-travel metric)
+    
+    LIMIT: int = 16  # 4-bit coordinate space
+    ENGINE_START_TIME: float = time.time()
     GALACTIC_SPACE_TIME_RADIUS: float = 3.154e13
-
-    # Eight structural tiers — binary weight, cardinal value, and display name
+    
+    # Restored 8-tier structural map
     CYLINDER_TIERS: dict = {
         1: {"binary": "0001", "val": 1,  "name": "Alpha Base Axis (NORTH)"},
         2: {"binary": "0010", "val": 2,  "name": "Beta Plane Layer (EAST)"},
@@ -56,95 +23,53 @@ class LotusCylinderEngine:
         8: {"binary": "1111", "val": 15, "name": "Theta Apex Governor (N-W)"},
     }
 
-    def process_clockwise_transform(self, data_stream: str, key_stream: str) -> dict:
+    def get_drift_offset(self) -> float:
+        """Calculates drift based on engine load time for vortex synchronization."""
+        return (time.time() - self.ENGINE_START_TIME) * 0.1
+
+    def process_transform(self, input_nodes: list, force_nodes: list):
         """
-        Transform hex data through the 8-tier cylinder matrix.
-
-        Parameters
-        ----------
-        data_stream : str
-            Hexadecimal input data (e.g. "ABC1").
-        key_stream : str
-            Hexadecimal rotational force key (e.g. "3576").
-
-        Returns
-        -------
-        dict with keys:
-            cipher_output : str  — transformed 8-character hex string
-            telemetry     : list — per-tier processing log entries
-
-        Raises
-        ------
-        ValueError
-            If inputs are empty or contain non-hexadecimal characters.
+        Processes hex input streams through the 8-tier cylindrical matrix.
+        Returns a hex string and a full telemetry log for the dashboard.
         """
-        clean_data = data_stream.upper().replace(" ", "")
-        clean_key  = key_stream.upper().replace(" ", "")
-
-        if len(clean_data) < 1 or len(clean_key) < 1:
-            raise ValueError("Input data and force key tracks cannot be null.")
-
-        if not all(c in "0123456789ABCDEF" for c in clean_data + clean_key):
-            raise ValueError("Input vectors must contain valid hexadecimal syntax.")
-
-        input_nodes = [int(c, 16) for c in clean_data]
-        force_nodes = [int(c, 16) for c in clean_key]
-
         output_hex_chars = []
-        telemetry_log    = []
-
-        # Use the shared drift offset so all clients see the same radial curve.
-        # The modulo keeps the value within the galactic radius scale.
-        current_epoch_vector = (ENGINE_START_TIME + get_drift_offset()) % self.GALACTIC_SPACE_TIME_RADIUS
+        telemetry_log = []
+        
+        # Use drift offset for synchronized motion
+        current_epoch_vector = (self.ENGINE_START_TIME + self.get_drift_offset()) % self.GALACTIC_SPACE_TIME_RADIUS
 
         for idx in range(8):
-            tier_id   = idx + 1
-            tier_meta = self.CYLINDER_TIERS.get(
-                tier_id,
-                {"binary": "0000", "val": 0, "name": "Undefined Layer"}
-            )
+            tier_id = idx + 1
+            tier_meta = self.CYLINDER_TIERS.get(tier_id, {"binary": "0000", "val": 0, "name": "Undefined Layer"})
+            
+            node_val = input_nodes[idx % len(input_nodes)]
+            force_val = force_nodes[idx % len(force_nodes)]
 
-            node_val  = input_nodes[idx  % len(input_nodes)]
-            force_val = force_nodes[idx  % len(force_nodes)]
+            # Radial calculation for kinetic motion
+            radius = 2.0 + (math.sin(current_epoch_vector + tier_id) * 0.05)
 
-            # Orbital angle: maps combined value (0-15) onto 0 → 2π in 16 steps
-            orbital_angle_rad = ((node_val + force_val) % self.LIMIT) * (math.pi / 8)
-
-            # Radial position: base 2.0 with small sinusoidal drift from epoch
-            calculated_clockwise_radius = 2.0 + (math.sin(current_epoch_vector + tier_id) * 0.05)
-
-            # Raw trajectory: node + force + tier cardinal weight
+            # Raw trajectory calculation
             raw_trajectory = node_val + force_val + tier_meta["val"]
-            final_state    = raw_trajectory % self.LIMIT
+            final_state = raw_trajectory % self.LIMIT
 
+            # Rotation state tracking
             if raw_trajectory >= self.LIMIT:
-                rotation_type = (
-                    f"Orbital layer boundary shift ({raw_trajectory}). "
-                    f"Rotated CLOCKWISE to coordinate {final_state}."
-                )
+                rotation_type = f"Orbital layer boundary shift ({raw_trajectory}). Rotated CLOCKWISE to {final_state}."
             else:
                 rotation_type = "Clockwise orbital trajectory maintained within spatial bounds."
 
             out_char = hex(final_state)[2:].upper()
             output_hex_chars.append(out_char)
 
+            # Append to telemetry log for frontend "Binary Box" display
             telemetry_log.append({
-                "tier":     tier_id,
-                "tier_name":   tier_meta["name"],
+                "tier": tier_id,
+                "tier_name": tier_meta["name"],
                 "tier_binary": tier_meta["binary"],
-                "formula": (
-                    f"Input ({hex(node_val)[2:].upper()}) "
-                    f"+ Force [{tier_meta['binary']}] "
-                    f"@ Radius: {calculated_clockwise_radius:.4f}"
-                ),
-                "boundary_enforcement": (
-                    f"Galactic Time-Scale Anchor -> {rotation_type} "
-                    f"-> Coordinate Out: {out_char}"
-                ),
+                "trajectory": final_state,
+                "rotation_status": rotation_type,
+                "radius_vector": round(radius, 4)
             })
 
-        return {
-            "cipher_output": "".join(output_hex_chars),
-            "telemetry":     telemetry_log,
-        }
+        return "".join(output_hex_chars), telemetry_log
         
