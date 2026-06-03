@@ -2,38 +2,34 @@ import math
 import time
 
 class LotusCylinderEngine:
-    """
-    Lotus Cylinder Engine — Core Transform Module
-    Implements the clockwise cylindrical spatial matrix transformation.
-    """
+    LIMIT = 16
+    ENGINE_START_TIME = time.time()
+    GALACTIC_SPACE_TIME_RADIUS = 3.154e13
     
-    LIMIT: int = 16  # 4-bit coordinate space
-    ENGINE_START_TIME: float = time.time()
-    GALACTIC_SPACE_TIME_RADIUS: float = 3.154e13
-    
-    # Restored 8-tier structural map
-    CYLINDER_TIERS: dict = {
-        1: {"binary": "0001", "val": 1,  "name": "Alpha Base Axis (NORTH)"},
-        2: {"binary": "0010", "val": 2,  "name": "Beta Plane Layer (EAST)"},
-        3: {"binary": "0100", "val": 4,  "name": "Gamma Vector Ring (SOUTH)"},
-        4: {"binary": "1000", "val": 8,  "name": "Delta Polar Node (WEST)"},
-        5: {"binary": "0011", "val": 3,  "name": "Epsilon Cross Sync (N-E)"},
-        6: {"binary": "0110", "val": 6,  "name": "Zeta Lateral Shift (S-E)"},
-        7: {"binary": "1100", "val": 12, "name": "Eta High Boundary (S-W)"},
-        8: {"binary": "1111", "val": 15, "name": "Theta Apex Governor (N-W)"},
+    CYLINDER_TIERS = {
+        1: {"binary": "0001", "val": 1, "name": "Alpha Base Axis"},
+        2: {"binary": "0010", "val": 2, "name": "Beta Plane Layer"},
+        3: {"binary": "0100", "val": 4, "name": "Gamma Vector Ring"},
+        4: {"binary": "1000", "val": 8, "name": "Delta Polar Node"},
+        5: {"binary": "0011", "val": 3, "name": "Epsilon Cross Sync"},
+        6: {"binary": "0110", "val": 6, "name": "Zeta Lateral Shift"},
+        7: {"binary": "1100", "val": 12, "name": "Eta High Boundary"},
+        8: {"binary": "1111", "val": 15, "name": "Theta Apex Governor"},
     }
 
-    def get_drift_offset(self) -> float:
-        """Calculates drift based on engine load time for vortex synchronization."""
-        return (time.time() - self.ENGINE_START_TIME) * 0.1
+    def process_transform(self, input_nodes, force_nodes):
+        output = []
+        telemetry = []
+        epoch = (self.ENGINE_START_TIME + (time.time() - self.ENGINE_START_TIME) * 0.1) % self.GALACTIC_SPACE_TIME_RADIUS
 
-    def process_transform(self, input_nodes: list, force_nodes: list):
-        """
-        Processes hex input streams through the 8-tier cylindrical matrix.
-        Returns a hex string and a full telemetry log for the dashboard.
-        """
-        output_hex_chars = []
-        telemetry_log = []
+        for idx in range(8):
+            tier_id = idx + 1
+            meta = self.CYLINDER_TIERS.get(tier_id)
+            val = (input_nodes[idx % len(input_nodes)] + force_nodes[idx % len(force_nodes)] + meta["val"]) % self.LIMIT
+            output.append(hex(val)[2:].upper())
+            telemetry.append({"tier": tier_id, "name": meta["name"], "binary": meta["binary"], "val": val})
+        
+        return "".join(output), telemetry
         
         # Use drift offset for synchronized motion
         current_epoch_vector = (self.ENGINE_START_TIME + self.get_drift_offset()) % self.GALACTIC_SPACE_TIME_RADIUS
