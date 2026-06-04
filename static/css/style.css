@@ -1,77 +1,512 @@
-/* LOTUS MATRIX ENGINE — PRODUCTION STYLESHEET
-   2026 Nicholas Desjardins. All Rights Reserved.
-*/
+/* ════════════════════════════════════════════════════
+   LOTUS MATRIX ENGINE — Static Stylesheet
+   © 2026 Nicholas Desjardins. All Rights Reserved.
+   Supplements inline styles in index.html
+   ════════════════════════════════════════════════════ */
 
-:root { --bg0:#020208; --teal:#00e5cc; --sec:#8888aa; }
-body { background:var(--bg0); color:#e8e8f8; font-family:'Share Tech Mono'; overflow:hidden; }
-#topbar { backdrop-filter:blur(16px); touch-action:pan-x; display:flex; overflow-x:auto; }
-.frame { position:absolute; background:rgba(6,6,15,0.96); border:1px solid #252545; border-radius:6px; touch-action:none; }
-.frame-titlebar { cursor:move; padding:6px; background:rgba(14,14,34,0.95); }
-.term-out { font-size:10px; flex:1; }
-/* Ensure windows resize dynamically */
-.frame-body { flex:1; overflow:auto; resize:both; }
-
-/* GLOBAL RESET */
-*, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
-html { scroll-behavior: smooth; height: 100%; }
-body { 
-  width:100%; height:100%; overflow:hidden; background:var(--bg0); 
-  font-family:var(--mono); color:var(--white); touch-action:none; user-select:none;
-}
-canvas { touch-action:none; }
-
-/* CUSTOM SCROLLBAR */
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: #03030a; }
-::-webkit-scrollbar-thumb { background: #252540; border-radius: 2px; }
-
-/* APP LAYOUT */
-#app {
-  position:fixed; inset:0; overflow:hidden;
-  background:radial-gradient(ellipse 70% 40% at 50%-10%,rgba(0,102,255,0.06) 0%,transparent 60%), var(--bg0);
-}
-#gridCanvas { position:absolute; inset:0; pointer-events:none; z-index:0; }
-#canvas { position:absolute; width:0; height:0; transform-origin:0 0; will-change:transform; z-index:1; }
-
-/* WINDOW SYSTEM */
-.frame {
-  position:absolute; background:rgba(6,6,15,0.96); border:1px solid var(--border2);
-  border-radius:var(--r); overflow:hidden; will-change:transform;
-  min-width:200px; min-height:140px; display:flex; flex-direction:column;
-  transition:box-shadow 0.2s ease;
-}
-.frame.selected { border-color:var(--teal); box-shadow:0 0 0 1px var(--teal), 0 0 24px rgba(0,229,204,0.1); }
-.frame-titlebar {
-  display:flex; align-items:center; gap:6px; padding:6px 8px;
-  background:rgba(14,14,34,0.95); border-bottom:1px solid var(--border);
-  cursor:grab; flex-shrink:0; touch-action:none; user-select:none;
+/* ── GLOBAL BOX-MODEL ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin:  0;
+  padding: 0;
 }
 
-/* INTERFACE COMPONENTS (TopBar, Palette, Compass, HUD, Menus) */
-#topbar {
-  position:fixed; top:0; left:0; right:0; height:44px;
-  background:rgba(2,2,8,0.94); border-bottom:1px solid var(--border2);
-  display:flex; align-items:center; gap:6px; padding:0 12px; z-index:9000;
-  backdrop-filter:blur(16px);
-}
-.tb-btn {
-  height:28px; padding:0 9px; background:transparent; border:1px solid var(--border2);
-  border-radius:4px; color:var(--sec); font-family:var(--hud); font-size:8px;
-  text-transform:uppercase; cursor:pointer; transition:all var(--tr);
-}
-.tb-btn:hover { border-color:var(--teal); color:var(--teal); background:rgba(0,229,204,0.05); }
+/* ── CUSTOM SCROLLBAR ── */
+::-webkit-scrollbar        { width: 4px; height: 4px; }
+::-webkit-scrollbar-track  { background: #03030a; }
+::-webkit-scrollbar-thumb  { background: #252540; border-radius: 2px; }
 
-/* MOBILE RESPONSIVE ADJUSTMENTS */
-@media (max-width:768px) {
-  body { padding-bottom:20px; }
-}
-@media (max-width:600px) {
-  #topbar { padding:0 8px; gap:3px; }
-  #compass { width:90px; height:90px; }
-  #minimap { display:none; }
+/* ── SMOOTH SCROLL ── */
+html { scroll-behavior: smooth; }
+
+/* ── MOBILE BOTTOM PADDING ── */
+@media (max-width: 768px) {
+  body { padding-bottom: 20px; }
 }
 
-/* PRINT UTILITY */
+/* ── PRINT — hide interactive chrome ── */
 @media print {
-  .threat-banner, .terminal-overlay, .btn-threat, .btn-contain, .demo-panel { display:none !important; }
+  .threat-banner,
+  .terminal-overlay,
+  .btn-threat,
+  .btn-contain,
+  .demo-panel,
+  #topbar,
+  #compass,
+  #zoomHud,
+  #spawnPalette,
+  #minimap,
+  #flashToast { display: none !important; }
+}
+
+/* ════════════════════════════════════════════════════
+   DESIGN TOKENS — Physical Constants
+   ════════════════════════════════════════════════════ */
+:root {
+  /* Background layers */
+  --bg0: #020208;
+  --bg1: #06060f;
+  --bg2: #0a0a1a;
+  --bg3: #0e0e22;
+
+  /* Borders */
+  --border:  #1a1a30;
+  --border2: #252545;
+
+  /* Brand palette */
+  --blue:       #0066ff;
+  --blue2:      #3388ff;
+  --blue-glow:  rgba(0, 102, 255, 0.3);
+  --teal:       #00e5cc;
+  --teal-glow:  rgba(0, 229, 204, 0.25);
+  --red:        #ff2244;
+  --red-glow:   rgba(255, 34, 68, 0.3);
+  --gold:       #f0b429;
+  --white:      #e8e8f8;
+  --dim:        #44445a;
+  --sec:        #8888aa;
+  --green:      #00ff88;
+  --purple:     #aa44ff;
+
+  /* Typography */
+  --mono: 'Share Tech Mono', monospace;
+  --hud:  'Orbitron', sans-serif;
+
+  /* Shared constants */
+  --r:  6px;
+  --tr: 0.16s ease;
+
+  /* Kinetic physics constants */
+  --gravity:    0.62;
+  --friction:   0.88;
+  --spring-k:   0.14;
+  --damping:    0.72;
+  --mass-unit:  1.047;   /* Governor apex constant (radians) */
+}
+
+/* ════════════════════════════════════════════════════
+   KINETIC BASE — Every element inherits physical weight
+   ════════════════════════════════════════════════════ */
+
+/* Kinetic pulse — used for live data updates */
+@keyframes kineticPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(0, 229, 204, 0.5); }
+  70%  { box-shadow: 0 0 0 8px rgba(0, 229, 204, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 229, 204, 0); }
+}
+
+@keyframes kineticPulseRed {
+  0%   { box-shadow: 0 0 0 0 rgba(255, 34, 68, 0.6); }
+  70%  { box-shadow: 0 0 0 10px rgba(255, 34, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 34, 68, 0); }
+}
+
+/* Orbit ring spin */
+@keyframes orbitSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Tier node appear */
+@keyframes tierAppear {
+  0%   { opacity: 0; transform: scale(0.6) translateY(4px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Data stream scroll */
+@keyframes streamScroll {
+  0%   { background-position: 0 0; }
+  100% { background-position: 0 -200px; }
+}
+
+/* Governor sweep */
+@keyframes governorSweep {
+  0%   { stroke-dashoffset: 440; }
+  100% { stroke-dashoffset: 0; }
+}
+
+/* Threat flash */
+@keyframes threatFlash {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+/* Spawn frame */
+@keyframes frameSpawn {
+  0%   { box-shadow: 0 0 0 3px var(--teal), 0 0 50px rgba(0, 229, 204, 0.35); }
+  100% { box-shadow: none; }
+}
+
+/* Dot pulse */
+@keyframes dp {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+/* Scan line */
+@keyframes scanLine {
+  0%   { top: 0; }
+  100% { top: 100%; }
+}
+
+/* Binary rain */
+@keyframes binaryRain {
+  0%   { transform: translateY(-100%); opacity: 1; }
+  100% { transform: translateY(400%);  opacity: 0; }
+}
+
+/* ════════════════════════════════════════════════════
+   LIVE CYLINDER PLANE LOG
+   ════════════════════════════════════════════════════ */
+
+.cylinder-plane-log {
+  font-family: var(--mono);
+  font-size: 9px;
+  line-height: 1.8;
+}
+
+.cpl-header {
+  font-family: var(--hud);
+  font-size: 7px;
+  letter-spacing: 2px;
+  color: var(--teal);
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border2);
+}
+
+.cpl-tier-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(26, 26, 48, 0.4);
+  animation: tierAppear 0.3s ease forwards;
+}
+
+.cpl-tier-id {
+  font-family: var(--hud);
+  font-size: 7px;
+  color: var(--blue2);
+  min-width: 16px;
+  flex-shrink: 0;
+}
+
+.cpl-tier-binary {
+  font-family: var(--mono);
+  font-size: 8px;
+  color: var(--gold);
+  min-width: 32px;
+  letter-spacing: 1px;
+  flex-shrink: 0;
+}
+
+.cpl-tier-name {
+  color: var(--sec);
+  font-size: 8px;
+  flex: 1;
+}
+
+.cpl-tier-cardinal {
+  font-family: var(--hud);
+  font-size: 7px;
+  color: var(--dim);
+  min-width: 32px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.cpl-tier-radius {
+  font-size: 8px;
+  color: var(--teal);
+  min-width: 52px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ════════════════════════════════════════════════════
+   GOVERNOR ENGINE PANEL
+   ════════════════════════════════════════════════════ */
+
+.governor-panel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.gov-stat {
+  background: var(--bg0);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px 8px;
+}
+
+.gov-stat-label {
+  font-family: var(--hud);
+  font-size: 6px;
+  color: var(--dim);
+  letter-spacing: 1px;
+  margin-bottom: 3px;
+}
+
+.gov-stat-value {
+  font-family: var(--hud);
+  font-size: 11px;
+  font-weight: 900;
+  color: var(--teal);
+  letter-spacing: 1px;
+}
+
+.gov-stat-value.warn  { color: var(--gold); animation: dp 1s ease infinite; }
+.gov-stat-value.alert { color: var(--red);  animation: threatFlash 0.5s ease infinite; }
+
+/* ════════════════════════════════════════════════════
+   THREAT BANNER
+   ════════════════════════════════════════════════════ */
+
+.threat-banner {
+  position: fixed;
+  top: 44px;
+  left: 0;
+  right: 0;
+  height: 28px;
+  background: rgba(255, 34, 68, 0.12);
+  border-bottom: 1px solid var(--red);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-family: var(--hud);
+  font-size: 8px;
+  color: var(--red);
+  letter-spacing: 2px;
+  z-index: 8950;
+  animation: threatFlash 0.8s ease infinite;
+  display: none;
+}
+
+.threat-banner.active { display: flex; }
+
+/* ════════════════════════════════════════════════════
+   INCIDENT ESCROW REPORT PANEL
+   ════════════════════════════════════════════════════ */
+
+.escrow-report {
+  background: rgba(255, 34, 68, 0.04);
+  border: 1px solid rgba(255, 34, 68, 0.3);
+  border-radius: 4px;
+  padding: 10px;
+  font-size: 8px;
+  color: var(--sec);
+  line-height: 1.9;
+  animation: kineticPulseRed 2s ease infinite;
+}
+
+.escrow-report-title {
+  font-family: var(--hud);
+  font-size: 7px;
+  color: var(--red);
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+
+.escrow-field {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid rgba(255, 34, 68, 0.1);
+  padding: 2px 0;
+}
+
+.escrow-key   { color: var(--dim); }
+.escrow-val   { color: var(--white); font-family: var(--mono); }
+.escrow-val.ok   { color: var(--teal); }
+.escrow-val.warn { color: var(--gold); }
+.escrow-val.err  { color: var(--red); }
+
+/* ════════════════════════════════════════════════════
+   HEX ENGINE ENHANCED
+   ════════════════════════════════════════════════════ */
+
+.hex-tier-stream {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.hex-tier-stream::-webkit-scrollbar { width: 2px; }
+.hex-tier-stream::-webkit-scrollbar-thumb { background: var(--border2); }
+
+.hex-tier-entry {
+  display: grid;
+  grid-template-columns: 18px 34px 1fr 26px;
+  gap: 4px;
+  align-items: center;
+  padding: 3px 6px;
+  background: var(--bg0);
+  border-radius: 3px;
+  border-left: 2px solid var(--border2);
+  font-size: 8px;
+  animation: tierAppear 0.2s ease forwards;
+  transition: border-color 0.2s ease;
+}
+
+.hex-tier-entry:hover { border-left-color: var(--teal); }
+
+.hte-id     { font-family: var(--hud); color: var(--blue2); font-size: 7px; }
+.hte-binary { font-family: var(--mono); color: var(--gold); letter-spacing: 1px; }
+.hte-formula { color: var(--sec); font-size: 7.5px; overflow: hidden;
+               text-overflow: ellipsis; white-space: nowrap; }
+.hte-out    { font-family: var(--hud); color: var(--teal); text-align: right;
+              font-size: 10px; font-weight: 700; }
+
+/* ════════════════════════════════════════════════════
+   BINARY RAIN OVERLAY
+   ════════════════════════════════════════════════════ */
+
+.binary-rain-col {
+  position: absolute;
+  top: 0;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: rgba(0, 229, 204, 0.15);
+  pointer-events: none;
+  animation: binaryRain linear infinite;
+  white-space: pre;
+  line-height: 1.4;
+}
+
+/* ════════════════════════════════════════════════════
+   3D VIEWPORT ENHANCEMENTS
+   ════════════════════════════════════════════════════ */
+
+.vp-overlay-info {
+  position: absolute;
+  bottom: 6px;
+  left: 8px;
+  font-family: var(--hud);
+  font-size: 6px;
+  color: var(--dim);
+  letter-spacing: 1px;
+  pointer-events: none;
+  z-index: 2;
+  line-height: 1.8;
+}
+
+.vp-tier-badge {
+  display: inline-block;
+  padding: 1px 5px;
+  background: rgba(0, 102, 255, 0.15);
+  border: 1px solid rgba(0, 102, 255, 0.3);
+  border-radius: 2px;
+  font-size: 6px;
+  margin-right: 3px;
+  margin-top: 2px;
+}
+
+/* ════════════════════════════════════════════════════
+   TERMINAL ENHANCED
+   ════════════════════════════════════════════════════ */
+
+.term-out .t-ok   { color: var(--teal); }
+.term-out .t-warn { color: var(--gold); }
+.term-out .t-err  { color: var(--red); }
+.term-out .t-dim  { color: var(--dim); }
+.term-out .t-hud  { color: var(--blue2); font-family: var(--hud); letter-spacing: 1px; }
+.term-out .t-gold { color: var(--gold); font-family: var(--hud); }
+
+/* Blinking cursor */
+.term-cursor {
+  display: inline-block;
+  width: 7px;
+  height: 11px;
+  background: var(--teal);
+  margin-left: 1px;
+  animation: dp 0.9s ease infinite;
+  vertical-align: middle;
+}
+
+/* ════════════════════════════════════════════════════
+   SCAN LINE EFFECT — Applied to frames in alert mode
+   ════════════════════════════════════════════════════ */
+
+.frame.scanning::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 229, 204, 0.4),
+    transparent
+  );
+  animation: scanLine 3s linear infinite;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* ════════════════════════════════════════════════════
+   KINETIC PULSE — frames receiving live data
+   ════════════════════════════════════════════════════ */
+
+.frame.kinetic-update {
+  animation: kineticPulse 0.6s ease forwards;
+}
+
+.frame.kinetic-alert {
+  animation: kineticPulseRed 0.6s ease forwards;
+  border-color: var(--red) !important;
+}
+
+/* ════════════════════════════════════════════════════
+   TOPBAR SCROLLABLE AREA
+   ════════════════════════════════════════════════════ */
+
+.tb-scroll-zone {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  flex: 1;
+  min-width: 0;
+  cursor: grab;
+  user-select: none;
+}
+
+.tb-scroll-zone:active { cursor: grabbing; }
+.tb-scroll-zone::-webkit-scrollbar { display: none; }
+
+/* ════════════════════════════════════════════════════
+   MOBILE ADJUSTMENTS
+   ════════════════════════════════════════════════════ */
+
+@media (max-width: 600px) {
+  #topbar        { padding: 0 8px; gap: 3px; }
+  .tb-logo       { font-size: 9px; letter-spacing: 1px; }
+  .tb-btn        { padding: 0 6px; font-size: 7px; }
+  #compass       { width: 90px; height: 90px; }
+  .compass-inner { width: 66px; height: 66px; }
+  #minimap       { display: none; }
+}
+
+/* ════════════════════════════════════════════════════
+   SELECTION BOX
+   ════════════════════════════════════════════════════ */
+
+#selBox {
+  position: fixed;
+  border: 1px solid var(--teal);
+  background: rgba(0, 229, 204, 0.04);
+  display: none;
+  pointer-events: none;
+  z-index: 500;
 }
